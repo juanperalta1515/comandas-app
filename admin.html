@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Cocina - Gestión de Comandas</title>
+    <!-- Google Fonts para tipografía premium -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body class="admin-body">
+    <!-- Barra de Navegación del Panel -->
+    <nav class="navbar navbar-admin">
+        <div class="nav-container">
+            <a href="admin.html" class="nav-brand">
+                <span class="brand-emoji">🍳</span>
+                <span>Panel Cocina <span id="admin-restaurant-badge" class="rest-badge">El Quincho Porteño</span></span>
+            </a>
+            <div class="nav-actions">
+                <a href="index.html" class="btn btn-secondary btn-sm nav-link-client">
+                    <span>Ver Carta Digital 🍕</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Pestañas de Navegación del Admin -->
+    <header class="admin-header-tabs">
+        <div class="tabs-container">
+            <button class="admin-tab-btn active" id="tab-orders-btn" onclick="switchTab('orders')">Tablero de Comandas 📋</button>
+            <button class="admin-tab-btn" id="tab-stock-btn" onclick="switchTab('stock')">Gestión de Menú & Stock 🍔</button>
+            <button class="admin-tab-btn" id="tab-config-btn" onclick="switchTab('config')">Configuración del Local ⚙️</button>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal Multi-vista -->
+    <main class="admin-container">
+        
+        <!-- ================= PESTAÑA 1: TABLERO KANBAN ================= -->
+        <section class="admin-tab-content active" id="view-orders">
+            <div class="kanban-wrapper">
+                
+                <!-- Columna: Pendiente -->
+                <div class="kanban-column" id="col-pendiente">
+                    <div class="kanban-column-header col-pendiente-h">
+                        <h3>Pendiente</h3>
+                        <span class="column-count" id="count-pendiente">0</span>
+                    </div>
+                    <div class="kanban-cards-container" id="cards-pendiente"></div>
+                </div>
+
+                <!-- Columna: Confirmado -->
+                <div class="kanban-column" id="col-confirmado">
+                    <div class="kanban-column-header col-confirmado-h">
+                        <h3>Confirmado</h3>
+                        <span class="column-count" id="count-confirmado">0</span>
+                    </div>
+                    <div class="kanban-cards-container" id="cards-confirmado"></div>
+                </div>
+
+                <!-- Columna: En Preparación -->
+                <div class="kanban-column" id="col-preparacion">
+                    <div class="kanban-column-header col-preparacion-h">
+                        <h3>En Preparación</h3>
+                        <span class="column-count" id="count-preparacion">0</span>
+                    </div>
+                    <div class="kanban-cards-container" id="cards-preparacion"></div>
+                </div>
+
+                <!-- Columna: Listo para Entregar -->
+                <div class="kanban-column" id="col-listo">
+                    <div class="kanban-column-header col-listo-h">
+                        <h3>Listo p/ Entregar</h3>
+                        <span class="column-count" id="count-listo">0</span>
+                    </div>
+                    <div class="kanban-cards-container" id="cards-listo"></div>
+                </div>
+
+                <!-- Columna: En Camino -->
+                <div class="kanban-column" id="col-camino">
+                    <div class="kanban-column-header col-camino-h">
+                        <h3>En Camino</h3>
+                        <span class="column-count" id="count-camino">0</span>
+                    </div>
+                    <div class="kanban-cards-container" id="cards-camino"></div>
+                </div>
+
+                <!-- Columna: Entregado -->
+                <div class="kanban-column" id="col-entregado">
+                    <div class="kanban-column-header col-entregado-h">
+                        <h3>Entregado</h3>
+                        <span class="column-count" id="count-entregado">0</span>
+                    </div>
+                    <div class="kanban-cards-container" id="cards-entregado"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA 2: GESTIÓN DE STOCK ================= -->
+        <section class="admin-tab-content" id="view-stock">
+            <div class="admin-card">
+                <h2>Gestión de Platos e Ingredientes (Stock)</h2>
+                <p class="admin-card-description">Activá o desactivá la disponibilidad inmediata de los platos de la carta digital.</p>
+                
+                <div class="table-responsive">
+                    <table class="stock-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre del Plato</th>
+                                <th>Categoría</th>
+                                <th>Precio (ARS)</th>
+                                <th>Disponibilidad en Carta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stock-table-body">
+                            <!-- Render dinámico de platos -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA 3: CONFIGURACIÓN ================= -->
+        <section class="admin-tab-content" id="view-config">
+            <div class="admin-grid-two-cols">
+                
+                <!-- Formulario de Configuración -->
+                <div class="admin-card">
+                    <h2>Configuración de Negocio</h2>
+                    <p class="admin-card-description">Ajustá las variables de envío condicional de la pizzería y los intereses de financiación.</p>
+                    
+                    <form id="config-form" onsubmit="guardarConfiguraciones(event)">
+                        <div class="form-group">
+                            <label for="cfg-nombre">Nombre del Restaurante</label>
+                            <input type="text" id="cfg-nombre" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cfg-envio-gratis">Monto Envío Gratis (ARS)</label>
+                                <input type="number" id="cfg-envio-gratis" min="0" required>
+                                <small class="form-hint">Monto de compra mínima para bonificar el envío.</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="cfg-costo-envio">Costo de Envío Estándar (ARS)</label>
+                                <input type="number" id="cfg-costo-envio" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="cfg-interes">Interés Mensual Crédito (% CFT)</label>
+                            <input type="number" id="cfg-interes" min="0" max="100" required>
+                            <small class="form-hint">Interés aplicado por cuota para pagos con tarjeta de crédito.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="cfg-wa-phone">WhatsApp Business Número</label>
+                            <input type="text" id="cfg-wa-phone" required placeholder="Ej: +5491132456789">
+                            <small class="form-hint">Número desde donde se simularán los envíos.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="cfg-wa-token">Token API WhatsApp Cloud</label>
+                            <input type="password" id="cfg-wa-token" required>
+                            <small class="form-hint">Token de portador (Bearer Token) para autenticar contra la API.</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Configuración 💾</button>
+                    </form>
+                </div>
+
+                <!-- Resumen de Configuración Actual -->
+                <div class="admin-card rules-card">
+                    <h2>Reglas de Negocio Activas</h2>
+                    <div class="rules-summary-box">
+                        <div class="rule-item">
+                            <span class="rule-label">Envío Bonificado:</span>
+                            <span class="rule-value" id="lbl-cfg-gratis">Si total >= $8.000, envío $0.</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-label">Envío Base:</span>
+                            <span class="rule-value" id="lbl-cfg-envio">Costo de $800 para subtotales menores.</span>
+                        </div>
+                        <div class="rule-item">
+                            <span class="rule-label">Interés Financiado:</span>
+                            <span class="rule-value" id="lbl-cfg-interes">10% mensual simple (12 cuotas = +120%).</span>
+                        </div>
+                    </div>
+                    <div class="alert-box alert-info">
+                        <strong>Nota Técnica:</strong> Los cambios aplicados se reflejan inmediatamente en el carrito y checkout de la Carta Digital del Cliente sin necesidad de recargar la página.
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= CONSOLA DE SIMULACIÓN DE WHATSAPP BUSINESS ================= -->
+        <section class="whatsapp-logs-section">
+            <div class="logs-card">
+                <div class="logs-header">
+                    <div class="logs-header-title">
+                        <span class="wa-indicator">🟢</span>
+                        <h2>Simulador de Notificaciones WhatsApp Cloud API</h2>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="limpiarLogsWhatsApp()">Limpiar Consola 🗑️</button>
+                </div>
+                <p class="admin-card-description">Muestra los Webhooks/Llamadas POST enviados automáticamente cuando el estado del pedido cambia.</p>
+                <div class="logs-console" id="wa-console-logs">
+                    <!-- Logs cargados dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal de Detalles del Pedido -->
+    <div class="modal-overlay" id="order-detail-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Detalle del Pedido <span id="detail-pedido-id">#PED-0000</span></h2>
+                <button class="close-btn" onclick="cerrarDetallePedido()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <h3>Información del Cliente</h3>
+                    <div class="detail-grid-two">
+                        <p><strong>Nombre:</strong> <span id="detail-cliente-nombre">-</span></p>
+                        <p><strong>Teléfono:</strong> <span id="detail-cliente-telefono">-</span></p>
+                        <p><strong>Tipo Entrega:</strong> <span id="detail-tipo-entrega">-</span></p>
+                        <p><strong>Dirección:</strong> <span id="detail-direccion">-</span></p>
+                        <p><strong>Programado Para:</strong> <span id="detail-agenda">-</span></p>
+                        <p><strong>Fecha/Hora Compra:</strong> <span id="detail-fecha">-</span></p>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Productos Solicitados</h3>
+                    <div class="table-responsive">
+                        <table class="detail-products-table">
+                            <thead>
+                                <tr>
+                                    <th>Plato</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio c/u</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detail-products-body">
+                                <!-- Llenado dinámico -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Pago e Intereses</h3>
+                    <div class="detail-grid-two">
+                        <p><strong>Método de Pago:</strong> <span id="detail-metodo-pago">-</span></p>
+                        <p><strong>Subtotal Platos:</strong> <span id="detail-subtotal">-</span></p>
+                        <p><strong>Costo de Envío:</strong> <span id="detail-costo-envio">-</span></p>
+                        <p><strong>Total Financiado:</strong> <strong id="detail-total">-</strong></p>
+                    </div>
+                    <div id="detail-financiacion-box" style="display: none;" class="alert-box alert-warning">
+                        <strong>Detalle de Cuotas:</strong> <span id="detail-financiacion-text">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarDetallePedido()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Pestaña activa inicial
+        let tabActiva = 'orders';
+        let pedidoDetalleActual = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarAdmin();
+
+            // Escuchadores de almacenamiento para sincronizar cambios
+            window.addEventListener('ordersUpdated', renderKanban);
+            window.addEventListener('menuUpdated', () => {
+                renderKanban();
+                renderStockTable();
+            });
+            window.addEventListener('configUpdated', () => {
+                cargarConfiguracionesForm();
+                actualizarLabelsConfig();
+                renderKanban();
+            });
+            window.addEventListener('waLogsUpdated', renderLogsWhatsApp);
+        });
+
+        function inicializarAdmin() {
+            renderKanban();
+            renderStockTable();
+            cargarConfiguracionesForm();
+            actualizarLabelsConfig();
+            renderLogsWhatsApp();
+        }
+
+        // -- MANEJO DE PESTAÑAS --
+        function switchTab(tabId) {
+            tabActiva = tabId;
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(view => view.classList.remove('active'));
+
+            document.getElementById(`tab-${tabId}-btn`).classList.add('active');
+            
+            if (tabId === 'orders') {
+                document.getElementById('view-orders').classList.add('active');
+                renderKanban();
+            } else if (tabId === 'stock') {
+                document.getElementById('view-stock').classList.add('active');
+                renderStockTable();
+            } else if (tabId === 'config') {
+                document.getElementById('view-config').classList.add('active');
+                cargarConfiguracionesForm();
+            }
+        }
+
+        // -- TABLERO KANBAN DE COMANDAS --
+        const ESTADOS = ['Pendiente', 'Confirmado', 'En Preparación', 'Listo para Entregar', 'En Camino', 'Entregado'];
+
+        function renderKanban() {
+            const pedidos = obtenerPedidos();
+            
+            // Limpiar contenedores
+            ESTADOS.forEach(est => {
+                const idContainer = `cards-${obtenerIdEstadoString(est)}`;
+                const container = document.getElementById(idContainer);
+                if (container) container.innerHTML = '';
+            });
+
+            // Contadores por columna
+            const contadores = { 'Pendiente': 0, 'Confirmado': 0, 'En Preparación': 0, 'Listo para Entregar': 0, 'En Camino': 0, 'Entregado': 0 };
+
+            pedidos.forEach(pedido => {
+                if (contadores[pedido.estado] !== undefined) {
+                    contadores[pedido.estado]++;
+                }
+
+                const containerId = `cards-${obtenerIdEstadoString(pedido.estado)}`;
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                const card = document.createElement('div');
+                card.className = 'kanban-card';
+
+                const totalFormateado = pedido.total.toLocaleString('es-AR', {
+                    style: 'currency', currency: 'ARS', minimumFractionDigits: 0
+                });
+
+                const countItems = pedido.items.reduce((acc, curr) => acc + curr.cantidad, 0);
+
+                // Determinar botones de avance/retroceso
+                const idxEstado = ESTADOS.indexOf(pedido.estado);
+                const btnRetroceder = idxEstado > 0 
+                    ? `<button class="kanban-nav-btn" onclick="moverEstado('${pedido.id_pedido}', '${ESTADOS[idxEstado - 1]}')">◀</button>` 
+                    : `<span></span>`;
+                const btnAvanzar = idxEstado < ESTADOS.length - 1 
+                    ? `<button class="kanban-nav-btn primary" onclick="moverEstado('${pedido.id_pedido}', '${ESTADOS[idxEstado + 1]}')">▶</button>` 
+                    : `<span></span>`;
+
+                card.innerHTML = `
+                    <div class="card-header-comanda">
+                        <span class="comanda-id">${pedido.id_pedido}</span>
+                        <span class="comanda-delivery-badge ${pedido.tipo_entrega}">
+                            ${pedido.tipo_entrega === 'envio' ? '🛵 Envío' : '🏪 Local'}
+                        </span>
+                    </div>
+                    <div class="card-body-comanda">
+                        <h4 class="comanda-cliente">${pedido.nombre_cliente}</h4>
+                        <p class="comanda-meta">${countItems} platos • ${pedido.fecha_hora_entrega === 'Lo antes posible' ? 'Inmediato' : 'Programado'}</p>
+                        <p class="comanda-total">Total: ${totalFormateado}</p>
+                    </div>
+                    <div class="card-actions-comanda">
+                        <button class="btn btn-secondary btn-sm" onclick="verDetallePedido('${pedido.id_pedido}')">Detalles 🔍</button>
+                        <div class="kanban-nav-actions">
+                            ${btnRetroceder}
+                            ${btnAvanzar}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Actualizar contadores visuales de columnas
+            ESTADOS.forEach(est => {
+                const countId = `count-${obtenerIdEstadoString(est)}`;
+                const element = document.getElementById(countId);
+                if (element) {
+                    element.innerText = contadores[est];
+                    // Resaltar si tiene pedidos pendientes
+                    if (contadores[est] > 0) {
+                        element.classList.add('has-orders');
+                    } else {
+                        element.classList.remove('has-orders');
+                    }
+                }
+            });
+        }
+
+        function obtenerIdEstadoString(estado) {
+            switch(estado) {
+                case 'Pendiente': return 'pendiente';
+                case 'Confirmado': return 'confirmado';
+                case 'En Preparación': return 'preparacion';
+                case 'Listo para Entregar': return 'listo';
+                case 'En Camino': return 'camino';
+                case 'Entregado': return 'entregado';
+                default: return 'pendiente';
+            }
+        }
+
+        function moverEstado(idPedido, nuevoEstado) {
+            actualizarEstadoPedido(idPedido, nuevoEstado);
+            renderKanban();
+        }
+
+        // -- MODAL DETALLES DEL PEDIDO --
+        function verDetallePedido(idPedido) {
+            const pedidos = obtenerPedidos();
+            const pedido = pedidos.find(p => p.id_pedido === idPedido);
+            if (!pedido) return;
+
+            pedidoDetalleActual = pedido;
+            
+            document.getElementById('detail-pedido-id').innerText = `#${pedido.id_pedido}`;
+            document.getElementById('detail-cliente-nombre').innerText = pedido.nombre_cliente;
+            document.getElementById('detail-cliente-telefono').innerText = pedido.telefono_cliente;
+            document.getElementById('detail-tipo-entrega').innerText = pedido.tipo_entrega === 'envio' ? '🛵 Envío a domicilio' : '🏪 Retiro por el local';
+            document.getElementById('detail-direccion').innerText = pedido.direccion_entrega;
+            document.getElementById('detail-agenda').innerText = pedido.fecha_hora_entrega;
+            document.getElementById('detail-fecha').innerText = pedido.fecha_hora;
+
+            // Render de productos del pedido
+            const productsBody = document.getElementById('detail-products-body');
+            productsBody.innerHTML = '';
+            pedido.items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.nombre}</td>
+                    <td>${item.cantidad}</td>
+                    <td>$${item.precio.toLocaleString('es-AR')}</td>
+                    <td>$${(item.precio * item.cantidad).toLocaleString('es-AR')}</td>
+                `;
+                productsBody.appendChild(tr);
+            });
+
+            // Resumen de Pagos
+            const metodoTexto = pedido.metodo_pago === 'efectivo' 
+                ? '💵 Efectivo / Transferencia' 
+                : (pedido.metodo_pago === 'debito' ? '💳 Tarjeta de Débito' : '💳 Tarjeta de Crédito');
+            document.getElementById('detail-metodo-pago').innerText = metodoTexto;
+            document.getElementById('detail-subtotal').innerText = `$${pedido.subtotal.toLocaleString('es-AR')}`;
+            document.getElementById('detail-costo-envio').innerText = pedido.costo_envio === 0 ? "Gratis" : `$${pedido.costo_envio.toLocaleString('es-AR')}`;
+            document.getElementById('detail-total').innerText = `$${pedido.total.toLocaleString('es-AR')}`;
+
+            // Financiación en cuotas si es Crédito
+            const finBox = document.getElementById('detail-financiacion-box');
+            if (pedido.metodo_pago === 'credito' && pedido.financiacion) {
+                finBox.style.display = 'block';
+                const valorCuotaFormato = pedido.financiacion.valor_cuota.toLocaleString('es-AR', {
+                    style: 'currency', currency: 'ARS', minimumFractionDigits: 2
+                });
+                document.getElementById('detail-financiacion-text').innerText = `${pedido.financiacion.cuotas} cuotas de ${valorCuotaFormato} (Recargo CFT: ${pedido.financiacion.interes_applied || pedido.financiacion.interes_aplicado}%)`;
+            } else {
+                finBox.style.display = 'none';
+            }
+
+            document.getElementById('order-detail-modal').classList.add('active');
+        }
+
+        function cerrarDetallePedido() {
+            document.getElementById('order-detail-modal').classList.remove('active');
+            pedidoDetalleActual = null;
+        }
+
+        // -- GESTIÓN DE STOCK --
+        function renderStockTable() {
+            const menu = obtenerMenu();
+            const body = document.getElementById('stock-table-body');
+            body.innerHTML = '';
+
+            menu.forEach(plato => {
+                const tr = document.createElement('tr');
+                
+                const switchCheck = plato.disponible ? 'checked' : '';
+
+                tr.innerHTML = `
+                    <td>${plato.id}</td>
+                    <td class="stock-plate-name">${plato.nombre}</td>
+                    <td><span class="category-badge">${plato.categoria}</span></td>
+                    <td>$${plato.precio.toLocaleString('es-AR')}</td>
+                    <td>
+                        <label class="switch-toggle">
+                            <input type="checkbox" ${switchCheck} onchange="toggleDisponibilidad(${plato.id}, this.checked)">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function toggleDisponibilidad(idPlato, disponible) {
+            const menu = obtenerMenu();
+            const idx = menu.findIndex(p => p.id === idPlato);
+            if (idx !== -1) {
+                menu[idx].disponible = disponible;
+                guardarMenu(menu);
+            }
+        }
+
+        // -- CONFIGURACIÓN DEL LOCAL --
+        function cargarConfiguracionesForm() {
+            const config = obtenerConfig();
+            document.getElementById('cfg-nombre').value = config.restauranteNombre;
+            document.getElementById('cfg-envio-gratis').value = config.montoEnvioGratis;
+            document.getElementById('cfg-costo-envio').value = config.costoEnvio;
+            document.getElementById('cfg-interes').value = config.interesCredito;
+            document.getElementById('cfg-wa-phone').value = config.whatsappPhone;
+            document.getElementById('cfg-wa-token').value = config.whatsappToken;
+        }
+
+        function actualizarLabelsConfig() {
+            const config = obtenerConfig();
+            document.getElementById('lbl-cfg-gratis').innerText = `Si total >= $${config.montoEnvioGratis.toLocaleString('es-AR')}, envío $0.`;
+            document.getElementById('lbl-cfg-envio').innerText = `Costo de $${config.costoEnvio.toLocaleString('es-AR')} para subtotales menores.`;
+            document.getElementById('lbl-cfg-interes').innerText = `${config.interesCredito}% mensual simple (1 cuota = 0% recargo, 3 cuotas = +30%, 6 cuotas = +60%, 12 cuotas = +120%).`;
+            document.getElementById('admin-restaurant-badge').innerText = config.restauranteNombre;
+        }
+
+        function guardarConfiguraciones(e) {
+            e.preventDefault();
+
+            const configNueva = {
+                restauranteNombre: document.getElementById('cfg-nombre').value.trim(),
+                montoEnvioGratis: parseFloat(document.getElementById('cfg-envio-gratis').value),
+                costoEnvio: parseFloat(document.getElementById('cfg-costo-envio').value),
+                interesCredito: parseFloat(document.getElementById('cfg-interes').value),
+                whatsappPhone: document.getElementById('cfg-wa-phone').value.trim(),
+                whatsappToken: document.getElementById('cfg-wa-token').value
+            };
+
+            guardarConfig(configNueva);
+            actualizarLabelsConfig();
+            alert("¡Configuración guardada correctamente! Todos los clientes verán los cambios en tiempo real.");
+        }
+
+        // -- CONSOLA DE SIMULACIÓN DE LOGS DE WHATSAPP --
+        function renderLogsWhatsApp() {
+            const logs = obtenerLogsWA();
+            const consoleBox = document.getElementById('wa-console-logs');
+            consoleBox.innerHTML = '';
+
+            if (logs.length === 0) {
+                consoleBox.innerHTML = `<div class="console-empty">No hay eventos de WhatsApp registrados. Probá cambiando el estado de un pedido a "Confirmado" o "En Camino".</div>`;
+                return;
+            }
+
+            logs.forEach((log, index) => {
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                
+                const time = new Date(log.timestamp).toLocaleTimeString();
+                
+                logItem.innerHTML = `
+                    <div class="log-header-row" onclick="toggleLogDetail(${index})">
+                        <span class="log-badge ${log.estadoPedido}">${log.estadoPedido}</span>
+                        <span class="log-summary">WhatsApp enviado a <strong>${log.cliente}</strong> (${log.telefono})</span>
+                        <span class="log-time">${time}</span>
+                        <span class="log-arrow" id="wa-arrow-${index}">▼</span>
+                    </div>
+                    <div class="log-details-block" id="wa-detail-${index}" style="display: none;">
+                        <p class="msg-preview">💬 <strong>Mensaje:</strong> "${log.mensaje}"</p>
+                        <div class="request-details">
+                            <h5>Detalles de la Petición POST (API Business Cloud)</h5>
+                            <pre><code><strong>POST</strong> ${log.endpoint}
+<strong>Headers:</strong> ${JSON.stringify(log.headers, null, 2)}
+<strong>Payload:</strong> ${JSON.stringify(log.payload, null, 2)}
+<strong>Response:</strong> ${log.status}</code></pre>
+                        </div>
+                    </div>
+                `;
+                consoleBox.appendChild(logItem);
+            });
+        }
+
+        function toggleLogDetail(index) {
+            const block = document.getElementById(`wa-detail-${index}`);
+            const arrow = document.getElementById(`wa-arrow-${index}`);
+            if (block.style.display === 'none') {
+                block.style.display = 'block';
+                arrow.innerText = '▲';
+            } else {
+                block.style.display = 'none';
+                arrow.innerText = '▼';
+            }
+        }
+
+        function limpiarLogsWhatsApp() {
+            if (confirm("¿Estás seguro de que querés vaciar la consola de simulación?")) {
+                guardarLogsWA([]);
+                renderLogsWhatsApp();
+            }
+        }
+    </script>
+</body>
+</html>

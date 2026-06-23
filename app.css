@@ -1,0 +1,1594 @@
+/* ==========================================================================
+   ESTILOS GENERALES Y VARIABLES DE DISEÑO (SISTEMA DE DISEÑO HSL)
+   ========================================================================== */
+
+:root {
+    /* Paleta Gastronómica Argentina */
+    --color-primary: hsl(16, 85%, 52%);      /* Terracota / Filete porteño */
+    --color-primary-hover: hsl(16, 85%, 45%);
+    --color-primary-light: hsl(16, 95%, 94%);
+    
+    --color-accent: hsl(38, 90%, 50%);       /* Dorado empanada / Queso gratinado */
+    --color-accent-hover: hsl(38, 90%, 42%);
+    
+    --color-bg-client: hsl(30, 40%, 98%);    /* Crema cálido */
+    --color-bg-card: hsl(0, 0%, 100%);
+    
+    --color-text-main: hsl(24, 15%, 15%);    /* Carbón vegetal */
+    --color-text-muted: hsl(24, 8%, 45%);
+    --color-border: hsl(24, 12%, 90%);
+    
+    /* Estados del Pedido (Colores Kanban) */
+    --color-state-pendiente: hsl(210, 15%, 50%);
+    --color-state-confirmado: hsl(175, 45%, 43%);
+    --color-state-preparacion: hsl(38, 90%, 50%);
+    --color-state-listo: hsl(88, 45%, 40%);
+    --color-state-camino: hsl(16, 85%, 52%);
+    --color-state-entregado: hsl(145, 63%, 42%);
+    
+    /* Utilidades */
+    --color-success: hsl(145, 63%, 42%);
+    --color-warning: hsl(45, 85%, 50%);
+    --color-danger: hsl(354, 70%, 54%);
+    --color-info: hsl(200, 75%, 48%);
+    
+    /* Efectos */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 8px 24px rgba(24, 15, 15, 0.06);
+    --shadow-lg: 0 16px 40px -10px rgba(24, 15, 15, 0.12);
+    --radius-sm: 8px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reinicio de Estilos */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    background-color: var(--color-bg-client);
+    color: var(--color-text-main);
+    line-height: 1.5;
+    overflow-x: hidden;
+}
+
+/* Estilos para el Administrador (Diferenciación Visual) */
+body.admin-body {
+    background-color: hsl(210, 20%, 98%);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: var(--color-text-main);
+    line-height: 1.25;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    margin: 1.5rem 0;
+}
+
+/* ==========================================================================
+   COMPONENTES BÁSICOS Y BOTONES
+   ========================================================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: var(--transition-fast);
+    text-align: center;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(235, 87, 87, 0.2);
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-primary:disabled {
+    background-color: var(--color-border);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: white;
+    border-color: var(--color-border);
+    color: var(--color-text-main);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-primary-light);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.btn-block {
+    display: flex;
+    width: 100%;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+/* ==========================================================================
+   BARRA DE NAVEGACIÓN (NAVBAR)
+   ========================================================================== */
+
+.navbar {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0.75rem 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.navbar-admin {
+    background-color: hsl(210, 30%, 15%);
+    border-bottom: none;
+}
+
+.navbar-admin .nav-brand {
+    color: white;
+}
+
+.navbar-admin .rest-badge {
+    font-size: 0.7rem;
+    background-color: var(--color-accent);
+    color: var(--color-text-main);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--color-text-main);
+}
+
+.brand-emoji {
+    font-size: 1.5rem;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Disparador del Carrito (Navbar) */
+.cart-trigger {
+    background: white;
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    transition: var(--transition-fast);
+}
+
+.cart-trigger:hover {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
+}
+
+.cart-icon {
+    font-size: 1.1rem;
+}
+
+.cart-badge {
+    background-color: var(--color-primary);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Animación pulse para carrito */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.cart-badge.pulse {
+    animation: pulse 0.3s ease-out;
+}
+
+/* ==========================================================================
+   HERO BANNER
+   ========================================================================== */
+
+.hero-banner {
+    background: linear-gradient(135deg, hsl(24, 30%, 15%) 0%, hsl(16, 40%, 10%) 100%);
+    color: white;
+    text-align: center;
+    padding: 4rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(var(--color-primary) 0.5px, transparent 0.5px);
+    background-size: 16px 16px;
+    opacity: 0.15;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.hero-tagline {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--color-accent);
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+.hero-banner h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.hero-banner p {
+    font-size: 1.1rem;
+    color: hsl(24, 10%, 80%);
+    font-weight: 300;
+}
+
+/* ==========================================================================
+   CARTA DIGITAL: FILTROS Y TARJETAS
+   ========================================================================== */
+
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+/* Categorías */
+.categories-bar {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+    scrollbar-width: none; /* Ocultar barra en Firefox */
+}
+
+.categories-bar::-webkit-scrollbar {
+    display: none; /* Ocultar en Chrome/Safari */
+}
+
+.category-btn {
+    background: white;
+    border: 1px solid var(--color-border);
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition-fast);
+}
+
+.category-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.category-btn.active {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(235, 87, 87, 0.15);
+}
+
+/* Grid de Platos */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.menu-card {
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+}
+
+.menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-light);
+}
+
+.card-badge-container {
+    padding: 1rem 1rem 0 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.category-badge {
+    background-color: hsl(24, 20%, 94%);
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+}
+
+.status-available {
+    background-color: hsl(145, 63%, 94%);
+    color: var(--color-success);
+}
+
+.status-unavailable {
+    background-color: hsl(354, 70%, 94%);
+    color: var(--color-danger);
+}
+
+.card-info {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    min-height: 2.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-desc {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.25rem;
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+}
+
+.card-price {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-text-main);
+}
+
+/* Platos agotados (Opacidad) */
+.menu-card.out-of-stock {
+    background-color: hsl(24, 10%, 96%);
+    opacity: 0.75;
+}
+
+.menu-card.out-of-stock .card-title,
+.menu-card.out-of-stock .card-price {
+    color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   CARRITO DE COMPRAS DESLIZANTE
+   ========================================================================== */
+
+.cart-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(24, 15, 15, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+.cart-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.cart-drawer {
+    position: absolute;
+    top: 0;
+    right: -450px;
+    width: 100%;
+    max-width: 450px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    transition: right var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cart-overlay.active .cart-drawer {
+    right: 0;
+}
+
+.cart-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    transition: var(--transition-fast);
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: var(--color-text-main);
+}
+
+.cart-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+/* Listado de Items en Carrito */
+.cart-items {
+    margin-bottom: 2rem;
+}
+
+.cart-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px dashed var(--color-border);
+}
+
+.cart-item-details h4 {
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.cart-item-details span {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.cart-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: white;
+    overflow: hidden;
+}
+
+.quantity-controls button {
+    background: none;
+    border: none;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.quantity-controls button:hover {
+    background-color: var(--color-border);
+}
+
+.quantity-controls span {
+    padding: 0 0.5rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.cart-item-total {
+    font-weight: 700;
+    font-size: 0.95rem;
+    min-width: 70px;
+    text-align: right;
+}
+
+.cart-empty {
+    text-align: center;
+    padding: 3rem 0;
+    color: var(--color-text-muted);
+}
+
+.empty-emoji {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+/* -- MÉTODO DE ENTREGA -- */
+.delivery-section {
+    margin-bottom: 2rem;
+}
+
+.delivery-section h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.delivery-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.delivery-card {
+    cursor: pointer;
+    position: relative;
+}
+
+.delivery-card input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.delivery-card-content {
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background-color: white;
+    transition: var(--transition-fast);
+}
+
+.delivery-card input:checked + .delivery-card-content {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
+}
+
+.delivery-emoji {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.delivery-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.delivery-price {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.15rem;
+}
+
+.delivery-card input:checked + .delivery-card-content .delivery-price {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* -- ENVÍO GRATIS INDICADOR (BARRA DE PROGRESO) -- */
+.free-shipping-progress {
+    background-color: var(--color-primary-light);
+    border: 1px solid hsl(16, 95%, 88%);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 2rem;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background-color: hsl(16, 20%, 90%);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    transition: width var(--transition-normal);
+}
+
+/* Resumen del Carrito */
+.cart-summary {
+    background-color: hsl(24, 15%, 97%);
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-muted);
+}
+
+.summary-row.total-row {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-text-main);
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+}
+
+.text-success {
+    color: var(--color-success) !important;
+    font-weight: 700;
+}
+
+.cart-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+/* ==========================================================================
+   MODALES Y FORMULARIOS DE CHECKOUT
+   ========================================================================== */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(24, 15, 15, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-normal), visibility var(--transition-normal);
+    padding: 1rem;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-card {
+    background: white;
+    width: 100%;
+    max-width: 600px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(20px);
+    transition: transform var(--transition-normal);
+}
+
+.modal-overlay.active .modal-card {
+    transform: translateY(0);
+}
+
+.modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 1.25rem;
+}
+
+.modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+/* Formularios */
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-section h3 {
+    font-size: 1.05rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    color: var(--color-text-main);
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    transition: var(--transition-fast);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+}
+
+/* Opciones de Método de Pago */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.payment-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: var(--transition-fast);
+}
+
+.payment-option:hover {
+    background-color: var(--color-bg-client);
+}
+
+.payment-option input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-primary);
+}
+
+/* Formulario de tarjeta simulado */
+.card-details-form {
+    background-color: hsl(24, 10%, 97%);
+    padding: 1.25rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    margin-top: 1rem;
+}
+
+.card-details-form h4 {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    color: var(--color-text-muted);
+}
+
+/* Cuotas */
+.installments-section {
+    margin-top: 1.25rem;
+    border-top: 1px dashed var(--color-border);
+    padding-top: 1.25rem;
+}
+
+.installments-preview {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background-color: white;
+    border-left: 4px solid var(--color-accent);
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.installments-hint {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.15rem;
+    display: inline-block;
+}
+
+/* Success Card Modal */
+.success-card {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    max-width: 450px;
+}
+
+.success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.order-details-box {
+    background-color: var(--color-bg-client);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    text-align: left;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+}
+
+.order-details-box p {
+    margin-bottom: 0.5rem;
+}
+
+.order-details-box p:last-child {
+    margin-bottom: 0;
+}
+
+.order-total-success {
+    font-size: 1.1rem;
+    font-weight: 800;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    color: var(--color-primary);
+}
+
+.whatsapp-simulation-notification {
+    background-color: var(--color-primary-light);
+    border: 1px solid hsl(16, 95%, 88%);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-main);
+    text-align: left;
+}
+
+/* ==========================================================================
+   INTERFAZ DE ADMINISTRACIÓN (BACKOFFICE)
+   ========================================================================== */
+
+/* Pestañas */
+.admin-header-tabs {
+    background-color: white;
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 57px; /* Debajo de navbar */
+    z-index: 90;
+    box-shadow: var(--shadow-sm);
+}
+
+.tabs-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+}
+
+.admin-tab-btn {
+    background: none;
+    border: none;
+    padding: 1rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    color: var(--color-text-muted);
+    transition: var(--transition-fast);
+}
+
+.admin-tab-btn:hover {
+    color: var(--color-primary);
+}
+
+.admin-tab-btn.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+.admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.admin-tab-content {
+    display: none;
+}
+
+.admin-tab-content.active {
+    display: block;
+}
+
+/* Tablero Kanban */
+.kanban-wrapper {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+    align-items: start;
+    overflow-x: auto;
+    padding-bottom: 1.5rem;
+}
+
+/* Para garantizar legibilidad en pantallas chicas, permitimos scroll horizontal */
+@media (max-width: 1200px) {
+    .kanban-wrapper {
+        grid-template-columns: repeat(6, 300px);
+    }
+}
+
+.kanban-column {
+    background-color: hsl(210, 20%, 94%);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.kanban-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid var(--color-border);
+}
+
+.kanban-column-header h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.column-count {
+    background-color: var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.column-count.has-orders {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+/* Encabezados coloreados por estado */
+.col-pendiente-h { border-bottom-color: var(--color-state-pendiente); }
+.col-confirmado-h { border-bottom-color: var(--color-state-confirmado); }
+.col-preparacion-h { border-bottom-color: var(--color-state-preparacion); }
+.col-listo-h { border-bottom-color: var(--color-state-listo); }
+.col-camino-h { border-bottom-color: var(--color-state-camino); }
+.col-entregado-h { border-bottom-color: var(--color-state-entregado); }
+
+.kanban-cards-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow-y: auto;
+    max-height: 600px;
+}
+
+/* Tarjeta Kanban */
+.kanban-card {
+    background-color: white;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    padding: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-fast);
+}
+
+.kanban-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.card-header-comanda {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.comanda-id {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.comanda-delivery-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+}
+
+.comanda-delivery-badge.envio {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.comanda-delivery-badge.retiro {
+    background-color: hsl(38, 90%, 94%);
+    color: var(--color-accent-hover);
+}
+
+.card-body-comanda {
+    margin-bottom: 0.75rem;
+}
+
+.comanda-cliente {
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+}
+
+.comanda-meta {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.comanda-total {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--color-text-main);
+}
+
+.card-actions-comanda {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.5rem;
+}
+
+.kanban-nav-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.kanban-nav-btn {
+    border: 1px solid var(--color-border);
+    background-color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+}
+
+.kanban-nav-btn:hover {
+    background-color: var(--color-border);
+}
+
+.kanban-nav-btn.primary {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.kanban-nav-btn.primary:hover {
+    background-color: var(--color-primary-hover);
+}
+
+/* Tarjeta Estándar Admin */
+.admin-card {
+    background-color: white;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+}
+
+.admin-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.admin-card-description {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.admin-grid-two-cols {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .admin-grid-two-cols {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Tabla de Stock */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.stock-table th, 
+.stock-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.9rem;
+}
+
+.stock-table th {
+    font-weight: 700;
+    background-color: hsl(24, 10%, 98%);
+    color: var(--color-text-muted);
+}
+
+.stock-plate-name {
+    font-weight: 600;
+}
+
+/* Switch Toggle (Control de Stock) */
+.switch-toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.switch-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-border);
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.switch-toggle input:checked + .switch-slider {
+    background-color: var(--color-success);
+}
+
+.switch-toggle input:checked + .switch-slider:before {
+    transform: translateX(20px);
+}
+
+/* Caja de Resumen de Reglas */
+.rules-card {
+    background-color: hsl(24, 20%, 97%);
+}
+
+.rules-summary-box {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.rule-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.rule-label {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+.rule-value {
+    font-size: 0.95rem;
+    color: var(--color-text-main);
+    font-weight: 500;
+}
+
+.alert-box {
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    border-left: 4px solid transparent;
+}
+
+.alert-info {
+    background-color: hsl(200, 75%, 95%);
+    border-left-color: var(--color-info);
+    color: hsl(200, 75%, 20%);
+}
+
+.alert-warning {
+    background-color: hsl(45, 85%, 95%);
+    border-left-color: var(--color-warning);
+    color: hsl(45, 85%, 20%);
+}
+
+/* Modales en Detalle de Pedido (Admin) */
+.detail-section {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 1.5rem;
+}
+
+.detail-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.detail-section h3 {
+    font-size: 0.95rem;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+}
+
+.detail-grid-two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.detail-products-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+.detail-products-table th,
+.detail-products-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.detail-products-table th {
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   CONSOLA DE SIMULACIÓN DE WHATSAPP BUSINESS
+   ========================================================================== */
+
+.whatsapp-logs-section {
+    margin-top: 2rem;
+}
+
+.logs-card {
+    background-color: hsl(210, 30%, 12%); /* Fondo consola muy oscuro */
+    color: hsl(210, 15%, 85%);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.logs-card h2,
+.logs-card .admin-card-description {
+    color: white;
+}
+
+.logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.logs-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.wa-indicator {
+    font-size: 0.8rem;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+}
+
+.logs-console {
+    background-color: hsl(210, 30%, 8%);
+    border: 1px solid hsl(210, 20%, 20%);
+    border-radius: var(--radius-sm);
+    min-height: 180px;
+    max-height: 350px;
+    overflow-y: auto;
+    font-family: 'Courier New', Courier, monospace;
+    padding: 1rem;
+    font-size: 0.8rem;
+}
+
+.console-empty {
+    color: hsl(210, 10%, 50%);
+    text-align: center;
+    padding: 4rem 0;
+}
+
+.log-item {
+    border-bottom: 1px solid hsl(210, 20%, 15%);
+    padding: 0.75rem 0;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.log-item:last-child {
+    border-bottom: none;
+}
+
+.log-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.log-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.log-badge.Confirmado { background-color: var(--color-state-confirmado); color: white; }
+.log-badge.En\ Camino { background-color: var(--color-state-camino); color: white; }
+.log-badge.Listo\ para\ Entregar { background-color: var(--color-state-listo); color: white; }
+
+.log-summary {
+    flex-grow: 1;
+    margin-left: 0.75rem;
+    color: hsl(210, 10%, 80%);
+}
+
+.log-time {
+    color: hsl(210, 10%, 50%);
+    font-size: 0.75rem;
+    margin-right: 0.75rem;
+}
+
+.log-arrow {
+    color: hsl(210, 10%, 50%);
+    font-size: 0.7rem;
+}
+
+.log-details-block {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background-color: hsl(210, 30%, 5%);
+    border-radius: 4px;
+    border-left: 3px solid var(--color-primary);
+}
+
+.msg-preview {
+    color: hsl(38, 90%, 65%);
+    margin-bottom: 0.5rem;
+}
+
+.request-details {
+    margin-top: 0.5rem;
+    border-top: 1px dashed hsl(210, 20%, 20%);
+    padding-top: 0.5rem;
+}
+
+.request-details h5 {
+    color: hsl(200, 75%, 70%);
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+    font-family: inherit;
+}
+
+.request-details pre {
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: hsl(120, 40%, 70%);
+    font-family: inherit;
+}
+
+/* Responsive general */
+@media (max-width: 600px) {
+    .hero-banner h1 {
+        font-size: 1.8rem;
+    }
+    .hero-banner p {
+        font-size: 0.95rem;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .nav-container {
+        padding: 0 1rem;
+    }
+    .cart-drawer {
+        max-width: 100%;
+    }
+    .delivery-options {
+        grid-template-columns: 1fr;
+    }
+}
