@@ -3,714 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carta Digital - El Quincho Porteño</title>
+    <title>ComandaFlow | Sistema de Pedidos y Menú Digital para Restaurantes</title>
     <!-- Google Fonts para tipografía premium -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="app.css">
 </head>
-<body>
-    <!-- Barra de Navegación Premium -->
-    <nav class="navbar">
+<body class="landing-body">
+    <!-- Navbar de la Landing Page -->
+    <nav class="navbar landing-navbar">
         <div class="nav-container">
             <a href="index.html" class="nav-brand">
-                <span class="brand-emoji">🍕</span>
-                <span id="nav-restaurant-name">El Quincho Porteño</span>
+                <span class="brand-emoji">⚡</span>
+                <span class="brand-text">ComandaFlow</span>
             </a>
-            <div class="nav-actions">
-                <a href="admin.html" class="btn btn-secondary btn-sm nav-link-admin">
-                    <span>Panel de Cocina 🍳</span>
-                </a>
-                <button class="cart-trigger" id="cart-trigger" onclick="toggleCart()">
-                    <span class="cart-icon">🛒</span>
-                    <span class="cart-badge" id="cart-badge">0</span>
-                </button>
+            <div class="nav-actions landing-nav-links">
+                <a href="#features" class="nav-link-landing">Características</a>
+                <a href="#how-it-works" class="nav-link-landing">Cómo Funciona</a>
+                <a href="#pricing" class="nav-link-landing">Precios</a>
+                <a href="#demos" class="btn btn-primary btn-sm btn-landing-cta">Ver Demos 🚀</a>
             </div>
         </div>
     </nav>
 
-    <!-- Banner Principal Gastronómico -->
-    <header class="hero-banner">
-        <div class="hero-content">
-            <span class="hero-tagline">El verdadero sabor argentino</span>
-            <h1>¡Hacé tu pedido online!</h1>
-            <p>Comidas caseras listas para retirar o enviar directo a tu mesa.</p>
+    <!-- Hero Section -->
+    <header class="landing-hero">
+        <div class="hero-bg-glow"></div>
+        <div class="landing-hero-content">
+            <span class="hero-badge-pill">⚡ Acelerá un 80% tus pedidos</span>
+            <h1>El sistema de pedidos online y comandas para tu restaurante</h1>
+            <p>Automatizá las comandas de tu cocina en tiempo real, recibí pedidos directo por WhatsApp y gestioná tu stock en segundos. Sin pagar comisiones abusivas.</p>
+            
+            <div class="hero-cta-group">
+                <a href="menu.html" target="_blank" class="btn btn-primary btn-lg">
+                    <span>Probar Demo Cliente 📱</span>
+                </a>
+                <a href="admin.html" target="_blank" class="btn btn-secondary btn-lg">
+                    <span>Ver Panel Cocina 🍳</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Vista previa interactiva de dispositivo (CSS Mockup) -->
+        <div class="hero-mockup-container">
+            <div class="phone-mockup">
+                <div class="phone-speaker"></div>
+                <div class="phone-screen">
+                    <div class="mock-nav">
+                        <span>🍔 El Quincho Porteño</span>
+                        <span class="mock-cart">🛒 <small class="mock-badge">2</small></span>
+                    </div>
+                    <div class="mock-hero"></div>
+                    <div class="mock-categories">
+                        <span class="mock-cat active">Todos</span>
+                        <span class="mock-cat">Entradas</span>
+                        <span class="mock-cat">Principales</span>
+                    </div>
+                    <div class="mock-list">
+                        <div class="mock-item">
+                            <div class="mock-item-text">
+                                <h5>Pizza Especial</h5>
+                                <p>$6.500</p>
+                            </div>
+                            <span class="mock-btn-add">+</span>
+                        </div>
+                        <div class="mock-item">
+                            <div class="mock-item-text">
+                                <h5>Empanada Carne</h5>
+                                <p>$950</p>
+                            </div>
+                            <span class="mock-btn-add">+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mockup de Cocina (Kanban) -->
+            <div class="kitchen-mockup">
+                <div class="mock-kitchen-header">
+                    <span>🍳 Panel Cocina (Comandas)</span>
+                </div>
+                <div class="mock-kanban">
+                    <div class="mock-col">
+                        <h6>Pendiente (1)</h6>
+                        <div class="mock-card">
+                            <div class="mock-card-header">#PED-1934 🛵</div>
+                            <p>Juan P. • 2 platos</p>
+                            <span class="mock-badge-status ready">Avanzar ▶</span>
+                        </div>
+                    </div>
+                    <div class="mock-col">
+                        <h6>En Prep (1)</h6>
+                        <div class="mock-card">
+                            <div class="mock-card-header">#PED-4820 🏪</div>
+                            <p>María L. • 3 platos</p>
+                            <span class="mock-badge-status in-prep">Preparando</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
-    <!-- Contenido Principal -->
-    <main class="main-container">
-        <!-- Filtros de Categorías -->
-        <div class="categories-bar">
-            <button class="category-btn active" onclick="filtrarCategoria('Todos', this)">Todos</button>
-            <button class="category-btn" onclick="filtrarCategoria('Entrada', this)">Entradas</button>
-            <button class="category-btn" onclick="filtrarCategoria('Principal', this)">Principales</button>
-            <button class="category-btn" onclick="filtrarCategoria('Postre', this)">Postres</button>
-            <button class="category-btn" onclick="filtrarCategoria('Bebida', this)">Bebidas</button>
-        </div>
-
-        <!-- Grid de Platos -->
-        <section class="menu-grid" id="menu-grid">
-            <!-- Renderizado dinámico desde app.js -->
-        </section>
-    </main>
-
-    <!-- -- SECCIÓN INTERACTIVA: CARRITO DE COMPRAS DESLIZANTE -- -->
-    <div class="cart-overlay" id="cart-overlay" onclick="closeCartOutside(event)">
-        <div class="cart-drawer">
-            <div class="cart-header">
-                <h2>Tu Pedido</h2>
-                <button class="close-btn" onclick="toggleCart()">&times;</button>
-            </div>
-            
-            <div class="cart-body">
-                <!-- Items del Carrito -->
-                <div class="cart-items" id="cart-items-container">
-                    <!-- Se carga dinámicamente -->
-                </div>
-
-                <!-- Métodos de Entrega (Reglas de Negocio Argentinas) -->
-                <div class="delivery-section">
-                    <h3>Método de Entrega</h3>
-                    <div class="delivery-options">
-                        <label class="delivery-card">
-                            <input type="radio" name="tipo_entrega" value="retiro" onchange="actualizarEntrega()" checked>
-                            <div class="delivery-card-content">
-                                <span class="delivery-emoji">🏪</span>
-                                <span class="delivery-title">Retiro por local</span>
-                                <span class="delivery-price">Gratis</span>
-                            </div>
-                        </label>
-                        <label class="delivery-card">
-                            <input type="radio" name="tipo_entrega" value="envio" onchange="actualizarEntrega()">
-                            <div class="delivery-card-content">
-                                <span class="delivery-emoji">🛵</span>
-                                <span class="delivery-title">Envío a domicilio</span>
-                                <span class="delivery-price" id="envio-badge-costo">$800</span>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- -- LÓGICA ENVÍO GRATIS INDICADOR -- -->
-                <div class="free-shipping-progress" id="free-shipping-progress-container" style="display: none;">
-                    <div class="progress-info">
-                        <span id="progress-text">¡Sumá $8.000 para envío GRATIS!</span>
-                        <span id="progress-percent-text">0%</span>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
-                    </div>
-                </div>
-
-                <!-- Resumen de Costos -->
-                <div class="cart-summary">
-                    <div class="summary-row">
-                        <span>Subtotal</span>
-                        <span id="summary-subtotal">$0</span>
-                    </div>
-                    <div class="summary-row" id="summary-row-envio">
-                        <span>Costo de Envío</span>
-                        <span id="summary-envio">$0</span>
-                    </div>
-                    <hr>
-                    <div class="summary-row total-row">
-                        <span>Total</span>
-                        <span id="summary-total">$0</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="cart-footer">
-                <button class="btn btn-primary btn-block" id="btn-checkout" onclick="openCheckout()" disabled>
-                    Proceder al Pago 💳
-                </button>
+    <!-- Logo Carousel (Restaurantes que usan la plataforma) -->
+    <section class="brand-ribbon-section">
+        <div class="ribbon-title">Marcas gastronómicas que confían en ComandaFlow</div>
+        <div class="logo-slider-container">
+            <div class="logo-slider-track">
+                <!-- Slide 1 -->
+                <div class="logo-slide">🍕 Bella Italia</div>
+                <div class="logo-slide">🍔 Burger Zone</div>
+                <div class="logo-slide">🌮 Taco Loco</div>
+                <div class="logo-slide">🍣 Sushi Wave</div>
+                <div class="logo-slide">🥩 Parrilla Don Julio</div>
+                <div class="logo-slide">🍺 Beer Garden</div>
+                <div class="logo-slide">🧁 Sweet Palace</div>
+                <div class="logo-slide">🌯 Wrap & Roll</div>
+                <!-- Duplicate for loop -->
+                <div class="logo-slide">🍕 Bella Italia</div>
+                <div class="logo-slide">🍔 Burger Zone</div>
+                <div class="logo-slide">🌮 Taco Loco</div>
+                <div class="logo-slide">🍣 Sushi Wave</div>
+                <div class="logo-slide">🥩 Parrilla Don Julio</div>
+                <div class="logo-slide">🍺 Beer Garden</div>
+                <div class="logo-slide">🧁 Sweet Palace</div>
+                <div class="logo-slide">🌯 Wrap & Roll</div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- -- SECCIÓN INTERACTIVA: MODAL DE CHECKOUT Y PASARELA -- -->
-    <div class="modal-overlay" id="checkout-modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>Finalizar Compra</h2>
-                <button class="close-btn" onclick="closeCheckout()">&times;</button>
-            </div>
-            
-            <form id="checkout-form" onsubmit="procesarPago(event)">
-                <div class="modal-body">
-                    <!-- Datos de Contacto del Cliente -->
-                    <div class="form-section">
-                        <h3>1. Datos de Contacto</h3>
-                        <div class="form-group">
-                            <label for="cliente-nombre">Nombre y Apellido *</label>
-                            <input type="text" id="cliente-nombre" required placeholder="Ej: Juan Pérez">
-                        </div>
-                        <div class="form-group">
-                            <label for="cliente-telefono">WhatsApp (Formato Argentino) *</label>
-                            <input type="tel" id="cliente-telefono" required placeholder="Ej: +54 9 11 3245 6789" value="+54 9 ">
-                            <small class="form-hint">Debe incluir código de área sin el 15. Ej: +54 9 11...</small>
-                        </div>
-                        <div class="form-group" id="direccion-group" style="display: none;">
-                            <label for="cliente-direccion">Dirección de Entrega *</label>
-                            <input type="text" id="cliente-direccion" placeholder="Ej: Av. Corrientes 1234, 4° B">
-                        </div>
-                        <div class="form-group">
-                            <label for="cliente-agenda">Programar Pedido (Opcional)</label>
-                            <input type="datetime-local" id="cliente-agenda">
-                            <small class="form-hint">Dejalo en blanco para recibirlo lo antes posible.</small>
-                        </div>
-                    </div>
-
-                    <!-- Pasarela de Pago Simulada (Checkout Argentino) -->
-                    <div class="form-section">
-                        <h3>2. Método de Pago</h3>
-                        <div class="payment-methods">
-                            <label class="payment-option">
-                                <input type="radio" name="metodo_pago" value="efectivo" onchange="actualizarMetodoPago()" checked>
-                                <span>💵 Efectivo / Transferencia</span>
-                            </label>
-                            <label class="payment-option">
-                                <input type="radio" name="metodo_pago" value="debito" onchange="actualizarMetodoPago()">
-                                <span>💳 Tarjeta de Débito</span>
-                            </label>
-                            <label class="payment-option">
-                                <input type="radio" name="metodo_pago" value="credito" onchange="actualizarMetodoPago()">
-                                <span>💳 Tarjeta de Crédito</span>
-                            </label>
-                        </div>
-
-                        <!-- Formulario de Tarjeta Seguro (Simulado) -->
-                        <div id="card-form-container" style="display: none;" class="card-details-form">
-                            <h4>Datos de la Tarjeta</h4>
-                            <div class="form-group">
-                                <label>Nombre del Titular (Como figura en la tarjeta)</label>
-                                <input type="text" id="card-name" placeholder="Ej: JUAN PEREZ">
-                            </div>
-                            <div class="form-group">
-                                <label>Número de Tarjeta</label>
-                                <input type="text" id="card-number" placeholder="4517 8400 0000 0000" maxlength="19">
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Vencimiento</label>
-                                    <input type="text" id="card-expiry" placeholder="MM/AA" maxlength="5">
-                                </div>
-                                <div class="form-group">
-                                    <label>CVV / Cód. Seguridad</label>
-                                    <input type="password" id="card-cvv" placeholder="123" maxlength="4">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Banco Emisor</label>
-                                <select id="card-bank">
-                                    <option value="Galicia">Banco Galicia</option>
-                                    <option value="Santander">Banco Santander</option>
-                                    <option value="BBVA">Banco BBVA</option>
-                                    <option value="Macro">Banco Macro</option>
-                                    <option value="Provincia">Banco Provincia</option>
-                                    <option value="Nacion">Banco Nación</option>
-                                    <option value="Otro">Otro Banco / Digital</option>
-                                </select>
-                            </div>
-
-                            <!-- -- LÓGICA DE CUOTAS (SOLO CRÉDITO) -- -->
-                            <div id="installments-container" style="display: none;" class="installments-section">
-                                <label for="card-installments">Cantidad de Cuotas</label>
-                                <select id="card-installments" onchange="actualizarCalculoCuotas()">
-                                    <option value="1">1 pago sin interés</option>
-                                    <option value="3">3 cuotas con interés</option>
-                                    <option value="6">6 cuotas con interés</option>
-                                    <option value="12">12 cuotas con interés</option>
-                                </select>
-                                <div class="installments-preview" id="installments-preview-box">
-                                    <!-- Se calcula dinámicamente -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeCheckout()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btn-confirmar-compra">Confirmar Pedido 🚀</button>
-                </div>
-            </form>
+    <!-- Features Section -->
+    <section id="features" class="landing-features">
+        <div class="section-header">
+            <h2>Todo lo que necesitás para digitalizar tu negocio</h2>
+            <p>Diseñado especialmente para restaurantes, cafeterías, dark kitchens y locales de comida.</p>
         </div>
-    </div>
 
-    <!-- Modal de Compra Exitosa -->
-    <div class="modal-overlay" id="success-modal">
-        <div class="modal-card success-card">
-            <div class="success-icon">🎉</div>
-            <h2>¡Pedido Recibido!</h2>
-            <p>Tu comanda ha sido enviada a la cocina.</p>
-            
-            <div class="order-details-box" id="success-order-details">
-                <!-- Se llena dinámicamente -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Carta Digital QR</h3>
+                <p>Tus clientes escanean el código en la mesa o acceden desde tus redes sociales para ver el menú digital. Diseño ultra rápido, intuitivo y optimizado para celulares.</p>
             </div>
-
-            <div class="whatsapp-simulation-notification">
-                <p><strong>Simulación WhatsApp:</strong> Recibirás un mensaje de confirmación en breve en tu número registrado.</p>
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Pedidos por WhatsApp</h3>
+                <p>El cliente arma su pedido en el carrito y, al finalizar, se genera un mensaje de WhatsApp perfectamente estructurado con sus datos, método de pago y dirección.</p>
             </div>
-
-            <button class="btn btn-primary btn-block" onclick="cerrarSuccessModal()">Seguir Comprando 🍕</button>
+            <div class="feature-card">
+                <div class="feature-icon">🍳</div>
+                <h3>Tablero de Control para Cocina</h3>
+                <p>Un panel Kanban interactivo en tiempo real. La cocina recibe el pedido, lo confirma, lo prepara y lo marca como listo para entregar o enviar en camino.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚙️</div>
+                <h3>Configuración Flexible</h3>
+                <p>Definí el costo de envío, el monto mínimo para envío gratis, el recargo por financiación de tarjetas en cuotas, y activá/desactivá stock de platos al instante.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💸</div>
+                <h3>Sin Comisiones por Venta</h3>
+                <p>Olvidate de las comisiones del 20% o 30% de las apps tradicionales. El sistema es tuyo por una suscripción fija mensual de bajo costo.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Seguro y Simulable</h3>
+                <p>Incluye un simulador transaccional de WhatsApp Cloud API en el panel de control para que verifiques en tiempo real los avisos automáticos a tus clientes.</p>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <script src="app.js"></script>
-    <script>
-        // Carrito de compras local (memoria de página)
-        let cart = [];
-        let categoriaSeleccionada = 'Todos';
+    <!-- Demos Interactivas -->
+    <section id="demos" class="landing-demos-section">
+        <div class="section-header">
+            <h2>Probá las Demos Interactivas del Sistema</h2>
+            <p>Explorá cómo interactúan las dos caras de la plataforma en tiempo real. Hacé un pedido en el menú de cliente y mirá cómo llega al panel de cocina al instante.</p>
+        </div>
 
-        // Cargar platos de localStorage e iniciar renders
-        document.addEventListener('DOMContentLoaded', () => {
-            inicializarVista();
-            
-            // Escuchar actualizaciones del menú (ej: cambios de stock de admin)
-            window.addEventListener('menuUpdated', inicializarVista);
-            window.addEventListener('configUpdated', () => {
-                inicializarVista();
-                actualizarTotalesCarrito();
-            });
-        });
+        <div class="demos-grid">
+            <div class="demo-card-box">
+                <div class="demo-badge">VISTA CLIENTE</div>
+                <h3>📱 Menú Digital (Carta)</h3>
+                <p>Simulá ser un cliente del restaurante. Navegá entre categorías, agregá platos al carrito, seleccioná envío o retiro, calculá cuotas y realizá tu pedido simulado.</p>
+                <a href="menu.html" target="_blank" class="btn btn-primary btn-block">Abrir Carta Digital Cliente 📱</a>
+            </div>
 
-        function inicializarVista() {
-            renderMenu();
-            actualizarTotalesCarrito();
-            actualizarNombreRestaurante();
-        }
+            <div class="demo-card-box kitchen-demo">
+                <div class="demo-badge admin">VISTA COCINA</div>
+                <h3>🍳 Panel Kanban de Cocina</h3>
+                <p>Simulá ser el administrador o cocinero. Gestioná los pedidos entrantes a través de las columnas de Kanban, controlá el stock de platos y ajustá las tarifas del local.</p>
+                <a href="admin.html" target="_blank" class="btn btn-secondary btn-block">Abrir Panel de Cocina 🍳</a>
+            </div>
+        </div>
+    </section>
 
-        function actualizarNombreRestaurante() {
-            const config = obtenerConfig();
-            document.getElementById('nav-restaurant-name').innerText = config.restauranteNombre;
-            document.title = `Carta Digital - ${config.restauranteNombre}`;
-        }
+    <!-- How It Works -->
+    <section id="how-it-works" class="landing-how">
+        <div class="section-header">
+            <h2>¿Cómo funciona ComandaFlow?</h2>
+            <p>Implementar nuestro sistema es sumamente sencillo y rápido.</p>
+        </div>
 
-        // Renderizado del menú
-        function renderMenu() {
-            const grid = document.getElementById('menu-grid');
-            const menu = obtenerMenu();
-            grid.innerHTML = '';
+        <div class="steps-flow">
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <h4>Escaneo de QR</h4>
+                <p>El comensal escanea el código QR en la mesa o ingresa al enlace web del restaurante.</p>
+            </div>
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <h4>Selección y Pedido</h4>
+                <p>Arma su orden y selecciona su método de entrega (envío a domicilio o retiro) y método de pago.</p>
+            </div>
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <h4>Notificación Directa</h4>
+                <p>El pedido ingresa al Panel de la cocina y se genera el mensaje transaccional directo para WhatsApp.</p>
+            </div>
+            <div class="step-item">
+                <div class="step-number">4</div>
+                <h4>Cocina y Despacho</h4>
+                <p>El staff procesa la comanda visualmente en el Kanban de cocina hasta que sale del local.</p>
+            </div>
+        </div>
+    </section>
 
-            const itemsFiltrados = menu.filter(item => 
-                categoriaSeleccionada === 'Todos' || item.categoria === categoriaSeleccionada
-            );
+    <!-- Pricing Section -->
+    <section id="pricing" class="landing-pricing">
+        <div class="section-header">
+            <h2>Planes simples y transparentes</h2>
+            <p>Comenzá hoy mismo sin contratos a largo plazo ni costos de instalación.</p>
+        </div>
 
-            if (itemsFiltrados.length === 0) {
-                grid.innerHTML = `<p class="no-items">No hay platos disponibles en esta categoría.</p>`;
-                return;
-            }
+        <div class="pricing-cards-container">
+            <div class="pricing-card">
+                <h3>Plan Básico</h3>
+                <div class="price">$15.000 <span>/ mes</span></div>
+                <p class="plan-desc">Ideal para cafeterías o locales que recién comienzan.</p>
+                <ul class="plan-features">
+                    <li>✔️ Menú Digital QR ilimitado</li>
+                    <li>✔️ Pedidos directos a WhatsApp</li>
+                    <li>✔️ Soporte por correo</li>
+                    <li>❌ Panel Kanban de Cocina</li>
+                    <li>❌ Reglas de negocio avanzadas</li>
+                </ul>
+                <a href="#demos" class="btn btn-secondary btn-block">Probar Demo</a>
+            </div>
 
-            itemsFiltrados.forEach(plato => {
-                const card = document.createElement('article');
-                card.className = `menu-card ${!plato.disponible ? 'out-of-stock' : ''}`;
-                
-                // Formato de precio ARS
-                const precioFormateado = plato.precio.toLocaleString('es-AR', {
-                    style: 'currency',
-                    currency: 'ARS',
-                    minimumFractionDigits: 0
-                });
+            <div class="pricing-card popular">
+                <div class="popular-ribbon">MÁS ELEGIDO</div>
+                <h3>Plan Full Premium</h3>
+                <div class="price">$25.000 <span>/ mes</span></div>
+                <p class="plan-desc">Perfecto para restaurantes y cocinas con alto volumen de comandas.</p>
+                <ul class="plan-features">
+                    <li>✔️ Menú Digital QR ilimitado</li>
+                    <li>✔️ Pedidos directos a WhatsApp</li>
+                    <li>✔️ **Panel Kanban de Cocina en tiempo real**</li>
+                    <li>✔️ Gestión de stock y disponibilidad</li>
+                    <li>✔️ Reglas de negocio (envíos, cuotas, etc.)</li>
+                    <li>✔️ Soporte prioritario por WhatsApp</li>
+                </ul>
+                <a href="#demos" class="btn btn-primary btn-block">Probar Demo Gratis</a>
+            </div>
 
-                card.innerHTML = `
-                    <div class="card-badge-container">
-                        <span class="category-badge">${plato.categoria}</span>
-                        ${plato.disponible 
-                            ? '<span class="status-badge status-available">Disponible</span>' 
-                            : '<span class="status-badge status-unavailable">Agotado</span>'}
-                    </div>
-                    <div class="card-info">
-                        <h3 class="card-title">${plato.nombre}</h3>
-                        <p class="card-desc">${plato.descripcion}</p>
-                        <div class="card-footer-row">
-                            <span class="card-price">${precioFormateado}</span>
-                            <button class="btn btn-primary btn-sm btn-add" 
-                                    onclick="agregarAlCarrito(${plato.id})"
-                                    ${!plato.disponible ? 'disabled' : ''}>
-                                ${plato.disponible ? 'Agregar 🛒' : 'Sin Stock 🚫'}
-                            </button>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
+            <div class="pricing-card">
+                <h3>Multi-Sucursal</h3>
+                <div class="price">Consultar <span>/ mes</span></div>
+                <p class="plan-desc">Para franquicias y cadenas que requieren administración centralizada.</p>
+                <ul class="plan-features">
+                    <li>✔️ Todo lo del Plan Full Premium</li>
+                    <li>✔️ Múltiples locales integrados</li>
+                    <li>✔️ Panel de control global consolidado</li>
+                    <li>✔️ Integraciones con sistemas POS</li>
+                    <li>✔️ Gerente de cuenta dedicado</li>
+                </ul>
+                <a href="https://wa.me/5491132456789?text=Hola!%20Me%20interesa%20el%20plan%20multi-sucursal" target="_blank" class="btn btn-secondary btn-block">Consultar por WhatsApp</a>
+            </div>
+        </div>
+    </section>
 
-        function filtrarCategoria(cat, btn) {
-            categoriaSeleccionada = cat;
-            
-            // Actualizar clase activa del botón
-            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            renderMenu();
-        }
-
-        // -- MANEJO DEL CARRITO DE COMPRAS --
-
-        function toggleCart() {
-            const overlay = document.getElementById('cart-overlay');
-            overlay.classList.toggle('active');
-        }
-
-        function closeCartOutside(e) {
-            if (e.target.id === 'cart-overlay') {
-                toggleCart();
-            }
-        }
-
-        function agregarAlCarrito(id) {
-            const menu = obtenerMenu();
-            const plato = menu.find(p => p.id === id);
-
-            if (!plato || !plato.disponible) {
-                alert("Este plato no está disponible hoy.");
-                return;
-            }
-
-            // Validar si ya está en el carrito
-            const cartItem = cart.find(item => item.id === id);
-            if (cartItem) {
-                cartItem.cantidad++;
-            } else {
-                cart.push({
-                    id: plato.id,
-                    nombre: plato.nombre,
-                    precio: plato.precio,
-                    cantidad: 1
-                });
-            }
-
-            actualizarTotalesCarrito();
-            
-            // Micro-animación en la campana/badge del carrito
-            const badge = document.getElementById('cart-badge');
-            badge.classList.add('pulse');
-            setTimeout(() => badge.classList.remove('pulse'), 300);
-        }
-
-        function modificarCantidad(id, cambio) {
-            const cartItem = cart.find(item => item.id === id);
-            if (!cartItem) return;
-
-            cartItem.cantidad += cambio;
-            if (cartItem.cantidad <= 0) {
-                cart = cart.filter(item => item.id !== id);
-            }
-
-            actualizarTotalesCarrito();
-        }
-
-        function actualizarEntrega() {
-            actualizarTotalesCarrito();
-            
-            const tipoEntrega = obtenerTipoEntrega();
-            const direccionGroup = document.getElementById('direccion-group');
-            const direccionInput = document.getElementById('cliente-direccion');
-            
-            if (tipoEntrega === 'envio') {
-                direccionGroup.style.display = 'block';
-                direccionInput.setAttribute('required', 'required');
-            } else {
-                direccionGroup.style.display = 'none';
-                direccionInput.removeAttribute('required');
-            }
-        }
-
-        function obtenerTipoEntrega() {
-            const radios = document.getElementsByName('tipo_entrega');
-            for (let radio of radios) {
-                if (radio.checked) return radio.value;
-            }
-            return 'retiro';
-        }
-
-        function actualizarTotalesCarrito() {
-            const config = obtenerConfig();
-            
-            // Render de items en el carrito
-            const container = document.getElementById('cart-items-container');
-            container.innerHTML = '';
-            
-            let subtotal = 0;
-            let totalCantidad = 0;
-
-            cart.forEach(item => {
-                subtotal += item.precio * item.cantidad;
-                totalCantidad += item.cantidad;
-
-                const itemRow = document.createElement('div');
-                itemRow.className = 'cart-item-row';
-                
-                const itemTotal = (item.precio * item.cantidad).toLocaleString('es-AR', {
-                    style: 'currency', currency: 'ARS', minimumFractionDigits: 0
-                });
-
-                itemRow.innerHTML = `
-                    <div class="cart-item-details">
-                        <h4>${item.nombre}</h4>
-                        <span>${item.precio.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 })} c/u</span>
-                    </div>
-                    <div class="cart-item-actions">
-                        <div class="quantity-controls">
-                            <button onclick="modificarCantidad(${item.id}, -1)">-</button>
-                            <span>${item.cantidad}</span>
-                            <button onclick="modificarCantidad(${item.id}, 1)">+</button>
-                        </div>
-                        <span class="cart-item-total">${itemTotal}</span>
-                    </div>
-                `;
-                container.appendChild(itemRow);
-            });
-
-            if (cart.length === 0) {
-                container.innerHTML = `
-                    <div class="cart-empty">
-                        <span class="empty-emoji">🍕</span>
-                        <p>Tu carrito está vacío.</p>
-                        <p>Elegí algo rico para arrancar.</p>
-                    </div>
-                `;
-                document.getElementById('btn-checkout').setAttribute('disabled', 'disabled');
-            } else {
-                document.getElementById('btn-checkout').removeAttribute('disabled');
-            }
-
-            // Actualizar Badges
-            document.getElementById('cart-badge').innerText = totalCantidad;
-
-            // Calcular Envío Gratis e indicador visual
-            const tipoEntrega = obtenerTipoEntrega();
-            const costos = calcularCostosPedido(subtotal, tipoEntrega);
-
-            // Actualizar Badge de costo envío del selector
-            document.getElementById('envio-badge-costo').innerText = `$${config.costoEnvio.toLocaleString('es-AR')}`;
-
-            // Indicador de Envío Gratis
-            const shippingProgress = document.getElementById('free-shipping-progress-container');
-            if (tipoEntrega === 'envio' && subtotal > 0) {
-                shippingProgress.style.display = 'block';
-                const percent = Math.min(100, (subtotal / config.montoEnvioGratis) * 100);
-                document.getElementById('progress-bar-fill').style.width = `${percent}%`;
-                document.getElementById('progress-percent-text').innerText = `${Math.round(percent)}%`;
-
-                if (costos.envioGratis) {
-                    document.getElementById('progress-text').innerHTML = `¡Felicidades! Lograste <strong>Envío GRATIS</strong> 🎉`;
-                    document.getElementById('progress-bar-fill').style.backgroundColor = 'var(--color-success)';
-                } else {
-                    const faltaARS = costos.faltaParaGratis.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 });
-                    document.getElementById('progress-text').innerHTML = `Sumá <strong>${faltaARS}</strong> más para tener Envío GRATIS`;
-                    document.getElementById('progress-bar-fill').style.backgroundColor = 'var(--color-accent)';
-                }
-            } else {
-                shippingProgress.style.display = 'none';
-            }
-
-            // Resúmenes numéricos
-            document.getElementById('summary-subtotal').innerText = subtotal.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 });
-            
-            const shippingRow = document.getElementById('summary-row-envio');
-            if (tipoEntrega === 'retiro') {
-                shippingRow.style.display = 'none';
-            } else {
-                shippingRow.style.display = 'flex';
-                document.getElementById('summary-envio').innerText = costos.costoEnvio === 0 ? "GRATIS" : `$${costos.costoEnvio.toLocaleString('es-AR')}`;
-                if (costos.costoEnvio === 0) {
-                    document.getElementById('summary-envio').classList.add('text-success');
-                } else {
-                    document.getElementById('summary-envio').classList.remove('text-success');
-                }
-            }
-
-            document.getElementById('summary-total').innerText = costos.total.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 });
-        }
-
-        // -- PASARELA DE CHECKOUT --
-
-        function openCheckout() {
-            toggleCart(); // Cerrar el drawer del carrito
-            document.getElementById('checkout-modal').classList.add('active');
-            actualizarEntrega(); // Sincroniza dirección requerido/oculto
-            actualizarMetodoPago();
-        }
-
-        function closeCheckout() {
-            document.getElementById('checkout-modal').classList.remove('active');
-        }
-
-        function actualizarMetodoPago() {
-            const metodo = document.querySelector('input[name="metodo_pago"]:checked').value;
-            const cardForm = document.getElementById('card-form-container');
-            const installments = document.getElementById('installments-container');
-            
-            const cardName = document.getElementById('card-name');
-            const cardNumber = document.getElementById('card-number');
-            const cardExpiry = document.getElementById('card-expiry');
-            const cardCvv = document.getElementById('card-cvv');
-
-            if (metodo === 'efectivo') {
-                cardForm.style.display = 'none';
-                installments.style.display = 'none';
-                
-                // Quitar validaciones
-                cardName.removeAttribute('required');
-                cardNumber.removeAttribute('required');
-                cardExpiry.removeAttribute('required');
-                cardCvv.removeAttribute('required');
-            } else {
-                cardForm.style.display = 'block';
-                cardName.setAttribute('required', 'required');
-                cardNumber.setAttribute('required', 'required');
-                cardExpiry.setAttribute('required', 'required');
-                cardCvv.setAttribute('required', 'required');
-                
-                if (metodo === 'credito') {
-                    installments.style.display = 'block';
-                    actualizarCalculoCuotas();
-                } else {
-                    installments.style.display = 'none';
-                }
-            }
-        }
-
-        // Lógica de cuotas en tiempo real
-        function actualizarCalculoCuotas() {
-            const subtotal = cart.reduce((acc, curr) => acc + (curr.precio * curr.cantidad), 0);
-            const tipoEntrega = obtenerTipoEntrega();
-            const costos = calcularCostosPedido(subtotal, tipoEntrega);
-            
-            const cuotasSel = parseInt(document.getElementById('card-installments').value);
-            const calculo = calcularCuotas(costos.total, cuotasSel);
-
-            const preview = document.getElementById('installments-preview-box');
-            
-            const valorCuotaFormato = calculo.valorCuota.toLocaleString('es-AR', {
-                style: 'currency', currency: 'ARS', minimumFractionDigits: 2
-            });
-            const totalFinanciadoFormato = calculo.totalFinanciado.toLocaleString('es-AR', {
-                style: 'currency', currency: 'ARS', minimumFractionDigits: 0
-            });
-
-            if (cuotasSel === 1) {
-                preview.innerHTML = `<strong>1 cuota sin interés de ${valorCuotaFormato}</strong> (Total financiado: ${totalFinanciadoFormato})`;
-            } else {
-                preview.innerHTML = `
-                    <strong>${cuotasSel} cuotas de ${valorCuotaFormato}</strong><br>
-                    <span class="installments-hint">CFT: ${calculo.interesAplicado}% acumulado. Total financiado: ${totalFinanciadoFormato}</span>
-                `;
-            }
-        }
-
-        // Procesar pago y guardar comanda
-        function procesarPago(event) {
-            event.preventDefault();
-
-            const nombre = document.getElementById('cliente-nombre').value.trim();
-            const telefono = document.getElementById('cliente-telefono').value.trim();
-            const tipoEntrega = obtenerTipoEntrega();
-            const direccion = tipoEntrega === 'envio' ? document.getElementById('cliente-direccion').value.trim() : 'Retiro por local';
-            const agenda = document.getElementById('cliente-agenda').value;
-            const metodoPago = document.querySelector('input[name="metodo_pago"]:checked').value;
-
-            // Validación número de teléfono
-            if (!telefono.startsWith("+54")) {
-                alert("Por favor ingrese el número de teléfono con el código de país. Ej: +54 9 11...");
-                return;
-            }
-
-            const subtotal = cart.reduce((acc, curr) => acc + (curr.precio * curr.cantidad), 0);
-            const costos = calcularCostosPedido(subtotal, tipoEntrega);
-
-            // Detalles de tarjeta si aplica
-            let infoFinanciacion = null;
-            if (metodoPago === 'credito') {
-                const cuotasSel = parseInt(document.getElementById('card-installments').value);
-                const calculo = calcularCuotas(costos.total, cuotasSel);
-                infoFinanciacion = {
-                    cuotas: cuotasSel,
-                    valor_cuota: calculo.valorCuota,
-                    total_financiado: calculo.totalFinanciado,
-                    interes_aplicado: calculo.interesAplicado
-                };
-            }
-
-            const totalFinal = infoFinanciacion ? infoFinanciacion.total_financiado : costos.total;
-
-            // Modelo del pedido/comanda
-            const pedido = {
-                nombre_cliente: nombre,
-                telefono_cliente: telefono,
-                items: cart, // Guardar array estructurado
-                tipo_entrega: tipoEntrega,
-                direccion_entrega: direccion,
-                subtotal: subtotal,
-                costo_envio: costos.costoEnvio,
-                total: totalFinal,
-                metodo_pago: metodoPago,
-                financiacion: infoFinanciacion,
-                fecha_hora_entrega: agenda || 'Lo antes posible'
-            };
-
-            // Crear el pedido en el storage e inicializar el envío de notificación de WhatsApp simulado
-            const nuevoPedido = crearPedido(pedido);
-
-            // Cerrar checkout, limpiar carrito y renderizar éxito
-            closeCheckout();
-            cart = [];
-            actualizarTotalesCarrito();
-
-            mostrarSuccessModal(nuevoPedido);
-        }
-
-        function mostrarSuccessModal(pedido) {
-            const detailsBox = document.getElementById('success-order-details');
-            
-            const metodoTexto = pedido.metodo_pago === 'efectivo' 
-                ? 'Efectivo / Transferencia' 
-                : (pedido.metodo_pago === 'debito' ? 'Tarjeta de Débito' : `Tarjeta de Crédito (${pedido.financiacion.cuotas} cuotas)`);
-
-            detailsBox.innerHTML = `
-                <p><strong>Pedido ID:</strong> ${pedido.id_pedido}</p>
-                <p><strong>Cliente:</strong> ${pedido.nombre_cliente}</p>
-                <p><strong>Teléfono:</strong> ${pedido.telefono_cliente}</p>
-                <p><strong>Entrega:</strong> ${pedido.tipo_entrega === 'envio' ? 'Envío a domicilio' : 'Retiro por el local'}</p>
-                <p><strong>Método de Pago:</strong> ${metodoTexto}</p>
-                <p class="order-total-success">Total a Pagar: $${pedido.total.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</p>
-            `;
-
-            document.getElementById('success-modal').classList.add('active');
-        }
-
-        function cerrarSuccessModal() {
-            document.getElementById('success-modal').classList.remove('active');
-        }
-
-        // Formateador automático de tarjeta (añadir espacios)
-        document.getElementById('card-number').addEventListener('input', function (e) {
-            let val = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-            let matches = val.match(/\d{4,16}/g);
-            let match = matches && matches[0] || '';
-            let parts = [];
-
-            for (let i=0, len=match.length; i<len; i+=4) {
-                parts.push(match.substring(i, i+4));
-            }
-
-            if (parts.length > 0) {
-                e.target.value = parts.join(' ');
-            } else {
-                e.target.value = val;
-            }
-        });
-
-        // Formateador automático de vencimiento (añadir barra)
-        document.getElementById('card-expiry').addEventListener('input', function (e) {
-            let val = e.target.value.replace(/^([0-9]{2})$/g, '$1/');
-            e.target.value = val;
-        });
-    </script>
+    <!-- Footer -->
+    <footer class="landing-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 ComandaFlow. Todos los derechos reservados. Desarrollado para el crecimiento de tu restaurante.</p>
+        </div>
+    </footer>
 </body>
 </html>

@@ -19,7 +19,10 @@
                 <span>Panel Cocina <span id="admin-restaurant-badge" class="rest-badge">El Quincho Porteño</span></span>
             </a>
             <div class="nav-actions">
-                <a href="index.html" class="btn btn-secondary btn-sm nav-link-client">
+                <a href="index.html" class="btn btn-secondary btn-sm nav-link-home">
+                    <span>Inicio 🏠</span>
+                </a>
+                <a href="menu.html" class="btn btn-secondary btn-sm nav-link-client">
                     <span>Ver Carta Digital 🍕</span>
                 </a>
             </div>
@@ -40,6 +43,15 @@
         
         <!-- ================= PESTAÑA 1: TABLERO KANBAN ================= -->
         <section class="admin-tab-content active" id="view-orders">
+            <!-- Control de Columnas Kanban para Celulares -->
+            <div class="kanban-mobile-tabs">
+                <button class="k-mobile-tab active" onclick="filtrarKanbanMovil('pendiente')">Pend. (<span id="m-count-pendiente">0</span>)</button>
+                <button class="k-mobile-tab" onclick="filtrarKanbanMovil('confirmado')">Conf. (<span id="m-count-confirmado">0</span>)</button>
+                <button class="k-mobile-tab" onclick="filtrarKanbanMovil('preparacion')">Prep. (<span id="m-count-preparacion">0</span>)</button>
+                <button class="k-mobile-tab" onclick="filtrarKanbanMovil('listo')">Listo (<span id="m-count-listo">0</span>)</button>
+                <button class="k-mobile-tab" onclick="filtrarKanbanMovil('camino')">En Camino (<span id="m-count-camino">0</span>)</button>
+                <button class="k-mobile-tab" onclick="filtrarKanbanMovil('entregado')">Entreg. (<span id="m-count-entregado">0</span>)</button>
+            </div>
             <div class="kanban-wrapper">
                 
                 <!-- Columna: Pendiente -->
@@ -400,7 +412,48 @@
                         element.classList.remove('has-orders');
                     }
                 }
+
+                // Contadores para versión móvil
+                const mCountId = `m-count-${obtenerIdEstadoString(est)}`;
+                const mElement = document.getElementById(mCountId);
+                if (mElement) {
+                    mElement.innerText = contadores[est];
+                }
             });
+
+            // Sincronizar visibilidad de columna activa en móvil
+            actualizarColumnasMovilesVista();
+        }
+
+        // Lógica de Kanban Móvil Inteligente
+        let activeMobileColumn = 'pendiente';
+
+        function filtrarKanbanMovil(idEstado) {
+            activeMobileColumn = idEstado;
+            actualizarColumnasMovilesVista();
+        }
+
+        function actualizarColumnasMovilesVista() {
+            // Actualizar clase activa en los botones de pestañas móviles
+            document.querySelectorAll('.k-mobile-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const btns = document.querySelectorAll('.k-mobile-tab');
+            for (let btn of btns) {
+                if (btn.getAttribute('onclick').includes(activeMobileColumn)) {
+                    btn.classList.add('active');
+                }
+            }
+
+            // Ocultar todas las columnas y mostrar solo la activa en versión móvil (mediante clase)
+            document.querySelectorAll('.kanban-column').forEach(col => {
+                col.classList.remove('mobile-active');
+            });
+            const colActiva = document.getElementById(`col-${activeMobileColumn}`);
+            if (colActiva) {
+                colActiva.classList.add('mobile-active');
+            }
         }
 
         function obtenerIdEstadoString(estado) {
