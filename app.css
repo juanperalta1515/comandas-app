@@ -429,6 +429,7 @@ hr {
     min-height: 2.5rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -440,6 +441,7 @@ hr {
     flex-grow: 1;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -2509,11 +2511,13 @@ hr {
         min-height: auto;
         margin-bottom: 0.25rem;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
     }
     .card-desc {
         font-size: 0.8rem;
         margin-bottom: 0.5rem;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
     }
     .card-footer-row {
         margin-top: 0;
