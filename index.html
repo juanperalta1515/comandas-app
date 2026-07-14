@@ -20,9 +20,10 @@
             </a>
             <div class="nav-actions landing-nav-links">
                 <a href="#features" class="nav-link-landing">Características</a>
-                <a href="#how-it-works" class="nav-link-landing">Cómo Funciona</a>
                 <a href="#pricing" class="nav-link-landing">Precios</a>
-                <a href="#demos" class="btn btn-primary btn-sm btn-landing-cta">Ver Demos 🚀</a>
+                <button class="btn btn-secondary btn-sm" onclick="abrirModalSuscripcion()">Registrar mi Local 🚀</button>
+                <a href="superadmin.html" class="btn btn-secondary btn-sm">SuperAdmin 👑</a>
+                <a href="admin.html" class="btn btn-primary btn-sm btn-landing-cta">Probar Demo</a>
             </div>
         </div>
     </nav>
@@ -106,12 +107,11 @@
         </div>
     </header>
 
-    <!-- Logo Carousel (Restaurantes que usan la plataforma) -->
+    <!-- Logo Ribbon -->
     <section class="brand-ribbon-section">
         <div class="ribbon-title">Marcas gastronómicas que confían en ComandaFlow</div>
         <div class="logo-slider-container">
             <div class="logo-slider-track">
-                <!-- Slide 1 -->
                 <div class="logo-slide">🍕 Bella Italia</div>
                 <div class="logo-slide">🍔 Burger Zone</div>
                 <div class="logo-slide">🌮 Taco Loco</div>
@@ -120,7 +120,7 @@
                 <div class="logo-slide">🍺 Beer Garden</div>
                 <div class="logo-slide">🧁 Sweet Palace</div>
                 <div class="logo-slide">🌯 Wrap & Roll</div>
-                <!-- Duplicate for loop -->
+                <!-- Duplicate -->
                 <div class="logo-slide">🍕 Bella Italia</div>
                 <div class="logo-slide">🍔 Burger Zone</div>
                 <div class="logo-slide">🌮 Taco Loco</div>
@@ -142,89 +142,34 @@
 
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>Carta Digital QR</h3>
-                <p>Tus clientes escanean el código en la mesa o acceden desde tus redes sociales para ver el menú digital. Diseño ultra rápido, intuitivo y optimizado para celulares.</p>
+                <div class="feature-icon">🍽️</div>
+                <h3>Gestión de Mesas y Salón</h3>
+                <p>Tus comensales escanean el QR, ordenan a su mesa y solicitan la cuenta. Tu staff gestiona los pedidos directamente e imprime tickets al instante.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">💬</div>
-                <h3>Pedidos por WhatsApp</h3>
-                <p>El cliente arma su pedido en el carrito y, al finalizar, se genera un mensaje de WhatsApp perfectamente estructurado con sus datos, método de pago y dirección.</p>
+                <div class="feature-icon">📊</div>
+                <h3>Caja Segregada del Día</h3>
+                <p>Llevá tus ingresos en orden dividiendo tus flujos en Caja Salón, Caja Plataformas y Caja Venta Directa, con cierres de turno y reportes históricos.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🍳</div>
-                <h3>Tablero de Control para Cocina</h3>
-                <p>Un panel Kanban interactivo en tiempo real. La cocina recibe el pedido, lo confirma, lo prepara y lo marca como listo para entregar o enviar en camino.</p>
+                <h3>Tablero Kanban en Tiempo Real</h3>
+                <p>Un panel interactivo para la cocina. Controlá el stock de platos, editá precios o cargá nuevas recetas sobre la marcha desde el gestor de menú.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">⚙️</div>
-                <h3>Configuración Flexible</h3>
-                <p>Definí el costo de envío, el monto mínimo para envío gratis, el recargo por financiación de tarjetas en cuotas, y activá/desactivá stock de platos al instante.</p>
+                <div class="feature-icon">🛵</div>
+                <h3>Simulador de Plataformas</h3>
+                <p>Probá cómo entran comandas directas desde PedidosYa y Rappi para unificar tu cocina en una sola pantalla integrada.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">💸</div>
-                <h3>Sin Comisiones por Venta</h3>
-                <p>Olvidate de las comisiones del 20% o 30% de las apps tradicionales. El sistema es tuyo por una suscripción fija mensual de bajo costo.</p>
+                <div class="feature-icon">🖨️</div>
+                <h3>Comandera y Facturación AFIP</h3>
+                <p>Conectá tu tickeadora térmica. Generá facturas de cliente formato AFIP con CUIT/CAE e imprime comandas de cocina simplificadas.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <h3>Seguro y Simulable</h3>
-                <p>Incluye un simulador transaccional de WhatsApp Cloud API en el panel de control para que verifiques en tiempo real los avisos automáticos a tus clientes.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Demos Interactivas -->
-    <section id="demos" class="landing-demos-section">
-        <div class="section-header">
-            <h2>Probá las Demos Interactivas del Sistema</h2>
-            <p>Explorá cómo interactúan las dos caras de la plataforma en tiempo real. Hacé un pedido en el menú de cliente y mirá cómo llega al panel de cocina al instante.</p>
-        </div>
-
-        <div class="demos-grid">
-            <div class="demo-card-box">
-                <div class="demo-badge">VISTA CLIENTE</div>
-                <h3>📱 Menú Digital (Carta)</h3>
-                <p>Simulá ser un cliente del restaurante. Navegá entre categorías, agregá platos al carrito, seleccioná envío o retiro, calculá cuotas y realizá tu pedido simulado.</p>
-                <a href="menu.html" target="_blank" class="btn btn-primary btn-block">Abrir Carta Digital Cliente 📱</a>
-            </div>
-
-            <div class="demo-card-box kitchen-demo">
-                <div class="demo-badge admin">VISTA COCINA</div>
-                <h3>🍳 Panel Kanban de Cocina</h3>
-                <p>Simulá ser el administrador o cocinero. Gestioná los pedidos entrantes a través de las columnas de Kanban, controlá el stock de platos y ajustá las tarifas del local.</p>
-                <a href="admin.html" target="_blank" class="btn btn-secondary btn-block">Abrir Panel de Cocina 🍳</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- How It Works -->
-    <section id="how-it-works" class="landing-how">
-        <div class="section-header">
-            <h2>¿Cómo funciona ComandaFlow?</h2>
-            <p>Implementar nuestro sistema es sumamente sencillo y rápido.</p>
-        </div>
-
-        <div class="steps-flow">
-            <div class="step-item">
-                <div class="step-number">1</div>
-                <h4>Escaneo de QR</h4>
-                <p>El comensal escanea el código QR en la mesa o ingresa al enlace web del restaurante.</p>
-            </div>
-            <div class="step-item">
-                <div class="step-number">2</div>
-                <h4>Selección y Pedido</h4>
-                <p>Arma su orden y selecciona su método de entrega (envío a domicilio o retiro) y método de pago.</p>
-            </div>
-            <div class="step-item">
-                <div class="step-number">3</div>
-                <h4>Notificación Directa</h4>
-                <p>El pedido ingresa al Panel de la cocina y se genera el mensaje transaccional directo para WhatsApp.</p>
-            </div>
-            <div class="step-item">
-                <div class="step-number">4</div>
-                <h4>Cocina y Despacho</h4>
-                <p>El staff procesa la comanda visualmente en el Kanban de cocina hasta que sale del local.</p>
+                <div class="feature-icon">🚀</div>
+                <h3>Onboarding Instantáneo</h3>
+                <p>Suscribite en segundos. Registrá tu comercio, realiza la simulación de pago y accedé al asistente interactivo para configurar tu CBU y logo.</p>
             </div>
         </div>
     </section>
@@ -246,9 +191,9 @@
                     <li>✔️ Pedidos directos a WhatsApp</li>
                     <li>✔️ Soporte por correo</li>
                     <li>❌ Panel Kanban de Cocina</li>
-                    <li>❌ Reglas de negocio avanzadas</li>
+                    <li>❌ Caja Chica y Mesas</li>
                 </ul>
-                <a href="#demos" class="btn btn-secondary btn-block">Probar Demo</a>
+                <button class="btn btn-secondary btn-block" onclick="abrirModalSuscripcion('Básico')">Suscribirme hoy</button>
             </div>
 
             <div class="pricing-card popular">
@@ -258,30 +203,105 @@
                 <p class="plan-desc">Perfecto para restaurantes y cocinas con alto volumen de comandas.</p>
                 <ul class="plan-features">
                     <li>✔️ Menú Digital QR ilimitado</li>
-                    <li>✔️ Pedidos directos a WhatsApp</li>
-                    <li>✔️ **Panel Kanban de Cocina en tiempo real**</li>
-                    <li>✔️ Gestión de stock y disponibilidad</li>
-                    <li>✔️ Reglas de negocio (envíos, cuotas, etc.)</li>
-                    <li>✔️ Soporte prioritario por WhatsApp</li>
+                    <li>✔️ Panel Kanban de Cocina</li>
+                    <li>✔️ Gestión de Salón y Mesas</li>
+                    <li>✔️ Caja Segregada & Finanzas</li>
+                    <li>✔️ Simulador PedidosYa / Rappi</li>
+                    <li>✔️ Impresión de Comandas y Facturas</li>
                 </ul>
-                <a href="#demos" class="btn btn-primary btn-block">Probar Demo Gratis</a>
-            </div>
-
-            <div class="pricing-card">
-                <h3>Multi-Sucursal</h3>
-                <div class="price">Consultar <span>/ mes</span></div>
-                <p class="plan-desc">Para franquicias y cadenas que requieren administración centralizada.</p>
-                <ul class="plan-features">
-                    <li>✔️ Todo lo del Plan Full Premium</li>
-                    <li>✔️ Múltiples locales integrados</li>
-                    <li>✔️ Panel de control global consolidado</li>
-                    <li>✔️ Integraciones con sistemas POS</li>
-                    <li>✔️ Gerente de cuenta dedicado</li>
-                </ul>
-                <a href="https://wa.me/5491132456789?text=Hola!%20Me%20interesa%20el%20plan%20multi-sucursal" target="_blank" class="btn btn-secondary btn-block">Consultar por WhatsApp</a>
+                <button class="btn btn-primary btn-block" onclick="abrirModalSuscripcion('Premium')">Suscribirme hoy 🚀</button>
             </div>
         </div>
     </section>
+
+    <!-- ================= MODAL DE REGISTRO & CHECKOUT SAAS (MERCADO PAGO) ================= -->
+    <div class="modal-overlay" id="saas-register-modal">
+        <div class="modal-card">
+            <!-- PASO 1: REGISTRO DE DATOS -->
+            <div id="saas-step-register">
+                <div class="modal-header">
+                    <h2>Registrar mi Restaurante</h2>
+                    <button class="close-btn" onclick="cerrarModalSuscripcion()">&times;</button>
+                </div>
+                <form onsubmit="irAPagoSuscripcion(event)">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="saas-nombre">Nombre de Fantasía del Local *</label>
+                            <input type="text" id="saas-nombre" required placeholder="Ej: Pizzería La Camorra">
+                        </div>
+                        <div class="form-group">
+                            <label for="saas-cuit">CUIT de la Empresa *</label>
+                            <input type="text" id="saas-cuit" required placeholder="Ej: 30-71589234-9">
+                        </div>
+                        <div class="form-group">
+                            <label for="saas-whatsapp">WhatsApp (Formato internacional) *</label>
+                            <input type="text" id="saas-whatsapp" required placeholder="Ej: +5491132456789" value="+549">
+                        </div>
+                        <div class="form-group">
+                            <label for="saas-plan">Plan Seleccionado</label>
+                            <select id="saas-plan">
+                                <option value="Premium">Plan Full Premium ($25.000 / mes)</option>
+                                <option value="Básico">Plan Básico ($15.000 / mes)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="cerrarModalSuscripcion()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Ir al Pago Mensual 💳</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- PASO 2: CHECKOUT MERCADO PAGO SIMULADO -->
+            <div id="saas-step-checkout" style="display: none;">
+                <div class="mp-checkout-header">
+                    <span class="mp-logo-icon">💳</span>
+                    <span class="mp-logo-text">mercado pago</span>
+                </div>
+                <div class="modal-body bg-light-gray" style="padding-top: 1rem;">
+                    <div class="mp-checkout-summary">
+                        <h4>Resumen de Compra</h4>
+                        <div class="mp-summary-row">
+                            <span id="lbl-mp-item">Suscripción ComandaFlow - Plan Premium</span>
+                            <strong id="lbl-mp-price">$25.000</strong>
+                        </div>
+                        <small class="text-muted">Débito automático mensual simple en pesos argentinos.</small>
+                    </div>
+                    
+                    <form onsubmit="procesarPagoSuscripcion(event)" style="margin-top: 1rem;">
+                        <div class="form-group">
+                            <label>Número de Tarjeta (Simulado)</label>
+                            <input type="text" required placeholder="4517 8400 0000 0000" disabled value="4517 **** **** 9082">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Vencimiento</label>
+                                <input type="text" required placeholder="MM/AA" disabled value="12/30">
+                            </div>
+                            <div class="form-group">
+                                <label>CVC</label>
+                                <input type="password" required placeholder="123" disabled value="999">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-mp btn-block" id="btn-pay-mp">
+                            Confirmar Suscripción 🔒
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- PASO 3: EXITO Y REDIRECCIÓN -->
+            <div id="saas-step-success" style="display: none; text-align: center;" class="modal-body">
+                <div class="success-icon" style="font-size: 4rem;">🎉</div>
+                <h2>¡Pago Aprobado!</h2>
+                <p>Tu local ya se encuentra activo en la plataforma.</p>
+                <div class="alert-box alert-info margin-top-20">
+                    <strong>¡Bienvenido!</strong> Serás redirigido a tu panel de control para realizar la configuración inicial de cobros y logotipo.
+                </div>
+                <div class="loading-spinner margin-top-20" id="success-spinner"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="landing-footer">
@@ -289,5 +309,78 @@
             <p>&copy; 2026 ComandaFlow. Todos los derechos reservados. Desarrollado para el crecimiento de tu restaurante.</p>
         </div>
     </footer>
+
+    <script src="app.js?v=2"></script>
+    <script>
+        let datosLocalRegistro = null;
+
+        function abrirModalSuscripcion(plan = 'Premium') {
+            document.getElementById('saas-step-register').style.display = 'block';
+            document.getElementById('saas-step-checkout').style.display = 'none';
+            document.getElementById('saas-step-success').style.display = 'none';
+            
+            document.getElementById('saas-plan').value = plan;
+            document.getElementById('saas-nombre').value = '';
+            document.getElementById('saas-cuit').value = '';
+            document.getElementById('saas-whatsapp').value = '+549';
+            
+            document.getElementById('saas-register-modal').classList.add('active');
+        }
+
+        function cerrarModalSuscripcion() {
+            document.getElementById('saas-register-modal').classList.remove('active');
+        }
+
+        function irAPagoSuscripcion(e) {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('saas-nombre').value.trim();
+            const cuit = document.getElementById('saas-cuit').value.trim();
+            const whatsapp = document.getElementById('saas-whatsapp').value.trim();
+            const plan = document.getElementById('saas-plan').value;
+
+            if (!whatsapp.startsWith("+549")) {
+                alert("Ingrese el número de WhatsApp con código internacional (+549 para Argentina).");
+                return;
+            }
+
+            datosLocalRegistro = {
+                nombre: nombre,
+                cuit: cuit,
+                whatsapp: whatsapp,
+                plan: plan
+            };
+
+            // Cambiar textos del checkout MP
+            document.getElementById('lbl-mp-item').innerText = `Suscripción ComandaFlow - Plan ${plan}`;
+            document.getElementById('lbl-mp-price').innerText = plan === 'Premium' ? '$25.000' : '$15.000';
+
+            // Switch to MP checkout screen
+            document.getElementById('saas-step-register').style.display = 'none';
+            document.getElementById('saas-step-checkout').style.display = 'block';
+        }
+
+        function procesarPagoSuscripcion(e) {
+            e.preventDefault();
+            
+            const payBtn = document.getElementById('btn-pay-mp');
+            payBtn.innerText = 'Procesando Pago... ⏳';
+            payBtn.setAttribute('disabled', 'disabled');
+
+            setTimeout(() => {
+                // Registrar local en la base de datos (localStorage)
+                const nuevoLocal = registrarLocalSaaS(datosLocalRegistro);
+
+                // Cambiar a pantalla de éxito
+                document.getElementById('saas-step-checkout').style.display = 'none';
+                document.getElementById('saas-step-success').style.display = 'block';
+
+                // Redirigir al panel tras 3 segundos
+                setTimeout(() => {
+                    window.location.href = 'admin.html';
+                }, 3000);
+            }, 1500);
+        }
+    </script>
 </body>
 </html>

@@ -2984,4 +2984,190 @@ hr {
     }
 }
 
+/* ==========================================================================
+   ESTILOS DE CAJA SEGREGADA Y CIERRE DE JORNADA
+   ========================================================================== */
+
+.jornada-close-container {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    padding: 1.5rem 2rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+    border-top: 6px solid var(--color-primary);
+}
+.jornada-close-info h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+.jornada-total {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--color-text-main);
+}
+.jornada-close-info small {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+}
+
+.financial-dashboard-segregado {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.fin-card-canal {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: transform var(--transition-fast);
+}
+.fin-card-canal:hover {
+    transform: translateY(-2px);
+}
+.fin-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.fin-card-header h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+}
+.canal-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+.canal-badge.open {
+    background-color: hsl(145, 63%, 95%);
+    color: var(--color-success);
+}
+.canal-badge.closed {
+    background-color: hsl(0, 0%, 90%);
+    color: var(--color-text-muted);
+}
+
+.card-salon { border-top: 6px solid var(--color-info); }
+.card-plataformas { border-top: 6px solid var(--color-accent); }
+.card-directo { border-top: 6px solid var(--color-success); }
+
+/* ==========================================================================
+   CORRECCIÓN DE USABILIDAD: MODALES DESPLAZABLES
+   ========================================================================== */
+.modal-card {
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+}
+
+/* ==========================================================================
+   ESTILOS SAAS MULTI-INQUILINO Y LOCK SCREEN
+   ========================================================================== */
+
+.saas-lock-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.lock-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    padding: 2.5rem;
+    border-radius: var(--radius-md);
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    border-top: 6px solid var(--color-accent);
+}
+
+.lock-icon {
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.lock-actions {
+    margin-top: 1.5rem;
+}
+
+/* Onboarding Wizard */
+.qr-mock-box {
+    border: 2px dashed var(--color-border);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-body);
+}
+
+/* Mercado Pago Checkout Simulated */
+.mp-checkout-header {
+    background: #009ee3;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    border-top-left-radius: var(--radius-sm);
+    border-top-right-radius: var(--radius-sm);
+    font-family: sans-serif;
+    gap: 0.5rem;
+}
+.mp-logo-text {
+    font-style: italic;
+    font-size: 1.1rem;
+}
+.mp-checkout-summary {
+    background: #eef7fc;
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid #cce8f6;
+    margin-bottom: 1rem;
+    color: #0f172a;
+}
+.mp-summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+.btn-mp {
+    background-color: #009ee3;
+    color: #fff;
+}
+.btn-mp:hover {
+    background-color: #008cd0;
+}
+.btn-mp:disabled {
+    background-color: #b3e3f7;
+    cursor: not-allowed;
+}
+
+
+
 

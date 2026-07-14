@@ -11,18 +11,34 @@
     <link rel="stylesheet" href="app.css">
 </head>
 <body class="admin-body">
+    <!-- ================= PANTALLA DE BLOQUEO POR SUSCRIPCIÓN INACTIVA ================= -->
+    <div class="saas-lock-screen" id="saas-lock-screen" style="display: none;">
+        <div class="lock-card">
+            <span class="lock-icon">🔒</span>
+            <h2>Suscripción Inactiva</h2>
+            <p>El portal administrativo para <strong id="lock-restaurant-name">este local</strong> se encuentra temporalmente desactivado por falta de pago o suspensión manual.</p>
+            <div class="alert-box alert-warning margin-top-20">
+                <strong>Aviso:</strong> Para desbloquear el panel y reactivar tu carta digital QR, por favor realiza el pago de la suscripción mensual.
+            </div>
+            <div class="lock-actions">
+                <a href="index.html#pricing" class="btn btn-primary btn-block">Pagar Suscripción en Landing 💳</a>
+                <button class="btn btn-secondary btn-block margin-top-10" onclick="cerrarSesionSaaS()">Cerrar Sesión / Cambiar Comercio</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Barra de Navegación del Panel -->
     <nav class="navbar navbar-admin">
         <div class="nav-container">
             <a href="admin.html" class="nav-brand">
-                <span class="brand-emoji">🍳</span>
+                <span class="brand-emoji" id="logo-icon-navbar">🍳</span>
                 <span>Panel Cocina & Administración <span id="admin-restaurant-badge" class="rest-badge">El Quincho Porteño</span></span>
             </a>
             <div class="nav-actions">
                 <a href="index.html" class="btn btn-secondary btn-sm nav-link-home">
                     <span>Inicio 🏠</span>
                 </a>
-                <a href="menu.html" class="btn btn-secondary btn-sm nav-link-client">
+                <a href="menu.html" class="btn btn-secondary btn-sm nav-link-client" target="_blank">
                     <span>Ver Carta Digital 🍕</span>
                 </a>
             </div>
@@ -49,7 +65,7 @@
             <div class="simulator-panel">
                 <span>🛵 Simular Pedidos de Plataformas Externas:</span>
                 <button class="btn btn-peya btn-sm" onclick="simularPedidoPlataforma('PedidosYa')">Simular PedidosYa 🛵</button>
-                <button class="btn btn-rappi btn-sm" onclick="simularPedidoPlataforma('Rappi')">Simular Rappi 🍊</button>
+                <button class="btn btn-orange btn-sm" onclick="simularPedidoPlataforma('Rappi')">Simular Rappi 🍊</button>
             </div>
 
             <div class="kanban-mobile-tabs">
@@ -124,7 +140,7 @@
                         <small><span class="legend-dot pidiendo"></span> Pidiendo Cuenta</small>
                     </span>
                 </div>
-                <p class="admin-card-description">Monitoreá la ocupación del salón. Agregá platos, generá cuentas e imprimí tickets de mesas activas.</p>
+                <p class="admin-card-description">Monitoreá la ocupación del salón. Abrí mesas directas desde cocina, agregá consumos y registrá cobros.</p>
                 
                 <div class="mesas-grid" id="mesas-salon-grid">
                     <!-- Cargadas dinámicamente -->
@@ -161,38 +177,64 @@
             </div>
         </section>
 
-        <!-- ================= PESTAÑA 4: CAJA Y DASHBOARD FINANCIERO ================= -->
+        <!-- ================= PESTAÑA 4: CAJA Y DASHBOARD FINANCIERO SEGREGADO ================= -->
         <section class="admin-tab-content" id="view-caja">
-            <div class="financial-dashboard">
-                <!-- Tarjetas de caja -->
-                <div class="fin-card income">
-                    <div class="fin-card-info">
-                        <h3>Ingresos del Día</h3>
-                        <p class="fin-amount" id="box-caja-ingresos">$0</p>
-                    </div>
-                    <span class="fin-icon">💰</span>
+            
+            <!-- Widget de Cierre Consolidado de Jornada -->
+            <div class="jornada-close-container">
+                <div class="jornada-close-info">
+                    <h3>CONSOLIDADO GENERAL DE JORNADA 🏁</h3>
+                    <p class="jornada-total" id="lbl-consolidado-total">$0</p>
+                    <small>Suma neta activa de todas las cajas del salón y delivery.</small>
                 </div>
-                <div class="fin-card expense">
-                    <div class="fin-card-info">
-                        <h3>Egresos del Día</h3>
-                        <p class="fin-amount" id="box-caja-egresos">$0</p>
+                <button class="btn btn-primary" onclick="ejecutarCierreGeneral()">
+                    Cerrar Jornada Completa y Archivar 🏁
+                </button>
+            </div>
+
+            <div class="financial-dashboard-segregado">
+                <!-- Caja 1: Salón (Mesas) -->
+                <div class="fin-card-canal card-salon">
+                    <div class="fin-card-header">
+                        <h4>🍽️ Caja Salón (Mesas)</h4>
+                        <span class="canal-badge" id="badge-estado-salon">Abierta</span>
                     </div>
-                    <span class="fin-icon">💸</span>
+                    <p class="fin-amount" id="box-caja-salon">$0</p>
+                    <button class="btn btn-secondary btn-xs btn-block" id="btn-cerrar-caja-salon" onclick="ejecutarCierreParcial('salon')">
+                        Cerrar Caja Salón 🔒
+                    </button>
                 </div>
-                <div class="fin-card net">
-                    <div class="fin-card-info">
-                        <h3>Caja Neta / Ganancia</h3>
-                        <p class="fin-amount" id="box-caja-neto">$0</p>
+                
+                <!-- Caja 2: Plataformas (PedidosYa / Rappi) -->
+                <div class="fin-card-canal card-plataformas">
+                    <div class="fin-card-header">
+                        <h4>🛵 Caja Plataformas</h4>
+                        <span class="canal-badge" id="badge-estado-plataformas">Abierta</span>
                     </div>
-                    <span class="fin-icon">📈</span>
+                    <p class="fin-amount" id="box-caja-plataformas">$0</p>
+                    <button class="btn btn-secondary btn-xs btn-block" id="btn-cerrar-caja-plataformas" onclick="ejecutarCierreParcial('plataformas')">
+                        Cerrar Caja Plataformas 🔒
+                    </button>
+                </div>
+                
+                <!-- Caja 3: Venta Directa (Delivery / Takeaway) -->
+                <div class="fin-card-canal card-directo">
+                    <div class="fin-card-header">
+                        <h4>🏪 Caja Directo / Local</h4>
+                        <span class="canal-badge" id="badge-estado-directo">Abierta</span>
+                    </div>
+                    <p class="fin-amount" id="box-caja-directo">$0</p>
+                    <button class="btn btn-secondary btn-xs btn-block" id="btn-cerrar-caja-directo" onclick="ejecutarCierreParcial('directo')">
+                        Cerrar Caja Directo 🔒
+                    </button>
                 </div>
             </div>
 
             <div class="admin-grid-two-cols">
                 <!-- Registrar Egreso Form -->
                 <div class="admin-card">
-                    <h2>Registrar Egreso / Gasto Manual</h2>
-                    <p class="admin-card-description">Registrá gastos menores del día (insumos, repartidores, etc.) para calcular la caja neta.</p>
+                    <h2>Registrar Egreso / Salida de Efectivo</h2>
+                    <p class="admin-card-description">Registrá gastos menores imputándolos a una de las cajas de canal correspondientes.</p>
                     <form id="expense-form" onsubmit="guardarEgresoManual(event)">
                         <div class="form-group">
                             <label for="egr-desc">Descripción del Egreso *</label>
@@ -204,10 +246,11 @@
                                 <input type="number" id="egr-monto" required min="1" placeholder="Ej: 1500">
                             </div>
                             <div class="form-group">
-                                <label for="egr-pago">Método de Caja</label>
-                                <select id="egr-pago">
-                                    <option value="Efectivo">Caja Efectivo</option>
-                                    <option value="Transferencia">Caja Digital / Banco</option>
+                                <label for="egr-canal">Imputar a Caja de</label>
+                                <select id="egr-canal">
+                                    <option value="directo">🏪 Caja Directo / Local</option>
+                                    <option value="salon">🍽️ Caja Salón (Mesas)</option>
+                                    <option value="plataformas">🛵 Caja Plataformas (PedidosYa/Rappi)</option>
                                 </select>
                             </div>
                         </div>
@@ -217,39 +260,20 @@
 
                 <!-- Gráficos de Estadísticas Rápidas -->
                 <div class="admin-card">
-                    <h2>Distribución de Ventas</h2>
-                    <p class="admin-card-description">Métricas de transacciones cobradas por canal y por método de pago.</p>
+                    <h2>Proporción por Canal de Venta</h2>
+                    <p class="admin-card-description">Porcentajes de participación de cada canal respecto a la facturación neta de la jornada.</p>
                     <div class="financial-charts">
-                        <div class="chart-section">
-                            <h4>Por Tipo de Servicio</h4>
-                            <div class="stat-progress-bar">
-                                <label>Mesas (Salón): <strong id="val-pct-mesa">$0</strong></label>
-                                <div class="p-bar"><div class="p-fill" id="bar-pct-mesa" style="width: 0%"></div></div>
-                            </div>
-                            <div class="stat-progress-bar">
-                                <label>Delivery: <strong id="val-pct-envio">$0</strong></label>
-                                <div class="p-bar"><div class="p-fill" id="bar-pct-envio" style="width: 0%"></div></div>
-                            </div>
-                            <div class="stat-progress-bar">
-                                <label>Take Away (Retiro): <strong id="val-pct-retiro">$0</strong></label>
-                                <div class="p-bar"><div class="p-fill" id="bar-pct-retiro" style="width: 0%"></div></div>
-                            </div>
+                        <div class="stat-progress-bar">
+                            <label>Caja Salón (Mesas): <strong id="lbl-proporcion-salon">$0 (0%)</strong></label>
+                            <div class="p-bar"><div class="p-fill blue" id="bar-proporcion-salon" style="width: 0%"></div></div>
                         </div>
-                        
-                        <div class="chart-section">
-                            <h4>Por Medio de Pago</h4>
-                            <div class="stat-progress-bar">
-                                <label>Efectivo: <strong id="val-pay-cash">$0</strong></label>
-                                <div class="p-bar"><div class="p-fill green" id="bar-pay-cash" style="width: 0%"></div></div>
-                            </div>
-                            <div class="stat-progress-bar">
-                                <label>Débito: <strong id="val-pay-deb">$0</strong></label>
-                                <div class="p-bar"><div class="p-fill blue" id="bar-pay-deb" style="width: 0%"></div></div>
-                            </div>
-                            <div class="stat-progress-bar">
-                                <label>Crédito: <strong id="val-pay-cred">$0</strong></label>
-                                <div class="p-bar"><div class="p-fill purple" id="bar-pay-cred" style="width: 0%"></div></div>
-                            </div>
+                        <div class="stat-progress-bar">
+                            <label>Caja Plataformas: <strong id="lbl-proporcion-plataformas">$0 (0%)</strong></label>
+                            <div class="p-bar"><div class="p-fill orange" id="bar-proporcion-plataformas" style="width: 0%"></div></div>
+                        </div>
+                        <div class="stat-progress-bar">
+                            <label>Caja Venta Directa: <strong id="lbl-proporcion-directo">$0 (0%)</strong></label>
+                            <div class="p-bar"><div class="p-fill green" id="bar-proporcion-directo" style="width: 0%"></div></div>
                         </div>
                     </div>
                 </div>
@@ -257,20 +281,43 @@
 
             <!-- Movimientos de Caja Chica -->
             <div class="admin-card margin-top-20">
-                <h2>Libro de Caja - Movimientos del Día</h2>
+                <h2>Libro Diario de Caja Activa</h2>
                 <div class="table-responsive">
                     <table class="logs-table">
                         <thead>
                             <tr>
-                                <th>ID Transacción</th>
-                                <th>Fecha/Hora</th>
+                                <th>Hora</th>
+                                <th>Canal</th>
                                 <th>Tipo</th>
-                                <th>Detalle / Concepto</th>
+                                <th>Detalle</th>
                                 <th>Método</th>
                                 <th>Importe</th>
                             </tr>
                         </thead>
                         <tbody id="caja-transactions-body">
+                            <!-- Dinámico -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- HISTORIAL DE JORNADAS ANTERIORES -->
+            <div class="admin-card margin-top-20">
+                <h2>Historial de Jornadas Anteriores (Cierres Consolidados)</h2>
+                <p class="admin-card-description">Muestra el histórico de cajas archivadas al cerrar la jornada laboral al final del día.</p>
+                <div class="table-responsive">
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>ID Cierre</th>
+                                <th>Fecha/Hora</th>
+                                <th>Salón Cerrado</th>
+                                <th>Plataformas</th>
+                                <th>Directo</th>
+                                <th>Total Jornada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cierres-historico-body">
                             <!-- Dinámico -->
                         </tbody>
                     </table>
@@ -385,7 +432,6 @@
                 <div class="detail-section">
                     <div class="admin-card-header-flex">
                         <h3>Productos Consumidos</h3>
-                        <!-- Controles para agregar platos sobre la marcha al pedido -->
                         <div class="add-item-to-order-inline">
                             <select id="select-add-plato-order"></select>
                             <button class="btn btn-primary btn-sm" onclick="agregarPlatoAPedidoDetalle()">Añadir ➕</button>
@@ -455,6 +501,126 @@
                     <button type="submit" class="btn btn-primary">Registrar Pago e Imprimir Factura 🧾</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL DEL CAMARERO: ABRIR MESA DIRECTO ================= -->
+    <div class="modal-overlay" id="waiter-order-modal">
+        <div class="modal-card detail-modal-card">
+            <div class="modal-header">
+                <h2>Abrir Mesa Directa - Mesa <span id="waiter-mesa-nro">-</span></h2>
+                <button class="close-btn" onclick="cerrarModalWaiterOrder()">&times;</button>
+            </div>
+            <form onsubmit="confirmarPedidoMesaDirecto(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="waiter-cliente-nombre">Identificación de Mesa (Cliente/Comentario) *</label>
+                        <input type="text" id="waiter-cliente-nombre" required placeholder="Ej: Familia Martinez / Mesa 4" value="Mesa ">
+                    </div>
+                    
+                    <div class="detail-section">
+                        <div class="admin-card-header-flex">
+                            <h3>Adicionar Platos</h3>
+                            <div class="add-item-to-order-inline">
+                                <select id="waiter-select-plato"></select>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="agregarPlatoAlWaiterCart()">Adicionar ➕</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="detail-products-table">
+                                <thead>
+                                    <tr>
+                                        <th>Plato</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio c/u</th>
+                                        <th>Total</th>
+                                        <th>Quitar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="waiter-cart-body">
+                                    <!-- Llenado dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-row total-row" style="margin-top: 1rem; justify-content: flex-end;">
+                        <span>Total Comanda: </span>
+                        <strong id="waiter-cart-total" style="font-size: 1.5rem; margin-left: 1rem;">$0</strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalWaiterOrder()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-waiter-submit">Confirmar y Ocupar Mesa 🚀</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL ONBOARDING WIZARD (CONFIGURACIÓN INICIAL) ================= -->
+    <div class="modal-overlay" id="saas-onboarding-modal">
+        <div class="modal-card">
+            <!-- PASO 1: FINANZAS Y COBROS -->
+            <div id="onb-step-1">
+                <div class="modal-header">
+                    <h2>Asistente de Onboarding - Paso 1: Configurar Cobros</h2>
+                </div>
+                <div class="modal-body">
+                    <p>¡Felicitaciones por registrar tu local! Vamos a configurar tu cuenta paso a paso.</p>
+                    <div class="form-group margin-top-20">
+                        <label for="onb-alias">Alias de Mercado Pago o CBU Bancario *</label>
+                        <input type="text" id="onb-alias" required placeholder="Ej: pizza.camorra.mp">
+                        <small class="form-hint">A este Alias / CBU se enviarán las transferencias directas de tus clientes cuando pidan la cuenta en mesa o delivery.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn-block" onclick="guardarOnboardingPaso1()">Continuar ➔</button>
+                </div>
+            </div>
+
+            <!-- PASO 2: LOGO Y DISEÑO -->
+            <div id="onb-step-2" style="display: none;">
+                <div class="modal-header">
+                    <h2>Asistente de Onboarding - Paso 2: Tu Logo</h2>
+                </div>
+                <div class="modal-body">
+                    <p>Personalizá el emoji de marca o logo que verán tus clientes en el encabezado de su carta digital.</p>
+                    <div class="form-group margin-top-20">
+                        <label for="onb-logo">Emoji / Icono de Logo *</label>
+                        <select id="onb-logo">
+                            <option value="🍕">🍕 Pizza / Trattoria</option>
+                            <option value="🍔">🍔 Hamburguesería</option>
+                            <option value="🍣">🍣 Sushi / Asia</option>
+                            <option value="☕">☕ Cafetería / Panadería</option>
+                            <option value="🥩">🥩 Parrilla / Minutas</option>
+                            <option value="🌮">🌮 Comida Mexicana</option>
+                            <option value="🍦">🍦 Heladería / Postres</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn-block" onclick="guardarOnboardingPaso2()">Finalizar Configuración 🎉</button>
+                </div>
+            </div>
+
+            <!-- PASO 3: CÓDIGOS QR GENERACIÓN -->
+            <div id="onb-step-3" style="display: none; text-align: center;">
+                <div class="modal-header">
+                    <h2>¡Cuenta Lista para Usar! 🎉</h2>
+                </div>
+                <div class="modal-body">
+                    <p>Tu local ha sido configurado correctamente.</p>
+                    
+                    <div class="qr-mock-box margin-top-20">
+                        <span style="font-size: 3rem;">🔲</span>
+                        <h4>CARTA DIGITAL QR DESCARGADA</h4>
+                        <p class="text-muted">Imprimí tus QRs de Mesa y colocalos en tu salón.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn-block" onclick="finalizarOnboarding()">Ir al Panel de Cocina 🚀</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -533,9 +699,14 @@
         let tabActiva = 'orders';
         let pedidoDetalleActual = null;
         let activeMobileColumn = 'pendiente';
+        
+        // Carrito de compras local del mesero
+        let waiterCart = [];
+        let waiterActiveMesa = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             inicializarAdmin();
+            comprobarLicenciaSaaS();
 
             // Sincronizadores en tiempo real
             window.addEventListener('ordersUpdated', () => {
@@ -547,6 +718,7 @@
                 renderKanban();
                 renderStockTable();
                 cargarListaDesplegablePlatosDetalle();
+                cargarListaDesplegablePlatosWaiter();
             });
             window.addEventListener('configUpdated', () => {
                 cargarConfiguracionesForm();
@@ -556,6 +728,15 @@
             window.addEventListener('waLogsUpdated', renderLogsWhatsApp);
             window.addEventListener('tablesUpdated', renderSalonMesas);
             window.addEventListener('cajaUpdated', calcularCajaYCharts);
+            window.addEventListener('cierresUpdated', renderHistoricoCierres);
+            window.addEventListener('cajaEstadosUpdated', calcularCajaYCharts);
+            window.addEventListener('activeRestaurantUpdated', () => {
+                comprobarLicenciaSaaS();
+                cargarConfiguracionesForm();
+                actualizarLabelsConfig();
+                actualizarLogoEncabezado();
+            });
+            window.addEventListener('saasUpdated', comprobarLicenciaSaaS);
         });
 
         function inicializarAdmin() {
@@ -566,7 +747,86 @@
             actualizarLabelsConfig();
             renderLogsWhatsApp();
             calcularCajaYCharts();
+            renderHistoricoCierres();
             cargarListaDesplegablePlatosDetalle();
+            cargarListaDesplegablePlatosWaiter();
+            actualizarLogoEncabezado();
+        }
+
+        // -- COMPROBACIÓN SAAS & LICENCIAS --
+        function comprobarLicenciaSaaS() {
+            const activo = obtenerRestauranteActivo();
+            const lock = document.getElementById('saas-lock-screen');
+            if (!activo || activo.estado !== 'Activo') {
+                lock.style.display = 'flex';
+                document.getElementById('lock-restaurant-name').innerText = activo ? activo.nombre : 'Comercio';
+            } else {
+                lock.style.display = 'none';
+                if (activo.onboarding_complete === false) {
+                    iniciarOnboardingWizard();
+                }
+            }
+        }
+
+        function cerrarSesionSaaS() {
+            // Cerrar sesión y volver al default para que funcione la demo
+            const locales = obtenerLocalesSaaS();
+            const localDefault = locales.find(l => l.id === 'quincho');
+            if (localDefault) {
+                guardarRestauranteActivo(localDefault);
+            }
+            window.location.href = 'index.html';
+        }
+
+        // -- ONBOARDING POPUPS WIZARD --
+        function iniciarOnboardingWizard() {
+            document.getElementById('onb-step-1').style.display = 'block';
+            document.getElementById('onb-step-2').style.display = 'none';
+            document.getElementById('onb-step-3').style.display = 'none';
+            
+            document.getElementById('onb-alias').value = '';
+            document.getElementById('onb-logo').value = '🍕';
+            
+            document.getElementById('saas-onboarding-modal').classList.add('active');
+        }
+
+        function guardarOnboardingPaso1() {
+            const alias = document.getElementById('onb-alias').value.trim();
+            if (!alias) {
+                alert("Por favor configure su Alias MP o CBU para poder facturar.");
+                return;
+            }
+            
+            document.getElementById('onb-step-1').style.display = 'none';
+            document.getElementById('onb-step-2').style.display = 'block';
+        }
+
+        function guardarOnboardingPaso2() {
+            document.getElementById('onb-step-2').style.display = 'none';
+            document.getElementById('onb-step-3').style.display = 'block';
+        }
+
+        function finalizarOnboarding() {
+            const alias = document.getElementById('onb-alias').value.trim();
+            const logo = document.getElementById('onb-logo').value;
+            const activo = obtenerRestauranteActivo();
+            
+            actualizarConfiguracionOnboarding(activo.id, {
+                alias_cbu: alias,
+                logo: logo
+            });
+
+            document.getElementById('saas-onboarding-modal').classList.remove('active');
+            inicializarAdmin();
+        }
+
+        function actualizarLogoEncabezado() {
+            const activo = obtenerRestauranteActivo();
+            if (activo && activo.logo) {
+                document.getElementById('logo-icon-navbar').innerText = activo.logo;
+            } else {
+                document.getElementById('logo-icon-navbar').innerText = '🍳';
+            }
         }
 
         // -- MANEJO DE PESTAÑAS --
@@ -589,6 +849,7 @@
             } else if (tabId === 'caja') {
                 document.getElementById('view-caja').classList.add('active');
                 calcularCajaYCharts();
+                renderHistoricoCierres();
             } else if (tabId === 'config') {
                 document.getElementById('view-config').classList.add('active');
                 cargarConfiguracionesForm();
@@ -601,7 +862,6 @@
         function renderKanban() {
             const pedidos = obtenerPedidos();
             
-            // Limpiar columnas
             ESTADOS.forEach(est => {
                 const idContainer = `cards-${obtenerIdEstadoString(est)}`;
                 const container = document.getElementById(idContainer);
@@ -670,7 +930,6 @@
                 container.appendChild(card);
             });
 
-            // Actualizar contadores
             ESTADOS.forEach(est => {
                 const countId = `count-${obtenerIdEstadoString(est)}`;
                 const element = document.getElementById(countId);
@@ -732,7 +991,7 @@
             renderKanban();
         }
 
-        // -- SIMULADOR DE PEDIDOSYA Y RAPPI --
+        // -- SIMULADOR DE PLATAFORMAS --
         function simularPedidoPlataforma(plataforma) {
             const menu = obtenerMenu().filter(p => p.disponible);
             if (menu.length === 0) {
@@ -740,7 +999,6 @@
                 return;
             }
 
-            // Elegir platos aleatorios
             const cantPlatos = Math.floor(1 + Math.random() * 3);
             const items = [];
             let subtotal = 0;
@@ -749,7 +1007,6 @@
                 const plato = menu[Math.floor(Math.random() * menu.length)];
                 const cant = Math.floor(1 + Math.random() * 2);
                 
-                // Evitar repetidos en el array de simulación
                 if (!items.find(x => x.id === plato.id)) {
                     items.push({
                         id: plato.id,
@@ -770,12 +1027,12 @@
                 tipo_entrega: "envio",
                 direccion_entrega: `Repartidor de ${plataforma} retira por local`,
                 subtotal: subtotal,
-                costo_envio: 0, // Las plataformas tienen su propio costo de envío
+                costo_envio: 0, 
                 total: subtotal,
-                metodo_pago: "debito", // Cobrado online
+                metodo_pago: "debito", 
                 financiacion: null,
                 fecha_hora_entrega: "Lo antes posible",
-                plataforma: plataforma.toLowerCase() // 'pedidosya' o 'rappi'
+                plataforma: plataforma.toLowerCase() 
             };
 
             crearPedido(pedido);
@@ -806,9 +1063,11 @@
                         descText = `${pedido.nombre_cliente} • $${totalMesa.toLocaleString('es-AR')}`;
                         
                         orderDetailsBtn = `<button class="btn btn-secondary btn-xs" onclick="verDetallePedido('${pedido.id_pedido}')">Ver Consumos 🔍</button>`;
-                        
                         actionBtn = `<button class="btn btn-primary btn-xs margin-top-5" onclick="abrirCobrarMesa(${mesa.numero})">Cobrar Cuenta 🧾</button>`;
                     }
+                } else {
+                    // Si está libre, permitir al camarero abrir la mesa
+                    actionBtn = `<button class="btn btn-primary btn-xs" onclick="abrirModalCrearPedidoMesa(${mesa.numero})">Abrir Mesa 🍽️</button>`;
                 }
 
                 card.innerHTML = `
@@ -822,6 +1081,131 @@
                 `;
                 grid.appendChild(card);
             });
+        }
+
+        // -- CAMARERO: MODAL ABRIR MESA DIRECTO --
+        function abrirModalCrearPedidoMesa(nroMesa) {
+            waiterActiveMesa = nroMesa;
+            waiterCart = [];
+            
+            document.getElementById('waiter-mesa-nro').innerText = nroMesa;
+            document.getElementById('waiter-cliente-nombre').value = `Mesa ${nroMesa}`;
+            
+            renderWaiterCart();
+            cargarListaDesplegablePlatosWaiter();
+            
+            document.getElementById('waiter-order-modal').classList.add('active');
+        }
+
+        function cerrarModalWaiterOrder() {
+            document.getElementById('waiter-order-modal').classList.remove('active');
+            waiterActiveMesa = null;
+        }
+
+        function cargarListaDesplegablePlatosWaiter() {
+            const select = document.getElementById('waiter-select-plato');
+            const menu = obtenerMenu();
+            select.innerHTML = '<option value="">-- Seleccionar Plato --</option>';
+            menu.forEach(plato => {
+                if (plato.disponible) {
+                    select.innerHTML += `<option value="${plato.id}">${plato.nombre} ($${plato.precio})</option>`;
+                }
+            });
+        }
+
+        function agregarPlatoAlWaiterCart() {
+            const select = document.getElementById('waiter-select-plato');
+            const idPlato = parseInt(select.value);
+            if (!idPlato) return;
+
+            const menu = obtenerMenu();
+            const plato = menu.find(p => p.id === idPlato);
+            if (!plato) return;
+
+            const itemExistente = waiterCart.find(i => i.id === plato.id);
+            if (itemExistente) {
+                itemExistente.cantidad++;
+            } else {
+                waiterCart.push({
+                    id: plato.id,
+                    nombre: plato.nombre,
+                    precio: plato.precio,
+                    cantidad: 1
+                });
+            }
+
+            renderWaiterCart();
+            select.value = '';
+        }
+
+        function editarCantidadWaiterCart(idPlato, cambio) {
+            const item = waiterCart.find(i => i.id === idPlato);
+            if (!item) return;
+
+            item.cantidad += cambio;
+            if (item.cantidad <= 0) {
+                waiterCart = waiterCart.filter(i => i.id !== idPlato);
+            }
+
+            renderWaiterCart();
+        }
+
+        function renderWaiterCart() {
+            const body = document.getElementById('waiter-cart-body');
+            body.innerHTML = '';
+
+            let total = 0;
+
+            if (waiterCart.length === 0) {
+                body.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No has adicionado ningún plato aún.</td></tr>`;
+            } else {
+                waiterCart.forEach(item => {
+                    const totalItem = item.precio * item.cantidad;
+                    total += totalItem;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${item.nombre}</td>
+                        <td>
+                            <div class="quantity-controls-table">
+                                <button type="button" class="btn btn-secondary btn-xs" onclick="editarCantidadWaiterCart(${item.id}, -1)">-</button>
+                                <span>${item.cantidad}</span>
+                                <button type="button" class="btn btn-secondary btn-xs" onclick="editarCantidadWaiterCart(${item.id}, 1)">+</button>
+                            </div>
+                        </td>
+                        <td>$${item.precio.toLocaleString('es-AR')}</td>
+                        <td>$${totalItem.toLocaleString('es-AR')}</td>
+                        <td><button type="button" class="btn btn-danger btn-xs" onclick="editarCantidadWaiterCart(${item.id}, -${item.cantidad})">Quitar</button></td>
+                    `;
+                    body.appendChild(tr);
+                });
+            }
+
+            document.getElementById('waiter-cart-total').innerText = `$${total.toLocaleString('es-AR')}`;
+            
+            const submitBtn = document.getElementById('btn-waiter-submit');
+            if (waiterCart.length === 0) {
+                submitBtn.setAttribute('disabled', 'disabled');
+            } else {
+                submitBtn.removeAttribute('disabled');
+            }
+        }
+
+        function confirmarPedidoMesaDirecto(e) {
+            e.preventDefault();
+            const cliente = document.getElementById('waiter-cliente-nombre').value;
+            
+            if (waiterCart.length === 0) {
+                alert("Debes adicionar al menos un producto.");
+                return;
+            }
+
+            crearPedidoDirectoMesa(waiterActiveMesa, waiterCart, cliente);
+            
+            cerrarModalWaiterOrder();
+            renderSalonMesas();
+            renderKanban();
+            alert(`¡Mesa ${waiterActiveMesa} abierta y ocupada con éxito!`);
         }
 
         // -- COBRAR MESA --
@@ -849,7 +1233,6 @@
             const nroMesa = parseInt(document.getElementById('checkout-mesa-nro').innerText);
             const metodo = document.getElementById('checkout-mesa-pago').value;
 
-            // Obtener el pedido para poder imprimir la factura antes de cerrar
             const mesas = obtenerMesas();
             const mesa = mesas.find(m => m.numero === nroMesa);
             const idPedido = mesa.pedido_activo;
@@ -861,7 +1244,6 @@
                 calcularCajaYCharts();
                 alert(`¡Mesa ${nroMesa} cobrada con éxito! Registrado en caja.`);
                 
-                // Mostrar Factura automáticamente
                 verDetallePedido(idPedido);
                 imprimirFacturaCliente();
             } else {
@@ -869,113 +1251,143 @@
             }
         }
 
-        // -- CAJA Y ESTADÍSTICAS FINANCIERAS --
+        // -- CAJA, SUB-CAJAS Y ESTADÍSTICAS FINANCIERAS SEGREGADAS --
         function calcularCajaYCharts() {
             const caja = obtenerCaja();
-            const pedidos = obtenerPedidos();
+            const estados = obtenerEstadosCaja();
 
-            let ingresos = 0;
-            let egresos = 0;
+            let totalSalon = 0;
+            let totalPlataformas = 0;
+            let totalDirecto = 0;
 
             caja.forEach(tx => {
-                if (tx.tipo === 'ingreso') {
-                    ingresos += tx.monto;
-                } else if (tx.tipo === 'egreso') {
-                    egresos += tx.monto;
+                const factor = tx.tipo === 'ingreso' ? 1 : -1;
+                const monto = tx.monto * factor;
+
+                if (tx.canal === 'salon') {
+                    totalSalon += monto;
+                } else if (tx.canal === 'plataformas') {
+                    totalPlataformas += monto;
+                } else if (tx.canal === 'directo') {
+                    totalDirecto += monto;
                 }
             });
 
-            document.getElementById('box-caja-ingresos').innerText = `$${ingresos.toLocaleString('es-AR')}`;
-            document.getElementById('box-caja-egresos').innerText = `$${egresos.toLocaleString('es-AR')}`;
-            const neto = ingresos - egresos;
+            document.getElementById('box-caja-salon').innerText = `$${totalSalon.toLocaleString('es-AR')}`;
+            document.getElementById('box-caja-plataformas').innerText = `$${totalPlataformas.toLocaleString('es-AR')}`;
+            document.getElementById('box-caja-directo').innerText = `$${totalDirecto.toLocaleString('es-AR')}`;
+
+            const totalConsolidado = totalSalon + totalPlataformas + totalDirecto;
+            document.getElementById('lbl-consolidado-total').innerText = `$${totalConsolidado.toLocaleString('es-AR')}`;
+
+            actualizarBadgeCajaCanal('salon', estados.salon);
+            actualizarBadgeCajaCanal('plataformas', estados.plataformas);
+            actualizarBadgeCajaCanal('directo', estados.directo);
+
+            const totalCajasPositivas = Math.max(0, totalSalon) + Math.max(0, totalPlataformas) + Math.max(0, totalDirecto);
             
-            const netoBox = document.getElementById('box-caja-neto');
-            netoBox.innerText = `$${neto.toLocaleString('es-AR')}`;
-            if (neto < 0) {
-                netoBox.style.color = '#ef4444';
-            } else {
-                netoBox.style.color = '#10b981';
-            }
+            const pctSalon = totalCajasPositivas > 0 ? (Math.max(0, totalSalon) / totalCajasPositivas) * 100 : 0;
+            const pctPlataformas = totalCajasPositivas > 0 ? (Math.max(0, totalPlataformas) / totalCajasPositivas) * 100 : 0;
+            const pctDirecto = totalCajasPositivas > 0 ? (Math.max(0, totalDirecto) / totalCajasPositivas) * 100 : 0;
 
-            // Estadísticas por Tipo de Servicio
-            let totalMesaVal = 0;
-            let totalEnvioVal = 0;
-            let totalRetiroVal = 0;
+            document.getElementById('lbl-proporcion-salon').innerText = `$${totalSalon.toLocaleString('es-AR')} (${Math.round(pctSalon)}%)`;
+            document.getElementById('bar-proporcion-salon').style.width = `${pctSalon}%`;
+            document.getElementById('lbl-proporcion-plataformas').innerText = `$${totalPlataformas.toLocaleString('es-AR')} (${Math.round(pctPlataformas)}%)`;
+            document.getElementById('bar-proporcion-plataformas').style.width = `${pctPlataformas}%`;
+            document.getElementById('lbl-proporcion-directo').innerText = `$${totalDirecto.toLocaleString('es-AR')} (${Math.round(pctDirecto)}%)`;
+            document.getElementById('bar-proporcion-directo').style.width = `${pctDirecto}%`;
 
-            // Estadísticas por Medio de Pago (sobre transacciones cobradas de caja)
-            let payCash = 0;
-            let payDeb = 0;
-            let payCred = 0;
-
-            caja.forEach(tx => {
-                if (tx.tipo === 'ingreso') {
-                    if (tx.metodoPago.toLowerCase() === 'efectivo' || tx.metodoPago.toLowerCase() === 'transferencia') {
-                        payCash += tx.monto;
-                    } else if (tx.metodoPago.toLowerCase() === 'debito') {
-                        payDeb += tx.monto;
-                    } else if (tx.metodoPago.toLowerCase() === 'credito') {
-                        payCred += tx.monto;
-                    }
-                }
-            });
-
-            // Agrupar pedidos finalizados/entregados por tipo de entrega
-            pedidos.forEach(p => {
-                if (p.estado === 'Entregado') {
-                    if (p.tipo_entrega === 'mesa') {
-                        totalMesaVal += p.total;
-                    } else if (p.tipo_entrega === 'envio') {
-                        totalEnvioVal += p.total;
-                    } else if (p.tipo_entrega === 'retiro') {
-                        totalRetiroVal += p.total;
-                    }
-                }
-            });
-
-            const totalServicios = totalMesaVal + totalEnvioVal + totalRetiroVal;
-            const pctMesa = totalServicios > 0 ? (totalMesaVal / totalServicios) * 100 : 0;
-            const pctEnvio = totalServicios > 0 ? (totalEnvioVal / totalServicios) * 100 : 0;
-            const pctRetiro = totalServicios > 0 ? (totalRetiroVal / totalServicios) * 100 : 0;
-
-            document.getElementById('val-pct-mesa').innerText = `$${totalMesaVal.toLocaleString('es-AR')}`;
-            document.getElementById('bar-pct-mesa').style.width = `${pctMesa}%`;
-            document.getElementById('val-pct-envio').innerText = `$${totalEnvioVal.toLocaleString('es-AR')}`;
-            document.getElementById('bar-pct-envio').style.width = `${pctEnvio}%`;
-            document.getElementById('val-pct-retiro').innerText = `$${totalRetiroVal.toLocaleString('es-AR')}`;
-            document.getElementById('bar-pct-retiro').style.width = `${pctRetiro}%`;
-
-            const totalPagos = payCash + payDeb + payCred;
-            const pctCash = totalPagos > 0 ? (payCash / totalPagos) * 100 : 0;
-            const pctDeb = totalPagos > 0 ? (payDeb / totalPagos) * 100 : 0;
-            const pctCred = totalPagos > 0 ? (payCred / totalPagos) * 100 : 0;
-
-            document.getElementById('val-pay-cash').innerText = `$${payCash.toLocaleString('es-AR')}`;
-            document.getElementById('bar-pay-cash').style.width = `${pctCash}%`;
-            document.getElementById('val-pay-deb').innerText = `$${payDeb.toLocaleString('es-AR')}`;
-            document.getElementById('bar-pay-deb').style.width = `${pctDeb}%`;
-            document.getElementById('val-pay-cred').innerText = `$${payCred.toLocaleString('es-AR')}`;
-            document.getElementById('bar-pay-cred').style.width = `${pctCred}%`;
-
-            // Listar movimientos
             const tbody = document.getElementById('caja-transactions-body');
             tbody.innerHTML = '';
 
             if (caja.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay registros contables para el día de hoy.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay registros contables en la jornada activa.</td></tr>`;
+            } else {
+                caja.forEach(tx => {
+                    const tr = document.createElement('tr');
+                    const badgeClass = tx.tipo === 'ingreso' ? 'status-available' : 'status-unavailable';
+                    
+                    let canalTexto = '';
+                    if (tx.canal === 'salon') {
+                        canalTexto = '🍽️ Salón';
+                    } else if (tx.canal === 'plataformas') {
+                        canalTexto = '🛵 Plataformas';
+                    } else {
+                        canalTexto = '🏪 Directo';
+                    }
+
+                    const extraCerrado = tx.estado_cierre === 'cerrada_parcial' ? ' <small class="text-danger">(Post-Cierre)</small>' : '';
+
+                    tr.innerHTML = `
+                        <td>${tx.fecha_hora.split(' ')[1] || tx.fecha_hora}</td>
+                        <td><strong>${canalTexto}</strong></td>
+                        <td><span class="status-badge ${badgeClass}">${tx.tipo.toUpperCase()}</span></td>
+                        <td>${tx.descripcion}${extraCerrado}</td>
+                        <td>${tx.metodoPago}</td>
+                        <td><strong class="${tx.tipo === 'ingreso' ? 'text-success' : 'text-danger'}">${tx.tipo === 'ingreso' ? '+' : '-'}$${tx.monto.toLocaleString('es-AR')}</strong></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function actualizarBadgeCajaCanal(canal, estaCerrado) {
+            const badge = document.getElementById(`badge-estado-${canal}`);
+            const btn = document.getElementById(`btn-cerrar-caja-${canal}`);
+            
+            if (estaCerrado) {
+                badge.innerText = 'Cerrada 🔒';
+                badge.className = 'canal-badge closed';
+                if (btn) {
+                    btn.innerText = 'Caja Cerrada 🔒';
+                    btn.setAttribute('disabled', 'disabled');
+                }
+            } else {
+                badge.innerText = 'Abierta 🟢';
+                badge.className = 'canal-badge open';
+                if (btn) {
+                    btn.innerText = `Cerrar Caja ${canal === 'salon' ? 'Salón' : (canal === 'plataformas' ? 'Plataformas' : 'Directo')} 🔒`;
+                    btn.removeAttribute('disabled');
+                }
+            }
+        }
+
+        function ejecutarCierreParcial(canal) {
+            const canalNombre = canal === 'salon' ? 'Salón' : (canal === 'plataformas' ? 'Plataformas' : 'Venta Directa');
+            if (confirm(`¿Estás seguro de que querés realizar el cierre parcial de la Caja ${canalNombre}?\nSe bloquearán los cierres ordinarios de este canal.`)) {
+                cerrarCajaParcial(canal);
+                calcularCajaYCharts();
+                alert(`¡La Caja de ${canalNombre} ha sido cerrada parcialmente de forma correcta!`);
+            }
+        }
+
+        function ejecutarCierreGeneral() {
+            if (confirm("🚨 ATENCIÓN CIERRE DE JORNADA 🚨\n\n¿Estás seguro de que querés cerrar la jornada de hoy?\n\nEsto realizará las siguientes acciones:\n1. Consolidará los totales de todas las sub-cajas (Salón, Plataformas y Venta Directa).\n2. Creará un registro histórico inmutable del cierre diario.\n3. RESETEARÁ todas las comandas, mesas y el libro de movimientos activo a $0 para comenzar el próximo día.\n\nEsta acción no se puede deshacer.")) {
+                const reporte = cerrarJornadaCompleta();
+                inicializarAdmin();
+                alert(`🏁 JORNADA CERRADA Y ARCHIVADA 🏁\n\nID Cierre: ${reporte.id_cierre}\nFecha: ${reporte.fecha}\nTotal General: $${reporte.total_general.toLocaleString('es-AR')}\n\nEl sistema se ha reiniciado correctamente para la siguiente jornada.`);
+            }
+        }
+
+        function renderHistoricoCierres() {
+            const cierres = obtenerHistoricoCierres();
+            const tbody = document.getElementById('cierres-historico-body');
+            tbody.innerHTML = '';
+
+            if (cierres.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay registros de jornadas cerradas anteriormente.</td></tr>`;
                 return;
             }
 
-            caja.forEach(tx => {
+            cierres.forEach(cie => {
                 const tr = document.createElement('tr');
-                const badgeClass = tx.tipo === 'ingreso' ? 'status-available' : 'status-unavailable';
-                
                 tr.innerHTML = `
-                    <td><code>${tx.id}</code></td>
-                    <td>${tx.fecha_hora.split(' ')[1] || tx.fecha_hora}</td>
-                    <td><span class="status-badge ${badgeClass}">${tx.tipo.toUpperCase()}</span></td>
-                    <td>${tx.descripcion}</td>
-                    <td>${tx.metodoPago}</td>
-                    <td><strong class="${tx.tipo === 'ingreso' ? 'text-success' : 'text-danger'}">${tx.tipo === 'ingreso' ? '+' : '-'}$${tx.monto.toLocaleString('es-AR')}</strong></td>
+                    <td><code>${cie.id_cierre}</code></td>
+                    <td><strong>${cie.fecha}</strong> <small class="text-muted">${cie.hora}</small></td>
+                    <td>$${cie.total_salon.toLocaleString('es-AR')}</td>
+                    <td>$${cie.total_plataformas.toLocaleString('es-AR')}</td>
+                    <td>$${cie.total_directo.toLocaleString('es-AR')}</td>
+                    <td><strong class="text-success">$${cie.total_general.toLocaleString('es-AR')}</strong></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -985,9 +1397,9 @@
             e.preventDefault();
             const desc = document.getElementById('egr-desc').value.trim();
             const monto = parseFloat(document.getElementById('egr-monto').value);
-            const pago = document.getElementById('egr-pago').value;
+            const canal = document.getElementById('egr-canal').value;
 
-            registrarTransaccionCaja('egreso', desc, monto, pago);
+            registrarTransaccionCaja('egreso', desc, monto, 'Efectivo', canal);
             
             document.getElementById('egr-desc').value = '';
             document.getElementById('egr-monto').value = '';
@@ -1127,7 +1539,6 @@
                 subtotal
             );
 
-            // Refrescar modal detalle actual
             verDetallePedido(pedidoDetalleActual.id_pedido);
             renderKanban();
             renderSalonMesas();
@@ -1177,6 +1588,7 @@ H. Entrega: ${pedidoDetalleActual.fecha_hora_entrega}
 
             const ticket = document.getElementById('thermal-ticket-content');
             const config = obtenerConfig();
+            const activo = obtenerRestauranteActivo();
             
             let itemsText = '';
             pedidoDetalleActual.items.forEach(item => {
@@ -1192,23 +1604,25 @@ H. Entrega: ${pedidoDetalleActual.fecha_hora_entrega}
                 ? 'EFECTIVO' 
                 : (pedidoDetalleActual.metodo_pago === 'debito' ? 'DEBITO' : 'CREDITO');
 
-            const fechaFactura = new Date().toLocaleDateString('es-AR');
             const ptoVta = "00002";
             const nroComp = Math.floor(100000 + Math.random() * 900000);
+
+            // Mostrar el Alias configurado en el onboarding en el ticket
+            const aliasPago = activo.alias_cbu ? `Alias MP/CBU: ${activo.alias_cbu}` : "Alias MP: quincho.mp";
 
             const ticketHTML = `
 <pre class="ticket-pre font-small">
 ======================================
           ${config.restauranteNombre.toUpperCase()}          
 ======================================
-C.U.I.T.: 30-71458923-9
-Ing. Brutos: 30-71458923-9
+C.U.I.T.: ${activo.cuit || '30-71458923-9'}
+Ing. Brutos: ${activo.cuit || '30-71458923-9'}
 Dirección: Av. Corrientes 1234, CABA
 Inicio Actividades: 10/11/2018
 IVA RESPON. INSCRIPTO - A CONSUMIDOR FINAL
 --------------------------------------
 Punto Venta: ${ptoVta}  Comp. Nro: ${nroComp}
-Fecha: ${fechaFactura}   Hora: ${new Date().toLocaleTimeString()}
+Fecha: ${pedidoDetalleActual.fecha_hora.split(' ')[0]}   Hora: ${pedidoDetalleActual.fecha_hora.split(' ')[1] || ''}
 --------------------------------------
 DOCUMENTO NO FISCAL - FACTURA C SIMULADA
 --------------------------------------
@@ -1219,6 +1633,8 @@ Subtotal:                $${subtotalText.padStart(12)}
 Costo Envío:             $${envioText.padStart(12)}
 Total Cobrado:           $${totalText.padStart(12)}
 Forma de Pago:           ${metodoTexto}
+--------------------------------------
+${aliasPago}
 --------------------------------------
            ¡Gracias por elegirnos!
           Visitanos en comandaflow.com
@@ -1242,8 +1658,6 @@ Forma de Pago:           ${metodoTexto}
             const ticketContent = document.getElementById('thermal-ticket-content').innerHTML;
             const printArea = document.getElementById('print-area-physical');
             printArea.innerHTML = ticketContent;
-            
-            // Invocar diálogo nativo
             window.print();
             printArea.innerHTML = '';
         }
@@ -1338,12 +1752,10 @@ Forma de Pago:           ${metodoTexto}
             }
 
             if (id) {
-                // Editar
                 plato.id = parseInt(id);
                 editarPlatoDelMenu(plato);
                 alert("¡Plato editado con éxito!");
             } else {
-                // Agregar
                 agregarPlatoAlMenu(plato);
                 alert("¡Plato agregado con éxito!");
             }

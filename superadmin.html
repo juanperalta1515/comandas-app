@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Control Hub | ComandaFlow Admin</title>
+    <!-- Google Fonts para tipografía premium -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body class="admin-body">
+    <!-- Navbar del SuperAdmin -->
+    <nav class="navbar navbar-admin">
+        <div class="nav-container">
+            <a href="superadmin.html" class="nav-brand">
+                <span class="brand-emoji">👑</span>
+                <span>ComandaFlow SaaS Owner Panel <span class="rest-badge premium">SUPERADMIN</span></span>
+            </a>
+            <div class="nav-actions">
+                <a href="index.html" class="btn btn-secondary btn-sm nav-link-home">
+                    <span>Volver a la Web 🏠</span>
+                </a>
+                <a href="admin.html" class="btn btn-primary btn-sm btn-landing-cta">
+                    <span>Ir a Cocina Demo 🍳</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="admin-container">
+        <!-- Tarjetas de Estadísticas Globales SaaS -->
+        <div class="financial-dashboard-segregado">
+            <!-- Clientes Totales -->
+            <div class="fin-card-canal card-directo">
+                <div class="fin-card-header">
+                    <h4>🏪 Comercios Registrados</h4>
+                </div>
+                <p class="fin-amount" id="saas-total-restaurants">0</p>
+                <small class="text-muted">Cantidad total de inquilinos SaaS.</small>
+            </div>
+            
+            <!-- MRR Estimado -->
+            <div class="fin-card-canal card-salon">
+                <div class="fin-card-header">
+                    <h4>💰 Ingresos Mensuales Recurrentes (MRR)</h4>
+                </div>
+                <p class="fin-amount" id="saas-mrr">$0</p>
+                <small class="text-muted">Estimado bruto mensual basado en planes contratados.</small>
+            </div>
+
+            <!-- Tasa de Actividad -->
+            <div class="fin-card-canal card-plataformas">
+                <div class="fin-card-header">
+                    <h4>🟢 Locales Activos</h4>
+                </div>
+                <p class="fin-amount" id="saas-active-percent">0%</p>
+                <small class="text-muted">Porcentaje de comercios con servicio habilitado.</small>
+            </div>
+        </div>
+
+        <div class="admin-grid-two-cols">
+            <!-- Alta Rápida de Clientes (SaaS Direct Register) -->
+            <div class="admin-card">
+                <h2>Registrar Nuevo Restaurante (Manual)</h2>
+                <p class="admin-card-description">Alta inmediata para clientes que pagaron fuera de la plataforma (ej. transferencias manuales, CBU).</p>
+                <form id="saas-manual-form" onsubmit="registrarManualRestaurant(event)">
+                    <div class="form-group">
+                        <label for="saas-reg-nombre">Nombre del Comercio *</label>
+                        <input type="text" id="saas-reg-nombre" required placeholder="Ej: Hamburguesería Dean & Dennys">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="saas-reg-whatsapp">WhatsApp (Internacional) *</label>
+                            <input type="text" id="saas-reg-whatsapp" required placeholder="Ej: +5491158901234" value="+549">
+                        </div>
+                        <div class="form-group">
+                            <label for="saas-reg-plan">Plan Comercial</label>
+                            <select id="saas-reg-plan">
+                                <option value="Premium">Plan Premium ($25.000 / mes)</option>
+                                <option value="Básico">Plan Básico ($15.000 / mes)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear y Activar Comercio 🚀</button>
+                </form>
+            </div>
+
+            <!-- Ayuda / Acceso Directo de Prueba -->
+            <div class="admin-card rules-card">
+                <h2>Manual de Operaciones SuperAdmin</h2>
+                <p class="admin-card-description">Podés simular suspensiones inmediatas de licencias de uso para probar las pantallas de bloqueo de clientes.</p>
+                
+                <div class="alert-box alert-info">
+                    <strong>¿Cómo probar la suspensión?</strong>
+                    <ol style="margin-left: 1.2rem; margin-top: 0.5rem; line-height: 1.5;">
+                        <li>Identificá un comercio en la lista.</li>
+                        <li>Hacé clic en <strong>"Dar de Baja 🔴"</strong>.</li>
+                        <li>Ingresá al panel del comercio o actualizá su pestaña (se bloqueará automáticamente en tiempo real).</li>
+                        <li>Hacé clic en <strong>"Dar de Alta 🟢"</strong> en esta consola para desbloquearlo al instante.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Comercios Registrados -->
+        <div class="admin-card margin-top-20">
+            <h2>Listado de Comercios Registrados</h2>
+            <div class="table-responsive">
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Logo</th>
+                            <th>ID Local</th>
+                            <th>Nombre del Local</th>
+                            <th>CUIT</th>
+                            <th>WhatsApp</th>
+                            <th>Plan</th>
+                            <th>Registro</th>
+                            <th>Estado Licencia</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="saas-table-body">
+                        <!-- Render dinámico -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js?v=2"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSaaSAdmin();
+
+            window.addEventListener('saasUpdated', renderSaaSAdmin);
+            window.addEventListener('activeRestaurantUpdated', renderSaaSAdmin);
+        });
+
+        function renderSaaSAdmin() {
+            const locales = obtenerLocalesSaaS();
+            
+            // Render de tarjetas de métricas
+            document.getElementById('saas-total-restaurants').innerText = locales.length;
+
+            let mrr = 0;
+            let activos = 0;
+
+            locales.forEach(loc => {
+                if (loc.estado === 'Activo') {
+                    activos++;
+                    mrr += loc.plan === 'Premium' ? 25000 : 15000;
+                }
+            });
+
+            document.getElementById('saas-mrr').innerText = `$${mrr.toLocaleString('es-AR')}`;
+            const pctActivos = locales.length > 0 ? Math.round((activos / locales.length) * 100) : 0;
+            document.getElementById('saas-active-percent').innerText = `${pctActivos}%`;
+
+            // Render de la tabla
+            const tbody = document.getElementById('saas-table-body');
+            tbody.innerHTML = '';
+
+            locales.forEach(loc => {
+                const tr = document.createElement('tr');
+                const isActivo = loc.estado === 'Activo';
+                const statusBadge = isActivo 
+                    ? '<span class="status-badge status-available">ACTIVO</span>' 
+                    : '<span class="status-badge status-unavailable">SUSPENDIDO</span>';
+                
+                const actionBtn = isActivo
+                    ? `<button class="btn btn-danger btn-xs" onclick="alterarEstadoRestaurante('${loc.id}', 'Inactivo')">Dar de Baja 🔴</button>`
+                    : `<button class="btn btn-primary btn-xs" onclick="alterarEstadoRestaurante('${loc.id}', 'Activo')">Dar de Alta 🟢</button>`;
+                
+                // Botón para iniciar sesión como este restaurante
+                const sessionBtn = `<button class="btn btn-secondary btn-xs margin-top-5 btn-block" onclick="seleccionarRestauranteComoActivo('${loc.id}')">Simular Login 👤</button>`;
+
+                tr.innerHTML = `
+                    <td style="font-size: 1.5rem; text-align: center;">${loc.logo || '🍕'}</td>
+                    <td><code>${loc.id}</code></td>
+                    <td><strong>${loc.nombre}</strong></td>
+                    <td>${loc.cuit}</td>
+                    <td>${loc.whatsapp}</td>
+                    <td><span class="category-badge">${loc.plan}</span></td>
+                    <td>${loc.fecha_registro}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div class="crud-actions" style="flex-direction: column;">
+                            ${actionBtn}
+                            ${sessionBtn}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function alterarEstadoRestaurante(id, nuevoEstado) {
+            const exito = actualizarEstadoLocalSaaS(id, nuevoEstado);
+            if (exito) {
+                renderSaaSAdmin();
+                alert(`Licencia del local actualizada a: ${nuevoEstado}`);
+            }
+        }
+
+        function seleccionarRestauranteComoActivo(id) {
+            const locales = obtenerLocalesSaaS();
+            const local = locales.find(l => l.id === id);
+            if (local) {
+                guardarRestauranteActivo(local);
+                alert(`Sesión activa cambiada a: ${local.nombre}. Si tenés abierta la pestaña de administración, se actualizará sola.`);
+            }
+        }
+
+        function registrarManualRestaurant(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('saas-reg-nombre').value.trim();
+            const whatsapp = document.getElementById('saas-reg-whatsapp').value.trim();
+            const plan = document.getElementById('saas-reg-plan').value;
+
+            if (!whatsapp.startsWith("+549")) {
+                alert("Ingrese el número de WhatsApp con código internacional (+549 para Argentina).");
+                return;
+            }
+
+            registrarLocalSaaS({
+                nombre: nombre,
+                whatsapp: whatsapp,
+                plan: plan
+            });
+
+            document.getElementById('saas-manual-form').reset();
+            document.getElementById('saas-reg-whatsapp').value = '+549';
+            
+            renderSaaSAdmin();
+            alert(`¡Comercio "${nombre}" registrado y activado con éxito!`);
+        }
+    </script>
+</body>
+</html>

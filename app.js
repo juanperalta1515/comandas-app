@@ -7,6 +7,12 @@ const KEY_CONFIG = 'comandas_config';
 const KEY_WA_LOGS = 'comandas_wa_logs';
 const KEY_TABLES = 'comandas_tables';
 const KEY_CAJA = 'comandas_caja';
+const KEY_CIERRES = 'comandas_cierres_historico';
+const KEY_CAJA_ESTADOS = 'comandas_caja_estados';
+
+// Claves SaaS para múltiples locales
+const KEY_RESTAURANTS = 'comandas_saas_restaurants';
+const KEY_ACTIVE_RESTAURANT = 'comandas_saas_active_restaurant';
 
 // Catálogo inicial de platos con imágenes de alta calidad de Unsplash
 const PLATOS_INICIALES = [
@@ -95,9 +101,9 @@ const PLATOS_INICIALES = [
 
 // Configuración inicial por defecto
 const CONFIG_DEFECTO = {
-    montoEnvioGratis: 8000, // ARS
-    costoEnvio: 800,       // ARS
-    interesCredito: 10,     // % mensual simple
+    montoEnvioGratis: 8000, 
+    costoEnvio: 800,       
+    interesCredito: 10,     
     restauranteNombre: "El Quincho Porteño",
     whatsappPhone: "+5491132456789",
     whatsappToken: "EAAG_simulado_token_antigravity_123456"
@@ -107,9 +113,28 @@ const CONFIG_DEFECTO = {
 const MESAS_INICIALES = Array.from({ length: 12 }, (_, i) => ({
     id: i + 1,
     numero: i + 1,
-    estado: 'Libre', // Libre, Ocupada, Pidiendo Cuenta
-    pedido_activo: null // ID del pedido asociado actual
+    estado: 'Libre', 
+    pedido_activo: null 
 }));
+
+const ESTADOS_CAJA_DEFECTO = {
+    salon: false,
+    plataformas: false,
+    directo: false
+};
+
+// Local pre-cargado de demostración (Tenant Inicial)
+const LOCAL_DEFECTO_SAAS = {
+    id: 'quincho',
+    nombre: 'El Quincho Porteño',
+    whatsapp: '+5491132456789',
+    alias_cbu: 'quincho.mp',
+    logo: '🍔',
+    estado: 'Activo', // Activo, Inactivo
+    plan: 'Premium',
+    onboarding_complete: true,
+    fecha_registro: new Date().toLocaleDateString('es-AR')
+};
 
 // -- INICIALIZACIÓN DE DATOS --
 function inicializarBaseDeDatos() {
@@ -130,6 +155,19 @@ function inicializarBaseDeDatos() {
     }
     if (!localStorage.getItem(KEY_CAJA)) {
         localStorage.setItem(KEY_CAJA, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(KEY_CIERRES)) {
+        localStorage.setItem(KEY_CIERRES, JSON.stringify([]));
+    }
+    if (!localStorage.getItem(KEY_CAJA_ESTADOS)) {
+        localStorage.setItem(KEY_CAJA_ESTADOS, JSON.stringify(ESTADOS_CAJA_DEFECTO));
+    }
+    // Inicialización del SaaS
+    if (!localStorage.getItem(KEY_RESTAURANTS)) {
+        localStorage.setItem(KEY_RESTAURANTS, JSON.stringify([LOCAL_DEFECTO_SAAS]));
+    }
+    if (!localStorage.getItem(KEY_ACTIVE_RESTAURANT)) {
+        localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(LOCAL_DEFECTO_SAAS));
     }
 }
 
@@ -164,23 +202,6 @@ function guardarPedidos(pedidos) {
     window.dispatchEvent(new Event('ordersUpdated'));
 }
 
-// Escuchar cambios en localStorage para sincronización instantánea
-window.addEventListener('storage', (e) => {
-    if (e.key === KEY_MENU) {
-        window.dispatchEvent(new Event('menuUpdated'));
-    } else if (e.key === KEY_CONFIG) {
-        window.dispatchEvent(new Event('configUpdated'));
-    } else if (e.key === KEY_ORDERS) {
-        window.dispatchEvent(new Event('ordersUpdated'));
-    } else if (e.key === KEY_WA_LOGS) {
-        window.dispatchEvent(new Event('waLogsUpdated'));
-    } else if (e.key === KEY_TABLES) {
-        window.dispatchEvent(new Event('tablesUpdated'));
-    } else if (e.key === KEY_CAJA) {
-        window.dispatchEvent(new Event('cajaUpdated'));
-    }
-});
-
 function obtenerLogsWA() {
     return JSON.parse(localStorage.getItem(KEY_WA_LOGS));
 }
@@ -208,7 +229,78 @@ function guardarCaja(caja) {
     window.dispatchEvent(new Event('cajaUpdated'));
 }
 
-// -- LÓGICA DE ENVÍO GRATIS Y PRECIOS --
+function obtenerHistoricoCierres() {
+    return JSON.parse(localStorage.getItem(KEY_CIERRES)) || [];
+}
+
+function guardarHistoricoCierres(cierres) {
+    localStorage.setItem(KEY_CIERRES, JSON.stringify(cierres));
+    window.dispatchEvent(new Event('cierresUpdated'));
+}
+
+function obtenerEstadosCaja() {
+    return JSON.parse(localStorage.getItem(KEY_CAJA_ESTADOS)) || ESTADOS_CAJA_DEFECTO;
+}
+
+function guardarEstadosCaja(estados) {
+    localStorage.setItem(KEY_CAJA_ESTADOS, JSON.stringify(estados));
+    window.dispatchEvent(new Event('cajaEstadosUpdated'));
+}
+
+// SaaS Getters y Setters
+function obtenerLocalesSaaS() {
+    return JSON.parse(localStorage.getItem(KEY_RESTAURANTS)) || [LOCAL_DEFECTO_SAAS];
+}
+
+function guardarLocalesSaaS(locales) {
+    localStorage.setItem(KEY_RESTAURANTS, JSON.stringify(locales));
+    window.dispatchEvent(new Event('saasUpdated'));
+}
+
+function obtenerRestauranteActivo() {
+    return JSON.parse(localStorage.getItem(KEY_ACTIVE_RESTAURANT)) || LOCAL_DEFECTO_SAAS;
+}
+
+function guardarRestauranteActivo(local) {
+    localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(local));
+    
+    // Si cambiamos de restaurante activo, sincronizamos también la configuración básica del negocio
+    if (local) {
+        const config = obtenerConfig();
+        config.restauranteNombre = local.nombre;
+        config.whatsappPhone = local.whatsapp;
+        guardarConfig(config);
+    }
+    
+    window.dispatchEvent(new Event('activeRestaurantUpdated'));
+}
+
+// Sincronización en tiempo real entre pestañas
+window.addEventListener('storage', (e) => {
+    if (e.key === KEY_MENU) {
+        window.dispatchEvent(new Event('menuUpdated'));
+    } else if (e.key === KEY_CONFIG) {
+        window.dispatchEvent(new Event('configUpdated'));
+    } else if (e.key === KEY_ORDERS) {
+        window.dispatchEvent(new Event('ordersUpdated'));
+    } else if (e.key === KEY_WA_LOGS) {
+        window.dispatchEvent(new Event('waLogsUpdated'));
+    } else if (e.key === KEY_TABLES) {
+        window.dispatchEvent(new Event('tablesUpdated'));
+    } else if (e.key === KEY_CAJA) {
+        window.dispatchEvent(new Event('cajaUpdated'));
+    } else if (e.key === KEY_CIERRES) {
+        window.dispatchEvent(new Event('cierresUpdated'));
+    } else if (e.key === KEY_CAJA_ESTADOS) {
+        window.dispatchEvent(new Event('cajaEstadosUpdated'));
+    } else if (e.key === KEY_RESTAURANTS) {
+        window.dispatchEvent(new Event('saasUpdated'));
+    } else if (e.key === KEY_ACTIVE_RESTAURANT) {
+        window.dispatchEvent(new Event('activeRestaurantUpdated'));
+    }
+});
+
+// -- LÓGICA DE PRECIOS Y COSTOS --
 function calcularCostosPedido(subtotal, tipoEntrega) {
     const config = obtenerConfig();
     const sub = parseFloat(subtotal) || 0;
@@ -236,7 +328,7 @@ function calcularCostosPedido(subtotal, tipoEntrega) {
     };
 }
 
-// -- LÓGICA DE FINANCIACIÓN EN CUOTAS --
+// -- LÓGICA DE CUOTAS --
 function calcularCuotas(monto, cuotasSeleccionadas) {
     const config = obtenerConfig();
     const interesMensual = config.interesCredito / 100;
@@ -259,7 +351,7 @@ function calcularCuotas(monto, cuotasSeleccionadas) {
     };
 }
 
-// -- SIMULADOR DE NOTIFICACIONES DE WHATSAPP BUSINESS --
+// -- SIMULADOR DE NOTIFICACIONES WHATSAPP --
 function enviarNotificacionWhatsApp(pedido) {
     const config = obtenerConfig();
     const { id_pedido, nombre_cliente, telefono_cliente, total, estado, tipo_entrega, nro_mesa } = pedido;
@@ -267,7 +359,6 @@ function enviarNotificacionWhatsApp(pedido) {
     let mensaje = '';
     let triggerEnvio = false;
 
-    // Disparadores automáticos según el estado
     if (estado === 'Confirmado') {
         const entregaTexto = tipo_entrega === 'mesa' ? `en la Mesa ${nro_mesa}` : (tipo_entrega === 'envio' ? 'para Envío a domicilio' : 'para Retiro por local');
         mensaje = `¡Hola ${nombre_cliente}! Tu pedido #${id_pedido} ${entregaTexto} ha sido confirmado. Total: $${total.toLocaleString('es-AR')}.`;
@@ -287,7 +378,6 @@ function enviarNotificacionWhatsApp(pedido) {
 
     if (!triggerEnvio) return;
 
-    // Crear log de la petición de API
     const logEntry = {
         timestamp: new Date().toISOString(),
         pedidoId: id_pedido,
@@ -312,8 +402,6 @@ function enviarNotificacionWhatsApp(pedido) {
     const logs = obtenerLogsWA();
     logs.unshift(logEntry);
     guardarLogsWA(logs);
-    
-    console.log("WhatsApp Cloud API - Mensaje Enviado:", logEntry);
 }
 
 // -- CREAR NUEVO PEDIDO --
@@ -326,10 +414,14 @@ function crearPedido(datosPedido) {
         ...datosPedido
     };
     
+    // Si viene directamente confirmado desde cocina
+    if (datosPedido.estado) {
+        nuevoPedido.estado = datosPedido.estado;
+    }
+    
     pedidos.push(nuevoPedido);
     guardarPedidos(pedidos);
     
-    // Si es consumo en salón, asociarlo a la mesa y ocuparla
     if (nuevoPedido.tipo_entrega === 'mesa') {
         const nroMesa = parseInt(nuevoPedido.nro_mesa);
         const mesas = obtenerMesas();
@@ -341,8 +433,50 @@ function crearPedido(datosPedido) {
         }
     }
     
-    console.log("Pedido Creado con Éxito:", nuevoPedido);
     return nuevoPedido;
+}
+
+// -- CREAR PEDIDO DIRECTO DESDE ADMIN (MESAS) --
+function crearPedidoDirectoMesa(nroMesa, items, nombreCliente) {
+    const subtotal = items.reduce((acc, curr) => acc + (curr.precio * curr.cantidad), 0);
+    const pedido = {
+        nombre_cliente: nombreCliente.trim() || `Mesa ${nroMesa}`,
+        telefono_cliente: "+54 9 11 0000 0000", // No requiere celular real en salón
+        items: items,
+        tipo_entrega: "mesa",
+        direccion_entrega: `Consumo en Mesa ${nroMesa}`,
+        subtotal: subtotal,
+        costo_envio: 0,
+        total: subtotal,
+        metodo_pago: "efectivo",
+        financiacion: null,
+        fecha_hora_entrega: "Lo antes posible",
+        nro_mesa: nroMesa,
+        estado: "Confirmado" // Entra directamente como comanda confirmada a la cocina
+    };
+    return crearPedido(pedido);
+}
+
+// -- REGISTRAR EN CAJA SEGREGADA --
+function registrarTransaccionCaja(tipo, descripcion, monto, metodoPago = 'Efectivo', canal = 'directo') {
+    const caja = obtenerCaja();
+    
+    const estados = obtenerEstadosCaja();
+    const cajaCerrada = estados[canal] === true;
+
+    const nuevaTransaccion = {
+        id: 'TX-' + Math.floor(10000 + Math.random() * 90000),
+        tipo: tipo, 
+        descripcion: descripcion,
+        monto: parseFloat(monto) || 0,
+        metodoPago: metodoPago,
+        canal: canal, 
+        estado_cierre: cajaCerrada ? 'cerrada_parcial' : 'abierta', 
+        fecha_hora: new Date().toLocaleString('es-AR')
+    };
+    caja.unshift(nuevaTransaccion);
+    guardarCaja(caja);
+    return nuevaTransaccion;
 }
 
 // -- ACTUALIZAR ESTADO DEL PEDIDO --
@@ -351,7 +485,28 @@ function actualizarEstadoPedido(idPedido, nuevoEstado) {
     const index = pedidos.findIndex(p => p.id_pedido === idPedido);
     
     if (index !== -1) {
+        const anteriorEstado = pedidos[index].estado;
         pedidos[index].estado = nuevoEstado;
+        
+        if (nuevoEstado === 'Entregado' && anteriorEstado !== 'Entregado' && pedidos[index].tipo_entrega !== 'mesa') {
+            const pedido = pedidos[index];
+            let canal = 'directo';
+            let descripcion = `Venta Directa - Pedido #${pedido.id_pedido}`;
+            
+            if (pedido.plataforma) {
+                canal = 'plataformas';
+                descripcion = `Venta ${pedido.plataforma.toUpperCase()} - Pedido #${pedido.id_pedido}`;
+            }
+            
+            registrarTransaccionCaja(
+                'ingreso',
+                descripcion,
+                pedido.total,
+                pedido.metodo_pago,
+                canal
+            );
+        }
+
         guardarPedidos(pedidos);
         enviarNotificacionWhatsApp(pedidos[index]);
         return true;
@@ -373,23 +528,7 @@ function actualizarItemsPedido(idPedido, nuevosItems, nuevoTotal, nuevoSubtotal)
     return false;
 }
 
-// -- REGISTRAR EN CAJA --
-function registrarTransaccionCaja(tipo, descripcion, monto, metodoPago = 'Efectivo') {
-    const caja = obtenerCaja();
-    const nuevaTransaccion = {
-        id: 'TX-' + Math.floor(10000 + Math.random() * 90000),
-        tipo: tipo, // 'ingreso' o 'egreso'
-        descripcion: descripcion,
-        monto: parseFloat(monto) || 0,
-        metodoPago: metodoPago,
-        fecha_hora: new Date().toLocaleString('es-AR')
-    };
-    caja.unshift(nuevaTransaccion);
-    guardarCaja(caja);
-    return nuevaTransaccion;
-}
-
-// -- PROCESAR COBRO DE MESA --
+// -- PROCESAR COBRO DE MESA (SALÓN) --
 function cobrarMesa(nroMesa, metodoPago) {
     const mesas = obtenerMesas();
     const idxMesa = mesas.findIndex(m => m.numero === parseInt(nroMesa));
@@ -404,25 +543,82 @@ function cobrarMesa(nroMesa, metodoPago) {
     
     const pedido = pedidos[idxPed];
     
-    // Registrar ingreso en caja
     registrarTransaccionCaja(
         'ingreso', 
         `Cobro Mesa ${nroMesa} - Pedido #${idPedido}`, 
         pedido.total, 
-        metodoPago
+        metodoPago,
+        'salon'
     );
     
-    // Actualizar pedido a Entregado/Finalizado
     pedidos[idxPed].estado = 'Entregado';
     pedidos[idxPed].metodo_pago = metodoPago.toLowerCase();
     guardarPedidos(pedidos);
     
-    // Liberar mesa
     mesas[idxMesa].estado = 'Libre';
     mesas[idxMesa].pedido_activo = null;
     guardarMesas(mesas);
     
     return true;
+}
+
+// -- GESTIÓN DE CIERRES PARCIALES Y TOTAL DE JORNADA --
+
+function cerrarCajaParcial(canal) {
+    const estados = obtenerEstadosCaja();
+    estados[canal] = true;
+    guardarEstadosCaja(estados);
+    return true;
+}
+
+function cerrarJornadaCompleta() {
+    const caja = obtenerCaja();
+    
+    let totalSalon = 0;
+    let totalPlataformas = 0;
+    let totalDirecto = 0;
+
+    caja.forEach(tx => {
+        const factor = tx.tipo === 'ingreso' ? 1 : -1;
+        const monto = tx.monto * factor;
+        
+        if (tx.canal === 'salon') {
+            totalSalon += monto;
+        } else if (tx.canal === 'plataformas') {
+            totalPlataformas += monto;
+        } else if (tx.canal === 'directo') {
+            totalDirecto += monto;
+        }
+    });
+
+    const totalGeneral = totalSalon + totalPlataformas + totalDirecto;
+    const fecha = new Date().toLocaleDateString('es-AR');
+    const hora = new Date().toLocaleTimeString('es-AR');
+    
+    const nuevoCierre = {
+        id_cierre: 'CIE-' + Math.floor(1000 + Math.random() * 9000),
+        fecha: fecha,
+        hora: hora,
+        total_salon: totalSalon,
+        total_plataformas: totalPlataformas,
+        total_directo: totalDirecto,
+        total_general: totalGeneral
+    };
+
+    const historico = obtenerHistoricoCierres();
+    historico.unshift(nuevoCierre);
+    guardarHistoricoCierres(historico);
+
+    guardarCaja([]); 
+    guardarPedidos([]); 
+    guardarEstadosCaja(ESTADOS_CAJA_DEFECTO); 
+    
+    const mesasReseteadas = MESAS_INICIALES.map(m => ({ ...m }));
+    guardarMesas(mesasReseteadas);
+
+    localStorage.removeItem('comandas_active_mesa');
+
+    return nuevoCierre;
 }
 
 // -- GESTIÓN DE PLATOS (CRUD) --
@@ -438,6 +634,73 @@ function agregarPlatoAlMenu(plato) {
     menu.push(nuevoPlato);
     guardarMenu(menu);
     return nuevoPlato;
+}
+
+// -- OPERACIONES SAAS (GESTIÓN DE CLIENTES / LOCALES) --
+function registrarLocalSaaS(datosLocal) {
+    const locales = obtenerLocalesSaaS();
+    const nuevoId = 'rest-' + Math.floor(1000 + Math.random() * 9000);
+    const nuevoLocal = {
+        id: nuevoId,
+        nombre: datosLocal.nombre,
+        whatsapp: datosLocal.whatsapp,
+        cuit: datosLocal.cuit || '30-' + Math.floor(10000000 + Math.random() * 90000000) + '-9',
+        alias_cbu: datosLocal.alias_cbu || '',
+        logo: datosLocal.logo || '🍕',
+        estado: 'Activo', // Activo automáticamente tras confirmación de pago
+        plan: datosLocal.plan || 'Premium',
+        onboarding_complete: false, // Forzar wizard popups
+        fecha_registro: new Date().toLocaleDateString('es-AR')
+    };
+
+    locales.push(nuevoLocal);
+    guardarLocalesSaaS(locales);
+    
+    // Iniciar sesión del nuevo local automáticamente
+    guardarRestauranteActivo(nuevoLocal);
+    return nuevoLocal;
+}
+
+function actualizarEstadoLocalSaaS(idLocal, estado) {
+    const locales = obtenerLocalesSaaS();
+    const idx = locales.findIndex(l => l.id === idLocal);
+    if (idx !== -1) {
+        locales[idx].estado = estado;
+        guardarLocalesSaaS(locales);
+
+        // Si es el local activo, actualizar también el estado de la sesión activa
+        const activo = obtenerRestauranteActivo();
+        if (activo && activo.id === idLocal) {
+            activo.estado = estado;
+            // No podemos usar guardarRestauranteActivo porque tiene efectos secundarios, escribimos directo
+            localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(activo));
+            window.dispatchEvent(new Event('activeRestaurantUpdated'));
+        }
+        return true;
+    }
+    return false;
+}
+
+function actualizarConfiguracionOnboarding(idLocal, datosConfig) {
+    const locales = obtenerLocalesSaaS();
+    const idx = locales.findIndex(l => l.id === idLocal);
+    if (idx !== -1) {
+        locales[idx].alias_cbu = datosConfig.alias_cbu;
+        locales[idx].logo = datosConfig.logo || locales[idx].logo;
+        locales[idx].onboarding_complete = true;
+        guardarLocalesSaaS(locales);
+
+        // Actualizar sesión activa
+        const activo = obtenerRestauranteActivo();
+        if (activo && activo.id === idLocal) {
+            activo.alias_cbu = datosConfig.alias_cbu;
+            activo.logo = datosConfig.logo || activo.logo;
+            activo.onboarding_complete = true;
+            guardarRestauranteActivo(activo); // Sincroniza configuraciones y nombre
+        }
+        return true;
+    }
+    return false;
 }
 
 function editarPlatoDelMenu(platoActualizado) {
@@ -460,3 +723,11 @@ function eliminarPlatoDelMenu(idPlato) {
     }
     return false;
 }
+
+/* 
+================================================================================
+GUÍA DE ARQUITECTURA: INTEGRACIÓN DE APIS EN PRODUCCIÓN (RAPPI & PEDIDOSYA)
+================================================================================
+(Consulte la sección final de app.js para leer el flujo completo de producción).
+================================================================================
+*/
