@@ -2570,3 +2570,418 @@ hr {
     }
 }
 
+/* ==========================================================================
+   NUEVAS CLASES Y ESTILOS: COMANDAS, SALÓN, CAJA Y TICKETS
+   ========================================================================== */
+
+/* 1. Estilos para fotos de platos en la Carta */
+.card-image-container {
+    width: 100%;
+    height: 180px;
+    position: relative;
+    overflow: hidden;
+    background-color: #f3f4f6;
+    border-top-left-radius: var(--radius-md);
+    border-top-right-radius: var(--radius-md);
+}
+.card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-normal);
+}
+.menu-card:hover .card-img {
+    transform: scale(1.06);
+}
+.card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.status-indicator.available {
+    background-color: var(--color-success);
+    box-shadow: 0 0 8px var(--color-success);
+}
+.status-indicator.unavailable {
+    background-color: var(--color-danger);
+    box-shadow: 0 0 8px var(--color-danger);
+}
+
+/* 2. Barra de Mesa Activa en la Carta (Flotante inferior) */
+.active-table-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(24, 15, 15, 0.9);
+    backdrop-filter: blur(12px);
+    color: #fff;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+.active-table-info {
+    display: flex;
+    flex-direction: column;
+}
+.order-id-hint {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.6);
+}
+
+/* 3. Panel de Salón y Mesas (Admin) */
+.mesas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+.mesa-card {
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: center;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+.mesa-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+.mesa-badge-nro {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--color-text-main);
+    margin-bottom: 0.25rem;
+}
+.mesa-status-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+}
+.mesa-desc {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    min-height: 40px;
+    margin-bottom: 1rem;
+}
+.mesa-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.btn-xs {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    border-radius: 4px;
+}
+
+/* Estados de las Mesas */
+.state-libre {
+    border-top: 6px solid var(--color-success);
+}
+.state-libre .mesa-status-label {
+    background: hsl(145, 63%, 95%);
+    color: var(--color-success);
+}
+.state-ocupada {
+    border-top: 6px solid var(--color-info);
+    background: hsl(200, 75%, 98%);
+}
+.state-ocupada .mesa-status-label {
+    background: hsl(200, 75%, 92%);
+    color: var(--color-info);
+}
+.state-pidiendo-cuenta {
+    border-top: 6px solid var(--color-warning);
+    background: hsl(45, 85%, 97%);
+    animation: pulse-warning 1.5s infinite alternate;
+}
+.state-pidiendo-cuenta .mesa-status-label {
+    background: hsl(45, 85%, 90%);
+    color: var(--color-warning);
+}
+
+@keyframes pulse-warning {
+    0% { box-shadow: 0 0 5px rgba(234,179,8,0.2); }
+    100% { box-shadow: 0 0 15px rgba(234,179,8,0.6); }
+}
+
+.tables-state-legend {
+    display: flex;
+    gap: 1rem;
+}
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.legend-dot.libre { background-color: var(--color-success); }
+.legend-dot.ocupada { background-color: var(--color-info); }
+.legend-dot.pidiendo { background-color: var(--color-warning); }
+
+/* 4. Dashboard Financiero (Caja) */
+.financial-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+.fin-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+}
+.fin-card-info h3 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+.fin-amount {
+    font-size: 2rem;
+    font-weight: 800;
+}
+.fin-icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+.fin-card.income { border-left: 6px solid var(--color-success); }
+.fin-card.expense { border-left: 6px solid var(--color-danger); }
+.fin-card.net { border-left: 6px solid var(--color-info); }
+
+.financial-charts {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.chart-section h4 {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text-main);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+}
+.stat-progress-bar {
+    margin-bottom: 0.75rem;
+}
+.stat-progress-bar label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+}
+.p-bar {
+    width: 100%;
+    height: 8px;
+    background: hsl(24, 12%, 93%);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.p-fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 4px;
+    transition: width 0.5s ease-out;
+}
+.p-fill.green { background: var(--color-success); }
+.p-fill.blue { background: var(--color-info); }
+.p-fill.purple { background: #8b5cf6; }
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.logs-table th, .logs-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.85rem;
+}
+.logs-table th {
+    background-color: hsl(24, 12%, 96%);
+    font-weight: 600;
+}
+
+/* 5. Simulador y Plataformas Externas */
+.simulator-panel {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+.simulator-panel span {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+.btn-peya {
+    background-color: #ef4444;
+    color: #fff;
+}
+.btn-peya:hover {
+    background-color: #dc2626;
+}
+.btn-rappi {
+    background-color: #f97316;
+    color: #fff;
+}
+.btn-rappi:hover {
+    background-color: #ea580c;
+}
+
+.kanban-card.pedidosya {
+    border-left: 6px solid #ef4444;
+}
+.kanban-card.rappi {
+    border-left: 6px solid #f97316;
+}
+.comanda-delivery-badge.pedidosya {
+    background: #fef2f2;
+    color: #ef4444;
+}
+.comanda-delivery-badge.rappi {
+    background: #fff7ed;
+    color: #f97316;
+}
+.comanda-delivery-badge.mesa {
+    background: #e0f2fe;
+    color: var(--color-info);
+}
+
+/* 6. Modificaciones de Pedidos / Comandas (Admin Detail) */
+.quantity-controls-table {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.add-item-to-order-inline {
+    display: flex;
+    gap: 0.5rem;
+}
+.add-item-to-order-inline select {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    font-size: 0.85rem;
+}
+
+/* CRUD Menú Table Styles */
+.stock-plate-thumb {
+    width: 60px;
+    height: 45px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+.crud-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+.margin-top-5 { margin-top: 5px; }
+.margin-top-20 { margin-top: 20px; }
+
+/* 7. Vista Previa de Ticket e Impresión */
+.thermal-ticket {
+    background: #fff;
+    color: #000;
+    padding: 1.5rem;
+    width: 320px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+}
+.ticket-pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1.4;
+}
+.ticket-pre.font-small {
+    font-size: 0.75rem;
+}
+.bg-light-gray {
+    background-color: #f3f4f6;
+}
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 0;
+}
+
+/* Modal sizing tweak */
+.detail-modal-card {
+    max-width: 700px !important;
+}
+.print-preview-card {
+    max-width: 400px !important;
+}
+
+/* 8. Estilos de Impresión Físicos */
+.print-only {
+    display: none;
+}
+
+@media print {
+    /* Ocultar toda la interfaz visual de la web */
+    body * {
+        visibility: hidden;
+    }
+    
+    /* Mostrar únicamente la sección especial de impresión */
+    .print-only,
+    .print-only * {
+        visibility: visible;
+    }
+    
+    .print-only {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background: #fff;
+        color: #000;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    
+    /* Ajustes específicos para tickeadoras térmicas continuas (evita cortes de página) */
+    @page {
+        margin: 0;
+        size: auto;
+    }
+}
+
+

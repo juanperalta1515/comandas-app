@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Cocina - Gestión de Comandas</title>
+    <title>Panel de Cocina - Gestión de Comandas y Salón</title>
     <!-- Google Fonts para tipografía premium -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,7 @@
         <div class="nav-container">
             <a href="admin.html" class="nav-brand">
                 <span class="brand-emoji">🍳</span>
-                <span>Panel Cocina <span id="admin-restaurant-badge" class="rest-badge">El Quincho Porteño</span></span>
+                <span>Panel Cocina & Administración <span id="admin-restaurant-badge" class="rest-badge">El Quincho Porteño</span></span>
             </a>
             <div class="nav-actions">
                 <a href="index.html" class="btn btn-secondary btn-sm nav-link-home">
@@ -32,9 +32,11 @@
     <!-- Pestañas de Navegación del Admin -->
     <header class="admin-header-tabs">
         <div class="tabs-container">
-            <button class="admin-tab-btn active" id="tab-orders-btn" onclick="switchTab('orders')">Tablero de Comandas 📋</button>
-            <button class="admin-tab-btn" id="tab-stock-btn" onclick="switchTab('stock')">Gestión de Menú & Stock 🍔</button>
-            <button class="admin-tab-btn" id="tab-config-btn" onclick="switchTab('config')">Configuración del Local ⚙️</button>
+            <button class="admin-tab-btn active" id="tab-orders-btn" onclick="switchTab('orders')">Comandas 📋</button>
+            <button class="admin-tab-btn" id="tab-tables-btn" onclick="switchTab('tables')">Salón & Mesas 🍽️</button>
+            <button class="admin-tab-btn" id="tab-stock-btn" onclick="switchTab('stock')">Gestión de Menú 🍔</button>
+            <button class="admin-tab-btn" id="tab-caja-btn" onclick="switchTab('caja')">Caja & Finanzas 📊</button>
+            <button class="admin-tab-btn" id="tab-config-btn" onclick="switchTab('config')">Configuración ⚙️</button>
         </div>
     </header>
 
@@ -43,7 +45,13 @@
         
         <!-- ================= PESTAÑA 1: TABLERO KANBAN ================= -->
         <section class="admin-tab-content active" id="view-orders">
-            <!-- Control de Columnas Kanban para Celulares -->
+            <!-- Simulador de Plataformas Integradas -->
+            <div class="simulator-panel">
+                <span>🛵 Simular Pedidos de Plataformas Externas:</span>
+                <button class="btn btn-peya btn-sm" onclick="simularPedidoPlataforma('PedidosYa')">Simular PedidosYa 🛵</button>
+                <button class="btn btn-rappi btn-sm" onclick="simularPedidoPlataforma('Rappi')">Simular Rappi 🍊</button>
+            </div>
+
             <div class="kanban-mobile-tabs">
                 <button class="k-mobile-tab active" onclick="filtrarKanbanMovil('pendiente')">Pend. (<span id="m-count-pendiente">0</span>)</button>
                 <button class="k-mobile-tab" onclick="filtrarKanbanMovil('confirmado')">Conf. (<span id="m-count-confirmado">0</span>)</button>
@@ -54,7 +62,6 @@
             </div>
             <div class="kanban-wrapper">
                 
-                <!-- Columna: Pendiente -->
                 <div class="kanban-column" id="col-pendiente">
                     <div class="kanban-column-header col-pendiente-h">
                         <h3>Pendiente</h3>
@@ -63,7 +70,6 @@
                     <div class="kanban-cards-container" id="cards-pendiente"></div>
                 </div>
 
-                <!-- Columna: Confirmado -->
                 <div class="kanban-column" id="col-confirmado">
                     <div class="kanban-column-header col-confirmado-h">
                         <h3>Confirmado</h3>
@@ -72,7 +78,6 @@
                     <div class="kanban-cards-container" id="cards-confirmado"></div>
                 </div>
 
-                <!-- Columna: En Preparación -->
                 <div class="kanban-column" id="col-preparacion">
                     <div class="kanban-column-header col-preparacion-h">
                         <h3>En Preparación</h3>
@@ -81,7 +86,6 @@
                     <div class="kanban-cards-container" id="cards-preparacion"></div>
                 </div>
 
-                <!-- Columna: Listo para Entregar -->
                 <div class="kanban-column" id="col-listo">
                     <div class="kanban-column-header col-listo-h">
                         <h3>Listo p/ Entregar</h3>
@@ -90,7 +94,6 @@
                     <div class="kanban-cards-container" id="cards-listo"></div>
                 </div>
 
-                <!-- Columna: En Camino -->
                 <div class="kanban-column" id="col-camino">
                     <div class="kanban-column-header col-camino-h">
                         <h3>En Camino</h3>
@@ -99,7 +102,6 @@
                     <div class="kanban-cards-container" id="cards-camino"></div>
                 </div>
 
-                <!-- Columna: Entregado -->
                 <div class="kanban-column" id="col-entregado">
                     <div class="kanban-column-header col-entregado-h">
                         <h3>Entregado</h3>
@@ -111,32 +113,172 @@
             </div>
         </section>
 
-        <!-- ================= PESTAÑA 2: GESTIÓN DE STOCK ================= -->
+        <!-- ================= PESTAÑA 2: CONTROL DE MESAS ================= -->
+        <section class="admin-tab-content" id="view-tables">
+            <div class="admin-card">
+                <div class="admin-card-header-flex">
+                    <h2>Control del Salón & Mesas 🍽️</h2>
+                    <span class="tables-state-legend">
+                        <small><span class="legend-dot libre"></span> Libre</small>
+                        <small><span class="legend-dot ocupada"></span> Ocupada</small>
+                        <small><span class="legend-dot pidiendo"></span> Pidiendo Cuenta</small>
+                    </span>
+                </div>
+                <p class="admin-card-description">Monitoreá la ocupación del salón. Agregá platos, generá cuentas e imprimí tickets de mesas activas.</p>
+                
+                <div class="mesas-grid" id="mesas-salon-grid">
+                    <!-- Cargadas dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA 3: GESTIÓN DE MENÚ & STOCK (CRUD) ================= -->
         <section class="admin-tab-content" id="view-stock">
             <div class="admin-card">
-                <h2>Gestión de Platos e Ingredientes (Stock)</h2>
-                <p class="admin-card-description">Activá o desactivá la disponibilidad inmediata de los platos de la carta digital.</p>
+                <div class="admin-card-header-flex">
+                    <h2>Administración de Menú & Disponibilidad</h2>
+                    <button class="btn btn-primary btn-sm" onclick="abrirModalNuevoPlato()">Agregar Nuevo Plato ➕</button>
+                </div>
+                <p class="admin-card-description">Editá precios, descripciones, fotos, disponibilidad en carta digital, y eliminá productos.</p>
                 
                 <div class="table-responsive">
                     <table class="stock-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Imagen</th>
                                 <th>Nombre del Plato</th>
                                 <th>Categoría</th>
                                 <th>Precio (ARS)</th>
-                                <th>Disponibilidad en Carta</th>
+                                <th>Disponible</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="stock-table-body">
-                            <!-- Render dinámico de platos -->
+                            <!-- Render dinámico -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- ================= PESTAÑA 3: CONFIGURACIÓN ================= -->
+        <!-- ================= PESTAÑA 4: CAJA Y DASHBOARD FINANCIERO ================= -->
+        <section class="admin-tab-content" id="view-caja">
+            <div class="financial-dashboard">
+                <!-- Tarjetas de caja -->
+                <div class="fin-card income">
+                    <div class="fin-card-info">
+                        <h3>Ingresos del Día</h3>
+                        <p class="fin-amount" id="box-caja-ingresos">$0</p>
+                    </div>
+                    <span class="fin-icon">💰</span>
+                </div>
+                <div class="fin-card expense">
+                    <div class="fin-card-info">
+                        <h3>Egresos del Día</h3>
+                        <p class="fin-amount" id="box-caja-egresos">$0</p>
+                    </div>
+                    <span class="fin-icon">💸</span>
+                </div>
+                <div class="fin-card net">
+                    <div class="fin-card-info">
+                        <h3>Caja Neta / Ganancia</h3>
+                        <p class="fin-amount" id="box-caja-neto">$0</p>
+                    </div>
+                    <span class="fin-icon">📈</span>
+                </div>
+            </div>
+
+            <div class="admin-grid-two-cols">
+                <!-- Registrar Egreso Form -->
+                <div class="admin-card">
+                    <h2>Registrar Egreso / Gasto Manual</h2>
+                    <p class="admin-card-description">Registrá gastos menores del día (insumos, repartidores, etc.) para calcular la caja neta.</p>
+                    <form id="expense-form" onsubmit="guardarEgresoManual(event)">
+                        <div class="form-group">
+                            <label for="egr-desc">Descripción del Egreso *</label>
+                            <input type="text" id="egr-desc" required placeholder="Ej: Compra de verduras en verdulería">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="egr-monto">Monto (ARS) *</label>
+                                <input type="number" id="egr-monto" required min="1" placeholder="Ej: 1500">
+                            </div>
+                            <div class="form-group">
+                                <label for="egr-pago">Método de Caja</label>
+                                <select id="egr-pago">
+                                    <option value="Efectivo">Caja Efectivo</option>
+                                    <option value="Transferencia">Caja Digital / Banco</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Registrar Salida 💸</button>
+                    </form>
+                </div>
+
+                <!-- Gráficos de Estadísticas Rápidas -->
+                <div class="admin-card">
+                    <h2>Distribución de Ventas</h2>
+                    <p class="admin-card-description">Métricas de transacciones cobradas por canal y por método de pago.</p>
+                    <div class="financial-charts">
+                        <div class="chart-section">
+                            <h4>Por Tipo de Servicio</h4>
+                            <div class="stat-progress-bar">
+                                <label>Mesas (Salón): <strong id="val-pct-mesa">$0</strong></label>
+                                <div class="p-bar"><div class="p-fill" id="bar-pct-mesa" style="width: 0%"></div></div>
+                            </div>
+                            <div class="stat-progress-bar">
+                                <label>Delivery: <strong id="val-pct-envio">$0</strong></label>
+                                <div class="p-bar"><div class="p-fill" id="bar-pct-envio" style="width: 0%"></div></div>
+                            </div>
+                            <div class="stat-progress-bar">
+                                <label>Take Away (Retiro): <strong id="val-pct-retiro">$0</strong></label>
+                                <div class="p-bar"><div class="p-fill" id="bar-pct-retiro" style="width: 0%"></div></div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-section">
+                            <h4>Por Medio de Pago</h4>
+                            <div class="stat-progress-bar">
+                                <label>Efectivo: <strong id="val-pay-cash">$0</strong></label>
+                                <div class="p-bar"><div class="p-fill green" id="bar-pay-cash" style="width: 0%"></div></div>
+                            </div>
+                            <div class="stat-progress-bar">
+                                <label>Débito: <strong id="val-pay-deb">$0</strong></label>
+                                <div class="p-bar"><div class="p-fill blue" id="bar-pay-deb" style="width: 0%"></div></div>
+                            </div>
+                            <div class="stat-progress-bar">
+                                <label>Crédito: <strong id="val-pay-cred">$0</strong></label>
+                                <div class="p-bar"><div class="p-fill purple" id="bar-pay-cred" style="width: 0%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Movimientos de Caja Chica -->
+            <div class="admin-card margin-top-20">
+                <h2>Libro de Caja - Movimientos del Día</h2>
+                <div class="table-responsive">
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>ID Transacción</th>
+                                <th>Fecha/Hora</th>
+                                <th>Tipo</th>
+                                <th>Detalle / Concepto</th>
+                                <th>Método</th>
+                                <th>Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody id="caja-transactions-body">
+                            <!-- Dinámico -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA 5: CONFIGURACIÓN ================= -->
         <section class="admin-tab-content" id="view-config">
             <div class="admin-grid-two-cols">
                 
@@ -154,7 +296,6 @@
                             <div class="form-group">
                                 <label for="cfg-envio-gratis">Monto Envío Gratis (ARS)</label>
                                 <input type="number" id="cfg-envio-gratis" min="0" required>
-                                <small class="form-hint">Monto de compra mínima para bonificar el envío.</small>
                             </div>
                             <div class="form-group">
                                 <label for="cfg-costo-envio">Costo de Envío Estándar (ARS)</label>
@@ -164,17 +305,14 @@
                         <div class="form-group">
                             <label for="cfg-interes">Interés Mensual Crédito (% CFT)</label>
                             <input type="number" id="cfg-interes" min="0" max="100" required>
-                            <small class="form-hint">Interés aplicado por cuota para pagos con tarjeta de crédito.</small>
                         </div>
                         <div class="form-group">
                             <label for="cfg-wa-phone">WhatsApp Business Número</label>
                             <input type="text" id="cfg-wa-phone" required placeholder="Ej: +5491132456789">
-                            <small class="form-hint">Número desde donde se simularán los envíos.</small>
                         </div>
                         <div class="form-group">
                             <label for="cfg-wa-token">Token API WhatsApp Cloud</label>
                             <input type="password" id="cfg-wa-token" required>
-                            <small class="form-hint">Token de portador (Bearer Token) para autenticar contra la API.</small>
                         </div>
                         <button type="submit" class="btn btn-primary">Guardar Configuración 💾</button>
                     </form>
@@ -186,15 +324,15 @@
                     <div class="rules-summary-box">
                         <div class="rule-item">
                             <span class="rule-label">Envío Bonificado:</span>
-                            <span class="rule-value" id="lbl-cfg-gratis">Si total >= $8.000, envío $0.</span>
+                            <span class="rule-value" id="lbl-cfg-gratis">-</span>
                         </div>
                         <div class="rule-item">
                             <span class="rule-label">Envío Base:</span>
-                            <span class="rule-value" id="lbl-cfg-envio">Costo de $800 para subtotales menores.</span>
+                            <span class="rule-value" id="lbl-cfg-envio">-</span>
                         </div>
                         <div class="rule-item">
                             <span class="rule-label">Interés Financiado:</span>
-                            <span class="rule-value" id="lbl-cfg-interes">10% mensual simple (12 cuotas = +120%).</span>
+                            <span class="rule-value" id="lbl-cfg-interes">-</span>
                         </div>
                     </div>
                     <div class="alert-box alert-info">
@@ -226,26 +364,34 @@
 
     <!-- Modal de Detalles del Pedido -->
     <div class="modal-overlay" id="order-detail-modal">
-        <div class="modal-card">
+        <div class="modal-card detail-modal-card">
             <div class="modal-header">
                 <h2>Detalle del Pedido <span id="detail-pedido-id">#PED-0000</span></h2>
                 <button class="close-btn" onclick="cerrarDetallePedido()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="detail-section">
-                    <h3>Información del Cliente</h3>
+                    <h3>Información del Pedido / Cliente</h3>
                     <div class="detail-grid-two">
                         <p><strong>Nombre:</strong> <span id="detail-cliente-nombre">-</span></p>
                         <p><strong>Teléfono:</strong> <span id="detail-cliente-telefono">-</span></p>
-                        <p><strong>Tipo Entrega:</strong> <span id="detail-tipo-entrega">-</span></p>
-                        <p><strong>Dirección:</strong> <span id="detail-direccion">-</span></p>
-                        <p><strong>Programado Para:</strong> <span id="detail-agenda">-</span></p>
+                        <p><strong>Entrega:</strong> <span id="detail-tipo-entrega">-</span></p>
+                        <p><strong>Ubicación:</strong> <span id="detail-direccion">-</span></p>
+                        <p><strong>Agenda:</strong> <span id="detail-agenda">-</span></p>
                         <p><strong>Fecha/Hora Compra:</strong> <span id="detail-fecha">-</span></p>
                     </div>
                 </div>
 
                 <div class="detail-section">
-                    <h3>Productos Solicitados</h3>
+                    <div class="admin-card-header-flex">
+                        <h3>Productos Consumidos</h3>
+                        <!-- Controles para agregar platos sobre la marcha al pedido -->
+                        <div class="add-item-to-order-inline">
+                            <select id="select-add-plato-order"></select>
+                            <button class="btn btn-primary btn-sm" onclick="agregarPlatoAPedidoDetalle()">Añadir ➕</button>
+                        </div>
+                    </div>
+                    
                     <div class="table-responsive">
                         <table class="detail-products-table">
                             <thead>
@@ -264,12 +410,12 @@
                 </div>
 
                 <div class="detail-section">
-                    <h3>Pago e Intereses</h3>
+                    <h3>Totales e Importes</h3>
                     <div class="detail-grid-two">
                         <p><strong>Método de Pago:</strong> <span id="detail-metodo-pago">-</span></p>
-                        <p><strong>Subtotal Platos:</strong> <span id="detail-subtotal">-</span></p>
-                        <p><strong>Costo de Envío:</strong> <span id="detail-costo-envio">-</span></p>
-                        <p><strong>Total Financiado:</strong> <strong id="detail-total">-</strong></p>
+                        <p><strong>Subtotal:</strong> <span id="detail-subtotal">-</span></p>
+                        <p><strong>Envío:</strong> <span id="detail-costo-envio">-</span></p>
+                        <p><strong>Total Final:</strong> <strong id="detail-total">-</strong></p>
                     </div>
                     <div id="detail-financiacion-box" style="display: none;" class="alert-box alert-warning">
                         <strong>Detalle de Cuotas:</strong> <span id="detail-financiacion-text">-</span>
@@ -277,25 +423,130 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-peya" id="btn-print-kitchen" onclick="imprimirTicketCocina()">Comanda Cocina 🖨️</button>
+                <button class="btn btn-rappi" id="btn-print-bill" onclick="imprimirFacturaCliente()">Factura/Cuenta 🧾</button>
                 <button class="btn btn-secondary" onclick="cerrarDetallePedido()">Cerrar</button>
             </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Modal de Cobro de Mesa (Caja Salón) -->
+    <div class="modal-overlay" id="checkout-table-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Cerrar Cuenta - Mesa <span id="checkout-mesa-nro">-</span></h2>
+                <button class="close-btn" onclick="cerrarCobrarMesa()">&times;</button>
+            </div>
+            <form onsubmit="procesarCobrarMesa(event)">
+                <div class="modal-body">
+                    <p>Vas a proceder a cobrar los consumos de la mesa.</p>
+                    <div class="order-total-success" id="checkout-mesa-total-box">$0</div>
+                    <div class="form-group">
+                        <label for="checkout-mesa-pago">Método de Cobro *</label>
+                        <select id="checkout-mesa-pago">
+                            <option value="Efectivo">💵 Efectivo / Transferencia</option>
+                            <option value="Debito">💳 Tarjeta de Débito</option>
+                            <option value="Credito">💳 Tarjeta de Crédito</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarCobrarMesa()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Pago e Imprimir Factura 🧾</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de CRUD: Crear/Editar Plato -->
+    <div class="modal-overlay" id="crud-plato-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="crud-modal-title">Agregar Nuevo Plato</h2>
+                <button class="close-btn" onclick="cerrarModalPlato()">&times;</button>
+            </div>
+            <form id="crud-plato-form" onsubmit="guardarPlatoCRUD(event)">
+                <input type="hidden" id="plato-id-crud">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="plato-nombre-crud">Nombre del Plato *</label>
+                        <input type="text" id="plato-nombre-crud" required placeholder="Ej: Milanesa a la Suiza">
+                    </div>
+                    <div class="form-group">
+                        <label for="plato-desc-crud">Descripción del Plato *</label>
+                        <textarea id="plato-desc-crud" required placeholder="Ej: Milanesa gigante de carne vacuna con salsa blanca..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="plato-precio-crud">Precio (ARS) *</label>
+                            <input type="number" id="plato-precio-crud" required min="1" placeholder="Ej: 5000">
+                        </div>
+                        <div class="form-group">
+                            <label for="plato-cat-crud">Categoría *</label>
+                            <select id="plato-cat-crud">
+                                <option value="Entrada">Entrada</option>
+                                <option value="Principal">Principal</option>
+                                <option value="Postre">Postre</option>
+                                <option value="Bebida">Bebida</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="plato-img-crud">URL de Imagen del Plato (Opcional)</label>
+                        <input type="url" id="plato-img-crud" placeholder="Ej: https://images.unsplash.com/photo...">
+                        <small class="form-hint">Si se deja vacío, se aplicará un placeholder gastronómico automático.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalPlato()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-plato-crud">Guardar Plato 💾</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Impresión Virtual (Ticket Térmico) -->
+    <div class="modal-overlay" id="print-preview-modal">
+        <div class="modal-card print-preview-card">
+            <div class="modal-header">
+                <h2>Vista Previa de Impresión 🖨️</h2>
+                <button class="close-btn" onclick="cerrarVistaImpresion()">&times;</button>
+            </div>
+            <div class="modal-body bg-light-gray flex-center">
+                <!-- Formato Ticket ESC/POS simulado -->
+                <div class="thermal-ticket" id="thermal-ticket-content">
+                    <!-- Se genera dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="mandarAImpresoraFisica()">Imprimir Ticket Real 🖨️</button>
+                <button class="btn btn-secondary" onclick="cerrarVistaImpresion()">Cerrar Vista</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Area invisible para imprimir (sólo detectado por window.print en CSS) -->
+    <div id="print-area-physical" class="print-only"></div>
+
+    <script src="app.js?v=2"></script>
     <script>
-        // Pestaña activa inicial
         let tabActiva = 'orders';
         let pedidoDetalleActual = null;
+        let activeMobileColumn = 'pendiente';
 
         document.addEventListener('DOMContentLoaded', () => {
             inicializarAdmin();
 
-            // Escuchadores de almacenamiento para sincronizar cambios
-            window.addEventListener('ordersUpdated', renderKanban);
+            // Sincronizadores en tiempo real
+            window.addEventListener('ordersUpdated', () => {
+                renderKanban();
+                renderSalonMesas();
+                calcularCajaYCharts();
+            });
             window.addEventListener('menuUpdated', () => {
                 renderKanban();
                 renderStockTable();
+                cargarListaDesplegablePlatosDetalle();
             });
             window.addEventListener('configUpdated', () => {
                 cargarConfiguracionesForm();
@@ -303,14 +554,19 @@
                 renderKanban();
             });
             window.addEventListener('waLogsUpdated', renderLogsWhatsApp);
+            window.addEventListener('tablesUpdated', renderSalonMesas);
+            window.addEventListener('cajaUpdated', calcularCajaYCharts);
         });
 
         function inicializarAdmin() {
             renderKanban();
+            renderSalonMesas();
             renderStockTable();
             cargarConfiguracionesForm();
             actualizarLabelsConfig();
             renderLogsWhatsApp();
+            calcularCajaYCharts();
+            cargarListaDesplegablePlatosDetalle();
         }
 
         // -- MANEJO DE PESTAÑAS --
@@ -324,9 +580,15 @@
             if (tabId === 'orders') {
                 document.getElementById('view-orders').classList.add('active');
                 renderKanban();
+            } else if (tabId === 'tables') {
+                document.getElementById('view-tables').classList.add('active');
+                renderSalonMesas();
             } else if (tabId === 'stock') {
                 document.getElementById('view-stock').classList.add('active');
                 renderStockTable();
+            } else if (tabId === 'caja') {
+                document.getElementById('view-caja').classList.add('active');
+                calcularCajaYCharts();
             } else if (tabId === 'config') {
                 document.getElementById('view-config').classList.add('active');
                 cargarConfiguracionesForm();
@@ -339,14 +601,13 @@
         function renderKanban() {
             const pedidos = obtenerPedidos();
             
-            // Limpiar contenedores
+            // Limpiar columnas
             ESTADOS.forEach(est => {
                 const idContainer = `cards-${obtenerIdEstadoString(est)}`;
                 const container = document.getElementById(idContainer);
                 if (container) container.innerHTML = '';
             });
 
-            // Contadores por columna
             const contadores = { 'Pendiente': 0, 'Confirmado': 0, 'En Preparación': 0, 'Listo para Entregar': 0, 'En Camino': 0, 'Entregado': 0 };
 
             pedidos.forEach(pedido => {
@@ -359,7 +620,7 @@
                 if (!container) return;
 
                 const card = document.createElement('div');
-                card.className = 'kanban-card';
+                card.className = `kanban-card ${pedido.plataforma ? pedido.plataforma : ''}`;
 
                 const totalFormateado = pedido.total.toLocaleString('es-AR', {
                     style: 'currency', currency: 'ARS', minimumFractionDigits: 0
@@ -367,7 +628,6 @@
 
                 const countItems = pedido.items.reduce((acc, curr) => acc + curr.cantidad, 0);
 
-                // Determinar botones de avance/retroceso
                 const idxEstado = ESTADOS.indexOf(pedido.estado);
                 const btnRetroceder = idxEstado > 0 
                     ? `<button class="kanban-nav-btn" onclick="moverEstado('${pedido.id_pedido}', '${ESTADOS[idxEstado - 1]}')">◀</button>` 
@@ -376,11 +636,22 @@
                     ? `<button class="kanban-nav-btn primary" onclick="moverEstado('${pedido.id_pedido}', '${ESTADOS[idxEstado + 1]}')">▶</button>` 
                     : `<span></span>`;
 
+                let deliveryLabel = '';
+                if (pedido.plataforma === 'pedidosya') {
+                    deliveryLabel = '🔴 PedidosYa';
+                } else if (pedido.plataforma === 'rappi') {
+                    deliveryLabel = '🍊 Rappi';
+                } else if (pedido.tipo_entrega === 'mesa') {
+                    deliveryLabel = `🍽️ Mesa ${pedido.nro_mesa}`;
+                } else {
+                    deliveryLabel = pedido.tipo_entrega === 'envio' ? '🛵 Envío' : '🏪 Local';
+                }
+
                 card.innerHTML = `
                     <div class="card-header-comanda">
                         <span class="comanda-id">${pedido.id_pedido}</span>
-                        <span class="comanda-delivery-badge ${pedido.tipo_entrega}">
-                            ${pedido.tipo_entrega === 'envio' ? '🛵 Envío' : '🏪 Local'}
+                        <span class="comanda-delivery-badge ${pedido.plataforma ? pedido.plataforma : pedido.tipo_entrega}">
+                            ${deliveryLabel}
                         </span>
                     </div>
                     <div class="card-body-comanda">
@@ -399,13 +670,12 @@
                 container.appendChild(card);
             });
 
-            // Actualizar contadores visuales de columnas
+            // Actualizar contadores
             ESTADOS.forEach(est => {
                 const countId = `count-${obtenerIdEstadoString(est)}`;
                 const element = document.getElementById(countId);
                 if (element) {
                     element.innerText = contadores[est];
-                    // Resaltar si tiene pedidos pendientes
                     if (contadores[est] > 0) {
                         element.classList.add('has-orders');
                     } else {
@@ -413,7 +683,6 @@
                     }
                 }
 
-                // Contadores para versión móvil
                 const mCountId = `m-count-${obtenerIdEstadoString(est)}`;
                 const mElement = document.getElementById(mCountId);
                 if (mElement) {
@@ -421,12 +690,8 @@
                 }
             });
 
-            // Sincronizar visibilidad de columna activa en móvil
             actualizarColumnasMovilesVista();
         }
-
-        // Lógica de Kanban Móvil Inteligente
-        let activeMobileColumn = 'pendiente';
 
         function filtrarKanbanMovil(idEstado) {
             activeMobileColumn = idEstado;
@@ -434,10 +699,7 @@
         }
 
         function actualizarColumnasMovilesVista() {
-            // Actualizar clase activa en los botones de pestañas móviles
-            document.querySelectorAll('.k-mobile-tab').forEach(btn => {
-                btn.classList.remove('active');
-            });
+            document.querySelectorAll('.k-mobile-tab').forEach(btn => btn.classList.remove('active'));
             
             const btns = document.querySelectorAll('.k-mobile-tab');
             for (let btn of btns) {
@@ -446,10 +708,7 @@
                 }
             }
 
-            // Ocultar todas las columnas y mostrar solo la activa en versión móvil (mediante clase)
-            document.querySelectorAll('.kanban-column').forEach(col => {
-                col.classList.remove('mobile-active');
-            });
+            document.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('mobile-active'));
             const colActiva = document.getElementById(`col-${activeMobileColumn}`);
             if (colActiva) {
                 colActiva.classList.add('mobile-active');
@@ -473,7 +732,271 @@
             renderKanban();
         }
 
-        // -- MODAL DETALLES DEL PEDIDO --
+        // -- SIMULADOR DE PEDIDOSYA Y RAPPI --
+        function simularPedidoPlataforma(plataforma) {
+            const menu = obtenerMenu().filter(p => p.disponible);
+            if (menu.length === 0) {
+                alert("No hay platos disponibles en el menú para simular.");
+                return;
+            }
+
+            // Elegir platos aleatorios
+            const cantPlatos = Math.floor(1 + Math.random() * 3);
+            const items = [];
+            let subtotal = 0;
+            
+            for (let i = 0; i < cantPlatos; i++) {
+                const plato = menu[Math.floor(Math.random() * menu.length)];
+                const cant = Math.floor(1 + Math.random() * 2);
+                
+                // Evitar repetidos en el array de simulación
+                if (!items.find(x => x.id === plato.id)) {
+                    items.push({
+                        id: plato.id,
+                        nombre: plato.nombre,
+                        precio: plato.precio,
+                        cantidad: cant
+                    });
+                    subtotal += plato.precio * cant;
+                }
+            }
+
+            const idSimulado = Math.floor(1000 + Math.random() * 9000);
+            
+            const pedido = {
+                nombre_cliente: `${plataforma} #${idSimulado}`,
+                telefono_cliente: "+54 9 11 3333 4444",
+                items: items,
+                tipo_entrega: "envio",
+                direccion_entrega: `Repartidor de ${plataforma} retira por local`,
+                subtotal: subtotal,
+                costo_envio: 0, // Las plataformas tienen su propio costo de envío
+                total: subtotal,
+                metodo_pago: "debito", // Cobrado online
+                financiacion: null,
+                fecha_hora_entrega: "Lo antes posible",
+                plataforma: plataforma.toLowerCase() // 'pedidosya' o 'rappi'
+            };
+
+            crearPedido(pedido);
+            alert(`¡Se simuló un pedido de ${plataforma} con éxito!`);
+        }
+
+        // -- SECCIÓN DE SALÓN & MESAS --
+        function renderSalonMesas() {
+            const mesas = obtenerMesas();
+            const grid = document.getElementById('mesas-salon-grid');
+            grid.innerHTML = '';
+
+            const pedidos = obtenerPedidos();
+
+            mesas.forEach(mesa => {
+                const card = document.createElement('div');
+                card.className = `mesa-card state-${mesa.estado.toLowerCase().replace(' ', '-')}`;
+
+                let totalMesa = 0;
+                let descText = 'Mesa Libre';
+                let actionBtn = '';
+                let orderDetailsBtn = '';
+
+                if (mesa.estado !== 'Libre' && mesa.pedido_activo) {
+                    const pedido = pedidos.find(p => p.id_pedido === mesa.pedido_activo);
+                    if (pedido) {
+                        totalMesa = pedido.total;
+                        descText = `${pedido.nombre_cliente} • $${totalMesa.toLocaleString('es-AR')}`;
+                        
+                        orderDetailsBtn = `<button class="btn btn-secondary btn-xs" onclick="verDetallePedido('${pedido.id_pedido}')">Ver Consumos 🔍</button>`;
+                        
+                        actionBtn = `<button class="btn btn-primary btn-xs margin-top-5" onclick="abrirCobrarMesa(${mesa.numero})">Cobrar Cuenta 🧾</button>`;
+                    }
+                }
+
+                card.innerHTML = `
+                    <div class="mesa-badge-nro">${mesa.numero}</div>
+                    <div class="mesa-status-label">${mesa.estado}</div>
+                    <p class="mesa-desc">${descText}</p>
+                    <div class="mesa-card-actions">
+                        ${orderDetailsBtn}
+                        ${actionBtn}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // -- COBRAR MESA --
+        function abrirCobrarMesa(nroMesa) {
+            const mesas = obtenerMesas();
+            const mesa = mesas.find(m => m.numero === nroMesa);
+            if (!mesa || !mesa.pedido_activo) return;
+
+            const pedidos = obtenerPedidos();
+            const pedido = pedidos.find(p => p.id_pedido === mesa.pedido_activo);
+            if (!pedido) return;
+
+            document.getElementById('checkout-mesa-nro').innerText = nroMesa;
+            document.getElementById('checkout-mesa-total-box').innerText = `$${pedido.total.toLocaleString('es-AR')}`;
+            
+            document.getElementById('checkout-table-modal').classList.add('active');
+        }
+
+        function cerrarCobrarMesa() {
+            document.getElementById('checkout-table-modal').classList.remove('active');
+        }
+
+        function procesarCobrarMesa(e) {
+            e.preventDefault();
+            const nroMesa = parseInt(document.getElementById('checkout-mesa-nro').innerText);
+            const metodo = document.getElementById('checkout-mesa-pago').value;
+
+            // Obtener el pedido para poder imprimir la factura antes de cerrar
+            const mesas = obtenerMesas();
+            const mesa = mesas.find(m => m.numero === nroMesa);
+            const idPedido = mesa.pedido_activo;
+
+            const exito = cobrarMesa(nroMesa, metodo);
+            if (exito) {
+                cerrarCobrarMesa();
+                renderSalonMesas();
+                calcularCajaYCharts();
+                alert(`¡Mesa ${nroMesa} cobrada con éxito! Registrado en caja.`);
+                
+                // Mostrar Factura automáticamente
+                verDetallePedido(idPedido);
+                imprimirFacturaCliente();
+            } else {
+                alert("Hubo un problema al cobrar la mesa.");
+            }
+        }
+
+        // -- CAJA Y ESTADÍSTICAS FINANCIERAS --
+        function calcularCajaYCharts() {
+            const caja = obtenerCaja();
+            const pedidos = obtenerPedidos();
+
+            let ingresos = 0;
+            let egresos = 0;
+
+            caja.forEach(tx => {
+                if (tx.tipo === 'ingreso') {
+                    ingresos += tx.monto;
+                } else if (tx.tipo === 'egreso') {
+                    egresos += tx.monto;
+                }
+            });
+
+            document.getElementById('box-caja-ingresos').innerText = `$${ingresos.toLocaleString('es-AR')}`;
+            document.getElementById('box-caja-egresos').innerText = `$${egresos.toLocaleString('es-AR')}`;
+            const neto = ingresos - egresos;
+            
+            const netoBox = document.getElementById('box-caja-neto');
+            netoBox.innerText = `$${neto.toLocaleString('es-AR')}`;
+            if (neto < 0) {
+                netoBox.style.color = '#ef4444';
+            } else {
+                netoBox.style.color = '#10b981';
+            }
+
+            // Estadísticas por Tipo de Servicio
+            let totalMesaVal = 0;
+            let totalEnvioVal = 0;
+            let totalRetiroVal = 0;
+
+            // Estadísticas por Medio de Pago (sobre transacciones cobradas de caja)
+            let payCash = 0;
+            let payDeb = 0;
+            let payCred = 0;
+
+            caja.forEach(tx => {
+                if (tx.tipo === 'ingreso') {
+                    if (tx.metodoPago.toLowerCase() === 'efectivo' || tx.metodoPago.toLowerCase() === 'transferencia') {
+                        payCash += tx.monto;
+                    } else if (tx.metodoPago.toLowerCase() === 'debito') {
+                        payDeb += tx.monto;
+                    } else if (tx.metodoPago.toLowerCase() === 'credito') {
+                        payCred += tx.monto;
+                    }
+                }
+            });
+
+            // Agrupar pedidos finalizados/entregados por tipo de entrega
+            pedidos.forEach(p => {
+                if (p.estado === 'Entregado') {
+                    if (p.tipo_entrega === 'mesa') {
+                        totalMesaVal += p.total;
+                    } else if (p.tipo_entrega === 'envio') {
+                        totalEnvioVal += p.total;
+                    } else if (p.tipo_entrega === 'retiro') {
+                        totalRetiroVal += p.total;
+                    }
+                }
+            });
+
+            const totalServicios = totalMesaVal + totalEnvioVal + totalRetiroVal;
+            const pctMesa = totalServicios > 0 ? (totalMesaVal / totalServicios) * 100 : 0;
+            const pctEnvio = totalServicios > 0 ? (totalEnvioVal / totalServicios) * 100 : 0;
+            const pctRetiro = totalServicios > 0 ? (totalRetiroVal / totalServicios) * 100 : 0;
+
+            document.getElementById('val-pct-mesa').innerText = `$${totalMesaVal.toLocaleString('es-AR')}`;
+            document.getElementById('bar-pct-mesa').style.width = `${pctMesa}%`;
+            document.getElementById('val-pct-envio').innerText = `$${totalEnvioVal.toLocaleString('es-AR')}`;
+            document.getElementById('bar-pct-envio').style.width = `${pctEnvio}%`;
+            document.getElementById('val-pct-retiro').innerText = `$${totalRetiroVal.toLocaleString('es-AR')}`;
+            document.getElementById('bar-pct-retiro').style.width = `${pctRetiro}%`;
+
+            const totalPagos = payCash + payDeb + payCred;
+            const pctCash = totalPagos > 0 ? (payCash / totalPagos) * 100 : 0;
+            const pctDeb = totalPagos > 0 ? (payDeb / totalPagos) * 100 : 0;
+            const pctCred = totalPagos > 0 ? (payCred / totalPagos) * 100 : 0;
+
+            document.getElementById('val-pay-cash').innerText = `$${payCash.toLocaleString('es-AR')}`;
+            document.getElementById('bar-pay-cash').style.width = `${pctCash}%`;
+            document.getElementById('val-pay-deb').innerText = `$${payDeb.toLocaleString('es-AR')}`;
+            document.getElementById('bar-pay-deb').style.width = `${pctDeb}%`;
+            document.getElementById('val-pay-cred').innerText = `$${payCred.toLocaleString('es-AR')}`;
+            document.getElementById('bar-pay-cred').style.width = `${pctCred}%`;
+
+            // Listar movimientos
+            const tbody = document.getElementById('caja-transactions-body');
+            tbody.innerHTML = '';
+
+            if (caja.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay registros contables para el día de hoy.</td></tr>`;
+                return;
+            }
+
+            caja.forEach(tx => {
+                const tr = document.createElement('tr');
+                const badgeClass = tx.tipo === 'ingreso' ? 'status-available' : 'status-unavailable';
+                
+                tr.innerHTML = `
+                    <td><code>${tx.id}</code></td>
+                    <td>${tx.fecha_hora.split(' ')[1] || tx.fecha_hora}</td>
+                    <td><span class="status-badge ${badgeClass}">${tx.tipo.toUpperCase()}</span></td>
+                    <td>${tx.descripcion}</td>
+                    <td>${tx.metodoPago}</td>
+                    <td><strong class="${tx.tipo === 'ingreso' ? 'text-success' : 'text-danger'}">${tx.tipo === 'ingreso' ? '+' : '-'}$${tx.monto.toLocaleString('es-AR')}</strong></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function guardarEgresoManual(e) {
+            e.preventDefault();
+            const desc = document.getElementById('egr-desc').value.trim();
+            const monto = parseFloat(document.getElementById('egr-monto').value);
+            const pago = document.getElementById('egr-pago').value;
+
+            registrarTransaccionCaja('egreso', desc, monto, pago);
+            
+            document.getElementById('egr-desc').value = '';
+            document.getElementById('egr-monto').value = '';
+            
+            calcularCajaYCharts();
+            alert("¡Egreso registrado correctamente!");
+        }
+
+        // -- MODAL DETALLES DEL PEDIDO Y EDICIÓN ACTIVA --
         function verDetallePedido(idPedido) {
             const pedidos = obtenerPedidos();
             const pedido = pedidos.find(p => p.id_pedido === idPedido);
@@ -484,26 +1007,13 @@
             document.getElementById('detail-pedido-id').innerText = `#${pedido.id_pedido}`;
             document.getElementById('detail-cliente-nombre').innerText = pedido.nombre_cliente;
             document.getElementById('detail-cliente-telefono').innerText = pedido.telefono_cliente;
-            document.getElementById('detail-tipo-entrega').innerText = pedido.tipo_entrega === 'envio' ? '🛵 Envío a domicilio' : '🏪 Retiro por el local';
+            document.getElementById('detail-tipo-entrega').innerText = pedido.tipo_entrega === 'envio' ? '🛵 Envío a domicilio' : (pedido.tipo_entrega === 'retiro' ? '🏪 Retiro por local' : `🍽️ Mesa ${pedido.nro_mesa} (Salón)`);
             document.getElementById('detail-direccion').innerText = pedido.direccion_entrega;
             document.getElementById('detail-agenda').innerText = pedido.fecha_hora_entrega;
             document.getElementById('detail-fecha').innerText = pedido.fecha_hora;
 
-            // Render de productos del pedido
-            const productsBody = document.getElementById('detail-products-body');
-            productsBody.innerHTML = '';
-            pedido.items.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.nombre}</td>
-                    <td>${item.cantidad}</td>
-                    <td>$${item.precio.toLocaleString('es-AR')}</td>
-                    <td>$${(item.precio * item.cantidad).toLocaleString('es-AR')}</td>
-                `;
-                productsBody.appendChild(tr);
-            });
+            renderProductosPedidoDetalle();
 
-            // Resumen de Pagos
             const metodoTexto = pedido.metodo_pago === 'efectivo' 
                 ? '💵 Efectivo / Transferencia' 
                 : (pedido.metodo_pago === 'debito' ? '💳 Tarjeta de Débito' : '💳 Tarjeta de Crédito');
@@ -512,14 +1022,13 @@
             document.getElementById('detail-costo-envio').innerText = pedido.costo_envio === 0 ? "Gratis" : `$${pedido.costo_envio.toLocaleString('es-AR')}`;
             document.getElementById('detail-total').innerText = `$${pedido.total.toLocaleString('es-AR')}`;
 
-            // Financiación en cuotas si es Crédito
             const finBox = document.getElementById('detail-financiacion-box');
             if (pedido.metodo_pago === 'credito' && pedido.financiacion) {
                 finBox.style.display = 'block';
                 const valorCuotaFormato = pedido.financiacion.valor_cuota.toLocaleString('es-AR', {
                     style: 'currency', currency: 'ARS', minimumFractionDigits: 2
                 });
-                document.getElementById('detail-financiacion-text').innerText = `${pedido.financiacion.cuotas} cuotas de ${valorCuotaFormato} (Recargo CFT: ${pedido.financiacion.interes_applied || pedido.financiacion.interes_aplicado}%)`;
+                finBox.innerHTML = `<strong>Tarjeta de Crédito (${pedido.financiacion.cuotas} cuotas de ${valorCuotaFormato}):</strong> Recargo del ${pedido.financiacion.interes_aplicado}% incluido en el total.`;
             } else {
                 finBox.style.display = 'none';
             }
@@ -527,12 +1036,219 @@
             document.getElementById('order-detail-modal').classList.add('active');
         }
 
+        function renderProductosPedidoDetalle() {
+            const productsBody = document.getElementById('detail-products-body');
+            productsBody.innerHTML = '';
+            
+            pedidoDetalleActual.items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.nombre}</td>
+                    <td>
+                        <div class="quantity-controls-table">
+                            <button class="btn btn-secondary btn-xs" onclick="editarCantidadItemPedido(${item.id}, -1)">-</button>
+                            <span>${item.cantidad}</span>
+                            <button class="btn btn-secondary btn-xs" onclick="editarCantidadItemPedido(${item.id}, 1)">+</button>
+                        </div>
+                    </td>
+                    <td>$${item.precio.toLocaleString('es-AR')}</td>
+                    <td>$${(item.precio * item.cantidad).toLocaleString('es-AR')}</td>
+                `;
+                productsBody.appendChild(tr);
+            });
+        }
+
+        function cargarListaDesplegablePlatosDetalle() {
+            const select = document.getElementById('select-add-plato-order');
+            const menu = obtenerMenu();
+            select.innerHTML = '<option value="">-- Agregar Plato --</option>';
+            menu.forEach(plato => {
+                if (plato.disponible) {
+                    select.innerHTML += `<option value="${plato.id}">${plato.nombre} ($${plato.precio})</option>`;
+                }
+            });
+        }
+
+        function agregarPlatoAPedidoDetalle() {
+            if (!pedidoDetalleActual) return;
+            const select = document.getElementById('select-add-plato-order');
+            const platoId = parseInt(select.value);
+            if (!platoId) return;
+
+            const menu = obtenerMenu();
+            const plato = menu.find(p => p.id === platoId);
+            if (!plato) return;
+
+            const itemExistente = pedidoDetalleActual.items.find(i => i.id === plato.id);
+            if (itemExistente) {
+                itemExistente.cantidad++;
+            } else {
+                pedidoDetalleActual.items.push({
+                    id: plato.id,
+                    nombre: plato.nombre,
+                    precio: plato.precio,
+                    cantidad: 1
+                });
+            }
+
+            recualcularYGuardarPedidoDetalle();
+            select.value = '';
+        }
+
+        function editarCantidadItemPedido(itemId, cambio) {
+            if (!pedidoDetalleActual) return;
+            const item = pedidoDetalleActual.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            item.cantidad += cambio;
+            if (item.cantidad <= 0) {
+                pedidoDetalleActual.items = pedidoDetalleActual.items.filter(i => i.id !== itemId);
+            }
+
+            recualcularYGuardarPedidoDetalle();
+        }
+
+        function recualcularYGuardarPedidoDetalle() {
+            const subtotal = pedidoDetalleActual.items.reduce((acc, curr) => acc + (curr.precio * curr.cantidad), 0);
+            const costos = calcularCostosPedido(subtotal, pedidoDetalleActual.tipo_entrega);
+
+            let totalFinal = costos.total;
+            if (pedidoDetalleActual.metodo_pago === 'credito' && pedidoDetalleActual.financiacion) {
+                const calculo = calcularCuotas(costos.total, pedidoDetalleActual.financiacion.cuotas);
+                pedidoDetalleActual.financiacion.valor_cuota = calculo.valorCuota;
+                pedidoDetalleActual.financiacion.total_financiado = calculo.totalFinanciado;
+                totalFinal = calculo.totalFinanciado;
+            }
+
+            actualizarItemsPedido(
+                pedidoDetalleActual.id_pedido, 
+                pedidoDetalleActual.items, 
+                totalFinal, 
+                subtotal
+            );
+
+            // Refrescar modal detalle actual
+            verDetallePedido(pedidoDetalleActual.id_pedido);
+            renderKanban();
+            renderSalonMesas();
+            calcularCajaYCharts();
+        }
+
         function cerrarDetallePedido() {
             document.getElementById('order-detail-modal').classList.remove('active');
             pedidoDetalleActual = null;
         }
 
-        // -- GESTIÓN DE STOCK --
+        // -- VISTA PREVIA Y SIMULACIÓN DE TICKETS DE IMPRESIÓN --
+        function imprimirTicketCocina() {
+            if (!pedidoDetalleActual) return;
+
+            const ticket = document.getElementById('thermal-ticket-content');
+            
+            let itemsText = '';
+            pedidoDetalleActual.items.forEach(item => {
+                itemsText += `${item.cantidad.toString().padEnd(3)} x ${item.nombre.substring(0, 22).padEnd(22)}\n`;
+            });
+
+            const ticketHTML = `
+<pre class="ticket-pre">
+================================
+         COMANDA COCINA         
+================================
+Pedido: ${pedidoDetalleActual.id_pedido}
+Fecha: ${pedidoDetalleActual.fecha_hora}
+Tipo: ${pedidoDetalleActual.tipo_entrega.toUpperCase()} ${pedidoDetalleActual.tipo_entrega === 'mesa' ? 'Mesa ' + pedidoDetalleActual.nro_mesa : ''}
+Cliente: ${pedidoDetalleActual.nombre_cliente}
+--------------------------------
+Cant  Producto
+--------------------------------
+${itemsText}--------------------------------
+H. Entrega: ${pedidoDetalleActual.fecha_hora_entrega}
+================================
+</pre>
+            `;
+
+            ticket.innerHTML = ticketHTML;
+            document.getElementById('print-preview-modal').classList.add('active');
+        }
+
+        function imprimirFacturaCliente() {
+            if (!pedidoDetalleActual) return;
+
+            const ticket = document.getElementById('thermal-ticket-content');
+            const config = obtenerConfig();
+            
+            let itemsText = '';
+            pedidoDetalleActual.items.forEach(item => {
+                const itemTotal = (item.precio * item.cantidad).toLocaleString('es-AR');
+                itemsText += `${item.cantidad.toString().padEnd(3)} ${item.nombre.substring(0, 18).padEnd(18)} $${itemTotal.padStart(8)}\n`;
+            });
+
+            const subtotalText = pedidoDetalleActual.subtotal.toLocaleString('es-AR');
+            const envioText = pedidoDetalleActual.costo_envio.toLocaleString('es-AR');
+            const totalText = pedidoDetalleActual.total.toLocaleString('es-AR');
+
+            const metodoTexto = pedidoDetalleActual.metodo_pago === 'efectivo' 
+                ? 'EFECTIVO' 
+                : (pedidoDetalleActual.metodo_pago === 'debito' ? 'DEBITO' : 'CREDITO');
+
+            const fechaFactura = new Date().toLocaleDateString('es-AR');
+            const ptoVta = "00002";
+            const nroComp = Math.floor(100000 + Math.random() * 900000);
+
+            const ticketHTML = `
+<pre class="ticket-pre font-small">
+======================================
+          ${config.restauranteNombre.toUpperCase()}          
+======================================
+C.U.I.T.: 30-71458923-9
+Ing. Brutos: 30-71458923-9
+Dirección: Av. Corrientes 1234, CABA
+Inicio Actividades: 10/11/2018
+IVA RESPON. INSCRIPTO - A CONSUMIDOR FINAL
+--------------------------------------
+Punto Venta: ${ptoVta}  Comp. Nro: ${nroComp}
+Fecha: ${fechaFactura}   Hora: ${new Date().toLocaleTimeString()}
+--------------------------------------
+DOCUMENTO NO FISCAL - FACTURA C SIMULADA
+--------------------------------------
+Cant Detalle                 Subtotal
+--------------------------------------
+${itemsText}--------------------------------------
+Subtotal:                $${subtotalText.padStart(12)}
+Costo Envío:             $${envioText.padStart(12)}
+Total Cobrado:           $${totalText.padStart(12)}
+Forma de Pago:           ${metodoTexto}
+--------------------------------------
+           ¡Gracias por elegirnos!
+          Visitanos en comandaflow.com
+--------------------------------------
+    [ QR AFIP SIMULADO - COBRO OK ]
+             CAE Nro: 7349182390234
+           Vto. CAE: ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('es-AR')}
+======================================
+</pre>
+            `;
+
+            ticket.innerHTML = ticketHTML;
+            document.getElementById('print-preview-modal').classList.add('active');
+        }
+
+        function cerrarVistaImpresion() {
+            document.getElementById('print-preview-modal').classList.remove('active');
+        }
+
+        function mandarAImpresoraFisica() {
+            const ticketContent = document.getElementById('thermal-ticket-content').innerHTML;
+            const printArea = document.getElementById('print-area-physical');
+            printArea.innerHTML = ticketContent;
+            
+            // Invocar diálogo nativo
+            window.print();
+            printArea.innerHTML = '';
+        }
+
+        // -- CRUD PLATOS --
         function renderStockTable() {
             const menu = obtenerMenu();
             const body = document.getElementById('stock-table-body');
@@ -540,12 +1256,12 @@
 
             menu.forEach(plato => {
                 const tr = document.createElement('tr');
-                
                 const switchCheck = plato.disponible ? 'checked' : '';
+                const thumbnail = plato.imagen || 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=80&q=80';
 
                 tr.innerHTML = `
-                    <td>${plato.id}</td>
-                    <td class="stock-plate-name">${plato.nombre}</td>
+                    <td><img src="${thumbnail}" class="stock-plate-thumb" onerror="this.src='https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=80&q=80'"></td>
+                    <td class="stock-plate-name"><strong>${plato.nombre}</strong><br><small class="text-muted">${plato.descripcion.substring(0, 45)}...</small></td>
                     <td><span class="category-badge">${plato.categoria}</span></td>
                     <td>$${plato.precio.toLocaleString('es-AR')}</td>
                     <td>
@@ -553,6 +1269,12 @@
                             <input type="checkbox" ${switchCheck} onchange="toggleDisponibilidad(${plato.id}, this.checked)">
                             <span class="switch-slider"></span>
                         </label>
+                    </td>
+                    <td>
+                        <div class="crud-actions">
+                            <button class="btn btn-secondary btn-xs" onclick="abrirModalEditarPlato(${plato.id})">Editar ✏️</button>
+                            <button class="btn btn-danger btn-xs" onclick="eliminarPlatoCRUD(${plato.id})">Borrar 🗑️</button>
+                        </div>
                     </td>
                 `;
                 body.appendChild(tr);
@@ -565,6 +1287,78 @@
             if (idx !== -1) {
                 menu[idx].disponible = disponible;
                 guardarMenu(menu);
+            }
+        }
+
+        function abrirModalNuevoPlato() {
+            document.getElementById('crud-plato-form').reset();
+            document.getElementById('plato-id-crud').value = '';
+            document.getElementById('crud-modal-title').innerText = 'Agregar Nuevo Plato';
+            document.getElementById('crud-plato-modal').classList.add('active');
+        }
+
+        function abrirModalEditarPlato(id) {
+            const menu = obtenerMenu();
+            const plato = menu.find(p => p.id === id);
+            if (!plato) return;
+
+            document.getElementById('plato-id-crud').value = plato.id;
+            document.getElementById('plato-nombre-crud').value = plato.nombre;
+            document.getElementById('plato-desc-crud').value = plato.descripcion;
+            document.getElementById('plato-precio-crud').value = plato.precio;
+            document.getElementById('plato-cat-crud').value = plato.categoria;
+            document.getElementById('plato-img-crud').value = plato.imagen || '';
+            
+            document.getElementById('crud-modal-title').innerText = 'Editar Plato';
+            document.getElementById('crud-plato-modal').classList.add('active');
+        }
+
+        function cerrarModalPlato() {
+            document.getElementById('crud-plato-modal').classList.remove('active');
+        }
+
+        function guardarPlatoCRUD(e) {
+            e.preventDefault();
+            const id = document.getElementById('plato-id-crud').value;
+            const nombre = document.getElementById('plato-nombre-crud').value.trim();
+            const descripcion = document.getElementById('plato-desc-crud').value.trim();
+            const precio = parseFloat(document.getElementById('plato-precio-crud').value);
+            const categoria = document.getElementById('plato-cat-crud').value;
+            const imagen = document.getElementById('plato-img-crud').value.trim();
+
+            const plato = {
+                nombre: nombre,
+                descripcion: descripcion,
+                precio: precio,
+                categoria: categoria
+            };
+
+            if (imagen) {
+                plato.imagen = imagen;
+            }
+
+            if (id) {
+                // Editar
+                plato.id = parseInt(id);
+                editarPlatoDelMenu(plato);
+                alert("¡Plato editado con éxito!");
+            } else {
+                // Agregar
+                agregarPlatoAlMenu(plato);
+                alert("¡Plato agregado con éxito!");
+            }
+
+            cerrarModalPlato();
+            renderStockTable();
+        }
+
+        function eliminarPlatoCRUD(id) {
+            if (confirm("¿Estás seguro de que querés borrar permanentemente este plato?")) {
+                const exito = eliminarPlatoDelMenu(id);
+                if (exito) {
+                    renderStockTable();
+                    alert("Plato eliminado de la base de datos.");
+                }
             }
         }
 
@@ -601,7 +1395,7 @@
 
             guardarConfig(configNueva);
             actualizarLabelsConfig();
-            alert("¡Configuración guardada correctamente! Todos los clientes verán los cambios en tiempo real.");
+            alert("¡Configuración guardada correctamente! Sincronizado en tiempo real.");
         }
 
         // -- CONSOLA DE SIMULACIÓN DE LOGS DE WHATSAPP --

@@ -42,6 +42,17 @@
         </div>
     </header>
 
+    <!-- Banner de Mesa Activa Floating -->
+    <div class="active-table-bar" id="active-table-bar" style="display: none;">
+        <div class="active-table-info">
+            <span>🍽️ Estás consumiendo en la <strong>Mesa <span id="lbl-mesa-activa">-</span></strong></span>
+            <span class="order-id-hint">Pedido: <span id="lbl-pedido-mesa-activo">-</span></span>
+        </div>
+        <button class="btn btn-warning btn-sm" id="btn-pedir-cuenta-cliente" onclick="clientePedirCuenta()">
+            Pedir la Cuenta 🧾
+        </button>
+    </div>
+
     <!-- Contenido Principal -->
     <main class="main-container">
         <!-- Filtros de Categorías -->
@@ -81,7 +92,7 @@
                             <input type="radio" name="tipo_entrega" value="retiro" onchange="actualizarEntrega()" checked>
                             <div class="delivery-card-content">
                                 <span class="delivery-emoji">🏪</span>
-                                <span class="delivery-title">Retiro por local</span>
+                                <span class="delivery-title">Retiro en local</span>
                                 <span class="delivery-price">Gratis</span>
                             </div>
                         </label>
@@ -91,6 +102,14 @@
                                 <span class="delivery-emoji">🛵</span>
                                 <span class="delivery-title">Envío a domicilio</span>
                                 <span class="delivery-price" id="envio-badge-costo">$800</span>
+                            </div>
+                        </label>
+                        <label class="delivery-card">
+                            <input type="radio" name="tipo_entrega" value="mesa" onchange="actualizarEntrega()">
+                            <div class="delivery-card-content">
+                                <span class="delivery-emoji">🍽️</span>
+                                <span class="delivery-title">Comer en Mesa</span>
+                                <span class="delivery-price">Salón</span>
                             </div>
                         </label>
                     </div>
@@ -150,7 +169,7 @@
                             <label for="cliente-nombre">Nombre y Apellido *</label>
                             <input type="text" id="cliente-nombre" required placeholder="Ej: Juan Pérez">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="telefono-group">
                             <label for="cliente-telefono">WhatsApp (Formato Argentino) *</label>
                             <input type="tel" id="cliente-telefono" required placeholder="Ej: +54 9 11 3245 6789" value="+54 9 ">
                             <small class="form-hint">Debe incluir código de área sin el 15. Ej: +54 9 11...</small>
@@ -159,7 +178,24 @@
                             <label for="cliente-direccion">Dirección de Entrega *</label>
                             <input type="text" id="cliente-direccion" placeholder="Ej: Av. Corrientes 1234, 4° B">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="mesa-group" style="display: none;">
+                            <label for="cliente-mesa">Seleccioná tu Mesa *</label>
+                            <select id="cliente-mesa">
+                                <option value="1">Mesa 1</option>
+                                <option value="2">Mesa 2</option>
+                                <option value="3">Mesa 3</option>
+                                <option value="4">Mesa 4</option>
+                                <option value="5">Mesa 5</option>
+                                <option value="6">Mesa 6</option>
+                                <option value="7">Mesa 7</option>
+                                <option value="8">Mesa 8</option>
+                                <option value="9">Mesa 9</option>
+                                <option value="10">Mesa 10</option>
+                                <option value="11">Mesa 11</option>
+                                <option value="12">Mesa 12</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="agenda-group">
                             <label for="cliente-agenda">Programar Pedido (Opcional)</label>
                             <input type="datetime-local" id="cliente-agenda">
                             <small class="form-hint">Dejalo en blanco para recibirlo lo antes posible.</small>
@@ -262,7 +298,7 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
     <script>
         // Carrito de compras local (memoria de página)
         let cart = [];
@@ -271,13 +307,15 @@
         // Cargar platos de localStorage e iniciar renders
         document.addEventListener('DOMContentLoaded', () => {
             inicializarVista();
+            comprobarSesionMesa();
             
-            // Escuchar actualizaciones del menú (ej: cambios de stock de admin)
+            // Escuchar actualizaciones de localStorage
             window.addEventListener('menuUpdated', inicializarVista);
             window.addEventListener('configUpdated', () => {
                 inicializarVista();
                 actualizarTotalesCarrito();
             });
+            window.addEventListener('tablesUpdated', comprobarSesionMesa);
         });
 
         function inicializarVista() {
@@ -292,7 +330,7 @@
             document.title = `Carta Digital - ${config.restauranteNombre}`;
         }
 
-        // Renderizado del menú
+        // Renderizado del menú con imágenes
         function renderMenu() {
             const grid = document.getElementById('menu-grid');
             const menu = obtenerMenu();
@@ -318,21 +356,27 @@
                     minimumFractionDigits: 0
                 });
 
+                // Default placeholder si no tiene imagen
+                const imagenSrc = plato.imagen || 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80';
+
                 card.innerHTML = `
-                    <div class="card-badge-container">
+                    <div class="card-image-container">
+                        <img src="${imagenSrc}" alt="${plato.nombre}" class="card-img" onerror="this.src='https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80'">
                         <span class="category-badge">${plato.categoria}</span>
-                        ${plato.disponible 
-                            ? '<span class="status-badge status-available">Disponible</span>' 
-                            : '<span class="status-badge status-unavailable">Agotado</span>'}
                     </div>
                     <div class="card-info">
-                        <h3 class="card-title">${plato.nombre}</h3>
+                        <div class="card-title-row">
+                            <h3 class="card-title">${plato.nombre}</h3>
+                            ${plato.disponible 
+                                ? '<span class="status-indicator available" title="Disponible"></span>' 
+                                : '<span class="status-indicator unavailable" title="Sin Stock"></span>'}
+                        </div>
                         <p class="card-desc">${plato.descripcion}</p>
                         <div class="card-footer-row">
                             <span class="card-price">${precioFormateado}</span>
                             <button class="btn btn-primary btn-sm btn-add" 
-                                    onclick="agregarAlCarrito(${plato.id})"
-                                    ${!plato.disponible ? 'disabled' : ''}>
+                                     onclick="agregarAlCarrito(${plato.id})"
+                                     ${!plato.disponible ? 'disabled' : ''}>
                                 ${plato.disponible ? 'Agregar 🛒' : 'Sin Stock 🚫'}
                             </button>
                         </div>
@@ -374,7 +418,6 @@
                 return;
             }
 
-            // Validar si ya está en el carrito
             const cartItem = cart.find(item => item.id === id);
             if (cartItem) {
                 cartItem.cantidad++;
@@ -389,7 +432,6 @@
 
             actualizarTotalesCarrito();
             
-            // Micro-animación en la campana/badge del carrito
             const badge = document.getElementById('cart-badge');
             badge.classList.add('pulse');
             setTimeout(() => badge.classList.remove('pulse'), 300);
@@ -413,13 +455,33 @@
             const tipoEntrega = obtenerTipoEntrega();
             const direccionGroup = document.getElementById('direccion-group');
             const direccionInput = document.getElementById('cliente-direccion');
+            const mesaGroup = document.getElementById('mesa-group');
+            const agendaGroup = document.getElementById('agenda-group');
+            const telefonoGroup = document.getElementById('telefono-group');
+            const telefonoInput = document.getElementById('cliente-telefono');
             
             if (tipoEntrega === 'envio') {
                 direccionGroup.style.display = 'block';
                 direccionInput.setAttribute('required', 'required');
-            } else {
+                mesaGroup.style.display = 'none';
+                agendaGroup.style.display = 'block';
+                telefonoGroup.style.display = 'block';
+                telefonoInput.setAttribute('required', 'required');
+            } else if (tipoEntrega === 'mesa') {
                 direccionGroup.style.display = 'none';
                 direccionInput.removeAttribute('required');
+                mesaGroup.style.display = 'block';
+                agendaGroup.style.display = 'none';
+                // Para consumo en mesa, el teléfono puede no requerirse estrictamente, pero mantenemos simple
+                telefonoGroup.style.display = 'block';
+                telefonoInput.setAttribute('required', 'required');
+            } else { // retiro
+                direccionGroup.style.display = 'none';
+                direccionInput.removeAttribute('required');
+                mesaGroup.style.display = 'none';
+                agendaGroup.style.display = 'block';
+                telefonoGroup.style.display = 'block';
+                telefonoInput.setAttribute('required', 'required');
             }
         }
 
@@ -433,8 +495,6 @@
 
         function actualizarTotalesCarrito() {
             const config = obtenerConfig();
-            
-            // Render de items en el carrito
             const container = document.getElementById('cart-items-container');
             container.innerHTML = '';
             
@@ -482,17 +542,14 @@
                 document.getElementById('btn-checkout').removeAttribute('disabled');
             }
 
-            // Actualizar Badges
             document.getElementById('cart-badge').innerText = totalCantidad;
 
-            // Calcular Envío Gratis e indicador visual
             const tipoEntrega = obtenerTipoEntrega();
             const costos = calcularCostosPedido(subtotal, tipoEntrega);
 
-            // Actualizar Badge de costo envío del selector
             document.getElementById('envio-badge-costo').innerText = `$${config.costoEnvio.toLocaleString('es-AR')}`;
 
-            // Indicador de Envío Gratis
+            // Indicador de Envío Gratis (solo si es delivery)
             const shippingProgress = document.getElementById('free-shipping-progress-container');
             if (tipoEntrega === 'envio' && subtotal > 0) {
                 shippingProgress.style.display = 'block';
@@ -512,11 +569,10 @@
                 shippingProgress.style.display = 'none';
             }
 
-            // Resúmenes numéricos
             document.getElementById('summary-subtotal').innerText = subtotal.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 });
             
             const shippingRow = document.getElementById('summary-row-envio');
-            if (tipoEntrega === 'retiro') {
+            if (tipoEntrega === 'retiro' || tipoEntrega === 'mesa') {
                 shippingRow.style.display = 'none';
             } else {
                 shippingRow.style.display = 'flex';
@@ -534,9 +590,9 @@
         // -- PASARELA DE CHECKOUT --
 
         function openCheckout() {
-            toggleCart(); // Cerrar el drawer del carrito
+            toggleCart();
             document.getElementById('checkout-modal').classList.add('active');
-            actualizarEntrega(); // Sincroniza dirección requerido/oculto
+            actualizarEntrega();
             actualizarMetodoPago();
         }
 
@@ -558,7 +614,6 @@
                 cardForm.style.display = 'none';
                 installments.style.display = 'none';
                 
-                // Quitar validaciones
                 cardName.removeAttribute('required');
                 cardNumber.removeAttribute('required');
                 cardExpiry.removeAttribute('required');
@@ -579,7 +634,6 @@
             }
         }
 
-        // Lógica de cuotas en tiempo real
         function actualizarCalculoCuotas() {
             const subtotal = cart.reduce((acc, curr) => acc + (curr.precio * curr.cantidad), 0);
             const tipoEntrega = obtenerTipoEntrega();
@@ -607,27 +661,33 @@
             }
         }
 
-        // Procesar pago y guardar comanda
         function procesarPago(event) {
             event.preventDefault();
 
             const nombre = document.getElementById('cliente-nombre').value.trim();
             const telefono = document.getElementById('cliente-telefono').value.trim();
             const tipoEntrega = obtenerTipoEntrega();
-            const direccion = tipoEntrega === 'envio' ? document.getElementById('cliente-direccion').value.trim() : 'Retiro por local';
             const agenda = document.getElementById('cliente-agenda').value;
             const metodoPago = document.querySelector('input[name="metodo_pago"]:checked').value;
 
-            // Validación número de teléfono
+            // Validación de teléfono básica
             if (!telefono.startsWith("+54")) {
                 alert("Por favor ingrese el número de teléfono con el código de país. Ej: +54 9 11...");
                 return;
             }
 
+            let nroMesa = null;
+            let direccion = 'Retiro por local';
+            if (tipoEntrega === 'envio') {
+                direccion = document.getElementById('cliente-direccion').value.trim();
+            } else if (tipoEntrega === 'mesa') {
+                nroMesa = document.getElementById('cliente-mesa').value;
+                direccion = `Consumo en Mesa ${nroMesa}`;
+            }
+
             const subtotal = cart.reduce((acc, curr) => acc + (curr.precio * curr.cantidad), 0);
             const costos = calcularCostosPedido(subtotal, tipoEntrega);
 
-            // Detalles de tarjeta si aplica
             let infoFinanciacion = null;
             if (metodoPago === 'credito') {
                 const cuotasSel = parseInt(document.getElementById('card-installments').value);
@@ -642,11 +702,10 @@
 
             const totalFinal = infoFinanciacion ? infoFinanciacion.total_financiado : costos.total;
 
-            // Modelo del pedido/comanda
             const pedido = {
                 nombre_cliente: nombre,
                 telefono_cliente: telefono,
-                items: cart, // Guardar array estructurado
+                items: cart,
                 tipo_entrega: tipoEntrega,
                 direccion_entrega: direccion,
                 subtotal: subtotal,
@@ -657,10 +716,21 @@
                 fecha_hora_entrega: agenda || 'Lo antes posible'
             };
 
-            // Crear el pedido en el storage e inicializar el envío de notificación de WhatsApp simulado
+            if (tipoEntrega === 'mesa') {
+                pedido.nro_mesa = nroMesa;
+            }
+
             const nuevoPedido = crearPedido(pedido);
 
-            // Cerrar checkout, limpiar carrito y renderizar éxito
+            // Si es mesa, guardar en almacenamiento local para habilitar botón de "pedir cuenta"
+            if (tipoEntrega === 'mesa') {
+                localStorage.setItem('comandas_active_mesa', JSON.stringify({
+                    nro_mesa: nroMesa,
+                    id_pedido: nuevoPedido.id_pedido
+                }));
+                comprobarSesionMesa();
+            }
+
             closeCheckout();
             cart = [];
             actualizarTotalesCarrito();
@@ -675,13 +745,17 @@
                 ? 'Efectivo / Transferencia' 
                 : (pedido.metodo_pago === 'debito' ? 'Tarjeta de Débito' : `Tarjeta de Crédito (${pedido.financiacion.cuotas} cuotas)`);
 
+            const entregaTexto = pedido.tipo_entrega === 'envio' 
+                ? 'Envío a domicilio' 
+                : (pedido.tipo_entrega === 'retiro' ? 'Retiro por el local' : `Mesa ${pedido.nro_mesa} (Salón)`);
+
             detailsBox.innerHTML = `
                 <p><strong>Pedido ID:</strong> ${pedido.id_pedido}</p>
                 <p><strong>Cliente:</strong> ${pedido.nombre_cliente}</p>
                 <p><strong>Teléfono:</strong> ${pedido.telefono_cliente}</p>
-                <p><strong>Entrega:</strong> ${pedido.tipo_entrega === 'envio' ? 'Envío a domicilio' : 'Retiro por el local'}</p>
+                <p><strong>Entrega/Mesa:</strong> ${entregaTexto}</p>
                 <p><strong>Método de Pago:</strong> ${metodoTexto}</p>
-                <p class="order-total-success">Total a Pagar: $${pedido.total.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</p>
+                <p class="order-total-success">Total: $${pedido.total.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</p>
             `;
 
             document.getElementById('success-modal').classList.add('active');
@@ -691,7 +765,59 @@
             document.getElementById('success-modal').classList.remove('active');
         }
 
-        // Formateador automático de tarjeta (añadir espacios)
+        // Lógica de sesión de mesa activa
+        function comprobarSesionMesa() {
+            const sesion = localStorage.getItem('comandas_active_mesa');
+            const bar = document.getElementById('active-table-bar');
+            
+            if (sesion) {
+                const data = JSON.parse(sesion);
+                
+                // Verificar si esta mesa sigue ocupada con nuestro pedido
+                const mesas = obtenerMesas();
+                const mesaData = mesas.find(m => m.numero === parseInt(data.nro_mesa));
+                
+                if (mesaData && mesaData.estado !== 'Libre' && mesaData.pedido_activo === data.id_pedido) {
+                    bar.style.display = 'flex';
+                    document.getElementById('lbl-mesa-activa').innerText = data.nro_mesa;
+                    document.getElementById('lbl-pedido-mesa-activo').innerText = data.id_pedido;
+                    
+                    // Si ya está pidiendo la cuenta, cambiar texto del botón
+                    const btn = document.getElementById('btn-pedir-cuenta-cliente');
+                    if (mesaData.estado === 'Pidiendo Cuenta') {
+                        btn.innerText = 'Llamando Mozo... 🔔';
+                        btn.setAttribute('disabled', 'disabled');
+                    } else {
+                        btn.innerText = 'Pedir la Cuenta 🧾';
+                        btn.removeAttribute('disabled');
+                    }
+                    return;
+                }
+            }
+            bar.style.display = 'none';
+        }
+
+        function clientePedirCuenta() {
+            const sesion = localStorage.getItem('comandas_active_mesa');
+            if (!sesion) return;
+            
+            const data = JSON.parse(sesion);
+            const mesas = obtenerMesas();
+            const idx = mesas.findIndex(m => m.numero === parseInt(data.nro_mesa));
+            
+            if (idx !== -1) {
+                mesas[idx].estado = 'Pidiendo Cuenta';
+                guardarMesas(mesas);
+                
+                const btn = document.getElementById('btn-pedir-cuenta-cliente');
+                btn.innerText = 'Llamando Mozo... 🔔';
+                btn.setAttribute('disabled', 'disabled');
+                
+                alert("¡Mozo llamado! Te traeremos la cuenta a la Mesa " + data.nro_mesa + " en unos instantes. ¡Muchas gracias!");
+            }
+        }
+
+        // Formateador de tarjeta
         document.getElementById('card-number').addEventListener('input', function (e) {
             let val = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
             let matches = val.match(/\d{4,16}/g);
@@ -709,7 +835,7 @@
             }
         });
 
-        // Formateador automático de vencimiento (añadir barra)
+        // Formateador de vencimiento
         document.getElementById('card-expiry').addEventListener('input', function (e) {
             let val = e.target.value.replace(/^([0-9]{2})$/g, '$1/');
             e.target.value = val;
