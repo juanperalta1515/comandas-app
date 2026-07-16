@@ -217,16 +217,70 @@
         <!-- ================= PESTAÑA 4: CAJA Y DASHBOARD FINANCIERO SEGREGADO ================= -->
         <section class="admin-tab-content" id="view-caja">
             
-            <!-- Widget de Cierre Consolidado de Jornada -->
-            <div class="jornada-close-container">
-                <div class="jornada-close-info">
-                    <h3>CONSOLIDADO GENERAL DE JORNADA 🏁</h3>
-                    <p class="jornada-total" id="lbl-consolidado-total">$0</p>
-                    <small>Suma neta activa de todas las cajas del salón y delivery.</small>
+            <!-- Dashboard de Cierre y Periodos (Día, Semana, Mes) -->
+            <div class="jornada-close-container period-summary-container">
+                <div class="period-summary-grid">
+                    <!-- Tarjeta Día -->
+                    <div class="period-card">
+                        <h3>Hoy 📅</h3>
+                        <div class="period-row text-success">
+                            <span>Ingresos:</span>
+                            <span id="resumen-dia-ingresos">+$0</span>
+                        </div>
+                        <div class="period-row text-danger">
+                            <span>Egresos:</span>
+                            <span id="resumen-dia-egresos">-$0</span>
+                        </div>
+                        <hr class="period-hr">
+                        <div class="period-row period-net">
+                            <span>Neto:</span>
+                            <strong id="resumen-dia-neto">$0</strong>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta Semana -->
+                    <div class="period-card">
+                        <h3>Esta Semana 📊</h3>
+                        <div class="period-row text-success">
+                            <span>Ingresos:</span>
+                            <span id="resumen-semana-ingresos">+$0</span>
+                        </div>
+                        <div class="period-row text-danger">
+                            <span>Egresos:</span>
+                            <span id="resumen-semana-egresos">-$0</span>
+                        </div>
+                        <hr class="period-hr">
+                        <div class="period-row period-net">
+                            <span>Neto:</span>
+                            <strong id="resumen-semana-neto">$0</strong>
+                        </div>
+                    </div>
+                    
+                    <!-- Tarjeta Mes -->
+                    <div class="period-card">
+                        <h3>Este Mes 📈</h3>
+                        <div class="period-row text-success">
+                            <span>Ingresos:</span>
+                            <span id="resumen-mes-ingresos">+$0</span>
+                        </div>
+                        <div class="period-row text-danger">
+                            <span>Egresos:</span>
+                            <span id="resumen-mes-egresos">-$0</span>
+                        </div>
+                        <hr class="period-hr">
+                        <div class="period-row period-net">
+                            <span>Neto:</span>
+                            <strong id="resumen-mes-neto">$0</strong>
+                        </div>
+                    </div>
                 </div>
-                <button class="btn btn-primary" onclick="ejecutarCierreGeneral()">
-                    Cerrar Jornada Completa y Archivar 🏁
-                </button>
+                
+                <div class="jornada-close-actions">
+                    <button class="btn btn-primary" onclick="ejecutarCierreGeneral()">
+                        Cerrar Jornada Completa y Archivar 🏁
+                    </button>
+                    <small class="text-muted text-center" style="margin-top: 5px; display: block;">El cierre consolidará la caja activa e iniciará un nuevo libro diario.</small>
+                </div>
             </div>
 
             <div class="financial-dashboard-segregado">
@@ -1444,9 +1498,6 @@
             document.getElementById('box-caja-plataformas').innerText = `$${totalPlataformas.toLocaleString('es-AR')}`;
             document.getElementById('box-caja-directo').innerText = `$${totalDirecto.toLocaleString('es-AR')}`;
 
-            const totalConsolidado = totalSalon + totalPlataformas + totalDirecto;
-            document.getElementById('lbl-consolidado-total').innerText = `$${totalConsolidado.toLocaleString('es-AR')}`;
-
             actualizarBadgeCajaCanal('salon', estados.salon);
             actualizarBadgeCajaCanal('plataformas', estados.plataformas);
             actualizarBadgeCajaCanal('directo', estados.directo);
@@ -1464,37 +1515,136 @@
             document.getElementById('lbl-proporcion-directo').innerText = `$${totalDirecto.toLocaleString('es-AR')} (${Math.round(pctDirecto)}%)`;
             document.getElementById('bar-proporcion-directo').style.width = `${pctDirecto}%`;
 
+            // Calcular y renderizar los resúmenes por períodos (Día, Semana, Mes)
+            const resumen = obtenerResumenFinanciero();
+            
+            document.getElementById('resumen-dia-ingresos').innerText = `+$${resumen.dia.ingresos.toLocaleString('es-AR')}`;
+            document.getElementById('resumen-dia-egresos').innerText = `-$${resumen.dia.egresos.toLocaleString('es-AR')}`;
+            document.getElementById('resumen-dia-neto').innerText = `$${resumen.dia.neto.toLocaleString('es-AR')}`;
+            document.getElementById('resumen-dia-neto').className = resumen.dia.neto >= 0 ? 'text-success' : 'text-danger';
+            
+            document.getElementById('resumen-semana-ingresos').innerText = `+$${resumen.semana.ingresos.toLocaleString('es-AR')}`;
+            document.getElementById('resumen-semana-egresos').innerText = `-$${resumen.semana.egresos.toLocaleString('es-AR')}`;
+            document.getElementById('resumen-semana-neto').innerText = `$${resumen.semana.neto.toLocaleString('es-AR')}`;
+            document.getElementById('resumen-semana-neto').className = resumen.semana.neto >= 0 ? 'text-success' : 'text-danger';
+            
+            document.getElementById('resumen-mes-ingresos').innerText = `+$${resumen.mes.ingresos.toLocaleString('es-AR')}`;
+            document.getElementById('resumen-mes-egresos').innerText = `-$${resumen.mes.egresos.toLocaleString('es-AR')}`;
+            document.getElementById('resumen-mes-neto').innerText = `$${resumen.mes.neto.toLocaleString('es-AR')}`;
+            document.getElementById('resumen-mes-neto').className = resumen.mes.neto >= 0 ? 'text-success' : 'text-danger';
+
             const tbody = document.getElementById('caja-transactions-body');
-            tbody.innerHTML = '';
+            if (tbody) {
+                tbody.innerHTML = '';
 
-            if (caja.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay registros contables en la jornada activa.</td></tr>`;
-            } else {
-                caja.forEach(tx => {
-                    const tr = document.createElement('tr');
-                    const badgeClass = tx.tipo === 'ingreso' ? 'status-available' : 'status-unavailable';
-                    
-                    let canalTexto = '';
-                    if (tx.canal === 'salon') {
-                        canalTexto = '🍽️ Salón';
-                    } else if (tx.canal === 'plataformas') {
-                        canalTexto = '🛵 Plataformas';
-                    } else {
-                        canalTexto = '🏪 Directo';
-                    }
+                if (caja.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay registros contables en la jornada activa.</td></tr>`;
+                } else {
+                    caja.forEach(tx => {
+                        const tr = document.createElement('tr');
+                        const badgeClass = tx.tipo === 'ingreso' ? 'status-available' : 'status-unavailable';
+                        
+                        let canalTexto = '';
+                        if (tx.canal === 'salon') {
+                            canalTexto = '🍽️ Salón';
+                        } else if (tx.canal === 'plataformas') {
+                            canalTexto = '🛵 Plataformas';
+                        } else {
+                            canalTexto = '🏪 Directo';
+                        }
 
-                    const extraCerrado = tx.estado_cierre === 'cerrada_parcial' ? ' <small class="text-danger">(Post-Cierre)</small>' : '';
+                        const extraCerrado = tx.estado_cierre === 'cerrada_parcial' ? ' <small class="text-danger">(Post-Cierre)</small>' : '';
 
-                    tr.innerHTML = `
-                        <td>${tx.fecha_hora.split(' ')[1] || tx.fecha_hora}</td>
-                        <td><strong>${canalTexto}</strong></td>
-                        <td><span class="status-badge ${badgeClass}">${tx.tipo.toUpperCase()}</span></td>
-                        <td>${tx.descripcion}${extraCerrado}</td>
-                        <td>${tx.metodoPago}</td>
-                        <td><strong class="${tx.tipo === 'ingreso' ? 'text-success' : 'text-danger'}">${tx.tipo === 'ingreso' ? '+' : '-'}$${tx.monto.toLocaleString('es-AR')}</strong></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                        tr.innerHTML = `
+                            <td>${tx.fecha_hora.split(' ')[1] || tx.fecha_hora}</td>
+                            <td><strong>${canalTexto}</strong></td>
+                            <td><span class="status-badge ${badgeClass}">${tx.tipo.toUpperCase()}</span></td>
+                            <td>${tx.descripcion}${extraCerrado}</td>
+                            <td>${tx.metodoPago}</td>
+                            <td><strong class="${tx.tipo === 'ingreso' ? 'text-success' : 'text-danger'}">${tx.tipo === 'ingreso' ? '+' : '-'}$${tx.monto.toLocaleString('es-AR')}</strong></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            }
+        }
+
+        // -- HELPERS DE CÁLCULO FINANCIERO --
+        function obtenerResumenFinanciero() {
+            const cajaActiva = obtenerCaja();
+            const historicoTx = JSON.parse(localStorage.getItem('comandas_caja_historico')) || [];
+            const todasLasTx = [...cajaActiva, ...historicoTx];
+            
+            const ahora = new Date();
+            const hoyStr = ahora.toLocaleDateString('es-AR');
+            
+            // Lunes de la semana actual
+            const copiaFechaSemana = new Date(ahora.getTime());
+            const diaSemana = copiaFechaSemana.getDay(); // 0: Domingo, 1: Lunes, etc.
+            const difLunes = copiaFechaSemana.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
+            const lunesEstaSemana = new Date(copiaFechaSemana.setDate(difLunes));
+            lunesEstaSemana.setHours(0, 0, 0, 0);
+            
+            // Primer día del mes
+            const primerDiaMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+            primerDiaMes.setHours(0, 0, 0, 0);
+
+            const resumen = {
+                dia: { ingresos: 0, egresos: 0, neto: 0 },
+                semana: { ingresos: 0, egresos: 0, neto: 0 },
+                mes: { ingresos: 0, egresos: 0, neto: 0 }
+            };
+
+            todasLasTx.forEach(tx => {
+                const timestamp = tx.timestamp ? new Date(tx.timestamp) : parsearFechaLocal(tx.fecha_hora);
+                const monto = tx.monto || 0;
+                const esIngreso = tx.tipo === 'ingreso';
+
+                // Clasificar por Día
+                if (new Date(timestamp).toLocaleDateString('es-AR') === hoyStr) {
+                    if (esIngreso) resumen.dia.ingresos += monto;
+                    else resumen.dia.egresos += monto;
+                }
+
+                // Clasificar por Semana
+                if (timestamp >= lunesEstaSemana) {
+                    if (esIngreso) resumen.semana.ingresos += monto;
+                    else resumen.semana.egresos += monto;
+                }
+
+                // Clasificar por Mes
+                if (timestamp >= primerDiaMes) {
+                    if (esIngreso) resumen.mes.ingresos += monto;
+                    else resumen.mes.egresos += monto;
+                }
+            });
+
+            resumen.dia.neto = resumen.dia.ingresos - resumen.dia.egresos;
+            resumen.semana.neto = resumen.semana.ingresos - resumen.semana.egresos;
+            resumen.mes.neto = resumen.mes.ingresos - resumen.mes.egresos;
+
+            return resumen;
+        }
+
+        function parsearFechaLocal(fechaStr) {
+            if (!fechaStr) return new Date();
+            try {
+                const partes = fechaStr.split(' ');
+                const fechaPartes = partes[0].split('/');
+                const dia = parseInt(fechaPartes[0]);
+                const mes = parseInt(fechaPartes[1]) - 1;
+                const anio = parseInt(fechaPartes[2]);
+                
+                let hora = 0, min = 0, seg = 0;
+                if (partes[1]) {
+                    const horaPartes = partes[1].split(':');
+                    hora = parseInt(horaPartes[0]);
+                    min = parseInt(horaPartes[1]);
+                    seg = parseInt(horaPartes[2]) || 0;
+                }
+                return new Date(anio, mes, dia, hora, min, seg);
+            } catch(e) {
+                return new Date();
             }
         }
 

@@ -3193,6 +3193,76 @@ hr {
     color: var(--color-warning);
 }
 
+/* ==========================================================================
+   DASHBOARD DE PERIODOS Y CIERRE DE CAJA
+   ========================================================================== */
+
+.period-summary-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    background: white;
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+}
+
+.period-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.period-card {
+    background-color: hsl(210, 20%, 98%);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+}
+
+.period-card h3 {
+    font-size: 1.1rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--color-text-main);
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 0.5rem;
+}
+
+.period-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.period-hr {
+    margin: 0.5rem 0;
+    border: 0;
+    border-top: 1px dashed var(--color-border);
+}
+
+.period-net {
+    font-size: 1.05rem;
+}
+
+.period-net strong {
+    color: var(--color-text-main);
+}
+
+.jornada-close-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-top: 1px solid var(--color-border);
+    padding-top: 1.5rem;
+    width: 100%;
+}
+
 
 
 
