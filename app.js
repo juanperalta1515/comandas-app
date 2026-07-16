@@ -411,6 +411,7 @@ function crearPedido(datosPedido) {
         id_pedido: 'PED-' + Math.floor(1000 + Math.random() * 9000),
         fecha_hora: new Date().toLocaleString('es-AR'),
         estado: 'Pendiente', 
+        cobrado: datosPedido.cobrado !== undefined ? datosPedido.cobrado : (datosPedido.plataforma ? true : false),
         ...datosPedido
     };
     
@@ -472,7 +473,8 @@ function registrarTransaccionCaja(tipo, descripcion, monto, metodoPago = 'Efecti
         metodoPago: metodoPago,
         canal: canal, 
         estado_cierre: cajaCerrada ? 'cerrada_parcial' : 'abierta', 
-        fecha_hora: new Date().toLocaleString('es-AR')
+        fecha_hora: new Date().toLocaleString('es-AR'),
+        timestamp: new Date().toISOString()
     };
     caja.unshift(nuevaTransaccion);
     guardarCaja(caja);
@@ -490,21 +492,24 @@ function actualizarEstadoPedido(idPedido, nuevoEstado) {
         
         if (nuevoEstado === 'Entregado' && anteriorEstado !== 'Entregado' && pedidos[index].tipo_entrega !== 'mesa') {
             const pedido = pedidos[index];
-            let canal = 'directo';
-            let descripcion = `Venta Directa - Pedido #${pedido.id_pedido}`;
-            
-            if (pedido.plataforma) {
-                canal = 'plataformas';
-                descripcion = `Venta ${pedido.plataforma.toUpperCase()} - Pedido #${pedido.id_pedido}`;
+            if (!pedido.cobrado) {
+                pedido.cobrado = true;
+                let canal = 'directo';
+                let descripcion = `Venta Directa - Pedido #${pedido.id_pedido}`;
+                
+                if (pedido.plataforma) {
+                    canal = 'plataformas';
+                    descripcion = `Venta ${pedido.plataforma.toUpperCase()} - Pedido #${pedido.id_pedido}`;
+                }
+                
+                registrarTransaccionCaja(
+                    'ingreso',
+                    descripcion,
+                    pedido.total,
+                    pedido.metodo_pago || 'Efectivo',
+                    canal
+                );
             }
-            
-            registrarTransaccionCaja(
-                'ingreso',
-                descripcion,
-                pedido.total,
-                pedido.metodo_pago,
-                canal
-            );
         }
 
         guardarPedidos(pedidos);
@@ -528,6 +533,55 @@ function actualizarItemsPedido(idPedido, nuevosItems, nuevoTotal, nuevoSubtotal)
     return false;
 }
 
+// -- PROCESAR COBRO DE CUALQUIER PEDIDO --
+function cobrarPedido(idPedido, metodoPago) {
+    const pedidos = obtenerPedidos();
+    const idxPed = pedidos.findIndex(p => p.id_pedido === idPedido);
+    if (idxPed === -1) return false;
+    
+    const pedido = pedidos[idxPed];
+    if (pedido.cobrado) return false;
+    
+    pedido.cobrado = true;
+    pedido.metodo_pago = metodoPago.toLowerCase();
+    
+    let canal = 'directo';
+    let descripcion = `Cobro Pedido #${idPedido} (${pedido.nombre_cliente})`;
+    
+    if (pedido.tipo_entrega === 'mesa') {
+        canal = 'salon';
+        descripcion = `Cobro Mesa ${pedido.nro_mesa} - Pedido #${idPedido}`;
+        
+        // Liberar mesa si está ocupada por este pedido
+        const mesas = obtenerMesas();
+        const idxMesa = mesas.findIndex(m => m.numero === parseInt(pedido.nro_mesa));
+        if (idxMesa !== -1 && mesas[idxMesa].pedido_activo === idPedido) {
+            mesas[idxMesa].estado = 'Libre';
+            mesas[idxMesa].pedido_activo = null;
+            guardarMesas(mesas);
+        }
+    } else if (pedido.plataforma) {
+        canal = 'plataformas';
+        descripcion = `Cobro Venta ${pedido.plataforma.toUpperCase()} - Pedido #${idPedido}`;
+    }
+    
+    registrarTransaccionCaja(
+        'ingreso',
+        descripcion,
+        pedido.total,
+        metodoPago,
+        canal
+    );
+    
+    // Si cobramos el pedido, lo marcamos también como Entregado si no estaba en un estado final
+    if (pedido.estado !== 'Entregado' && pedido.estado !== 'Anulado') {
+        pedido.estado = 'Entregado';
+    }
+    
+    guardarPedidos(pedidos);
+    return true;
+}
+
 // -- PROCESAR COBRO DE MESA (SALÓN) --
 function cobrarMesa(nroMesa, metodoPago) {
     const mesas = obtenerMesas();
@@ -537,28 +591,48 @@ function cobrarMesa(nroMesa, metodoPago) {
     const idPedido = mesas[idxMesa].pedido_activo;
     if (!idPedido) return false;
     
+    return cobrarPedido(idPedido, metodoPago);
+}
+
+// -- ANULAR UN PEDIDO --
+function anularPedido(idPedido) {
     const pedidos = obtenerPedidos();
     const idxPed = pedidos.findIndex(p => p.id_pedido === idPedido);
     if (idxPed === -1) return false;
     
     const pedido = pedidos[idxPed];
+    const eraCobrado = pedido.cobrado;
     
-    registrarTransaccionCaja(
-        'ingreso', 
-        `Cobro Mesa ${nroMesa} - Pedido #${idPedido}`, 
-        pedido.total, 
-        metodoPago,
-        'salon'
-    );
+    pedido.estado = 'Anulado';
+    pedido.cobrado = false; // Ya no está cobrado ya que se anuló
     
-    pedidos[idxPed].estado = 'Entregado';
-    pedidos[idxPed].metodo_pago = metodoPago.toLowerCase();
+    // Si era una mesa y estaba ocupada, la liberamos
+    if (pedido.tipo_entrega === 'mesa') {
+        const mesas = obtenerMesas();
+        const idxMesa = mesas.findIndex(m => m.numero === parseInt(pedido.nro_mesa));
+        if (idxMesa !== -1 && mesas[idxMesa].pedido_activo === idPedido) {
+            mesas[idxMesa].estado = 'Libre';
+            mesas[idxMesa].pedido_activo = null;
+            guardarMesas(mesas);
+        }
+    }
+    
+    // Si ya había sido cobrado (o entregado y por ende ingresado en caja), revertimos el cobro con un egreso
+    if (eraCobrado) {
+        let canal = 'directo';
+        if (pedido.tipo_entrega === 'mesa') canal = 'salon';
+        else if (pedido.plataforma) canal = 'plataformas';
+        
+        registrarTransaccionCaja(
+            'egreso',
+            `Anulación de Pedido #${idPedido} - Devolución`,
+            pedido.total,
+            pedido.metodo_pago || 'Efectivo',
+            canal
+        );
+    }
+    
     guardarPedidos(pedidos);
-    
-    mesas[idxMesa].estado = 'Libre';
-    mesas[idxMesa].pedido_activo = null;
-    guardarMesas(mesas);
-    
     return true;
 }
 
@@ -604,6 +678,12 @@ function cerrarJornadaCompleta() {
         total_directo: totalDirecto,
         total_general: totalGeneral
     };
+
+    // Guardar transacciones de caja activa en el histórico persistente antes de limpiar la caja
+    const KEY_CAJA_HISTORICO = 'comandas_caja_historico';
+    const historicoTx = JSON.parse(localStorage.getItem(KEY_CAJA_HISTORICO)) || [];
+    const cajaConIdCierre = caja.map(tx => ({ ...tx, id_cierre: nuevoCierre.id_cierre }));
+    localStorage.setItem(KEY_CAJA_HISTORICO, JSON.stringify(historicoTx.concat(cajaConIdCierre)));
 
     const historico = obtenerHistoricoCierres();
     historico.unshift(nuevoCierre);

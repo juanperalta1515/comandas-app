@@ -3168,6 +3168,31 @@ hr {
     cursor: not-allowed;
 }
 
+/* ==========================================================================
+   MODULO DE COBRANZA Y DETALLES ADICIONALES
+   ========================================================================== */
+
+.form-control-inline {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background-color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-main);
+    outline: none;
+    transition: var(--transition-fast);
+}
+
+.form-control-inline:focus {
+    border-color: var(--color-primary);
+}
+
+.status-pending {
+    background-color: hsl(45, 85%, 94%);
+    color: var(--color-warning);
+}
+
 
 
 

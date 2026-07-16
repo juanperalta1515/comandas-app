@@ -50,6 +50,7 @@
         <div class="tabs-container">
             <button class="admin-tab-btn active" id="tab-orders-btn" onclick="switchTab('orders')">Comandas 📋</button>
             <button class="admin-tab-btn" id="tab-tables-btn" onclick="switchTab('tables')">Salón & Mesas 🍽️</button>
+            <button class="admin-tab-btn" id="tab-cobranza-btn" onclick="switchTab('cobranza')">Cobranza 💳</button>
             <button class="admin-tab-btn" id="tab-stock-btn" onclick="switchTab('stock')">Gestión de Menú 🍔</button>
             <button class="admin-tab-btn" id="tab-caja-btn" onclick="switchTab('caja')">Caja & Finanzas 📊</button>
             <button class="admin-tab-btn" id="tab-config-btn" onclick="switchTab('config')">Configuración ⚙️</button>
@@ -144,6 +145,42 @@
                 
                 <div class="mesas-grid" id="mesas-salon-grid">
                     <!-- Cargadas dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA NUEVA: MÓDULO DE COBRANZA ================= -->
+        <section class="admin-tab-content" id="view-cobranza">
+            <div class="admin-card">
+                <div class="admin-card-header-flex">
+                    <h2>Módulo de Cobranza y Cuentas Activas 💳</h2>
+                    <div class="cobranza-filters">
+                        <select id="cobranza-filter-estado" onchange="renderCobranza()" class="form-control-inline">
+                            <option value="pendientes">Pendientes de Cobro</option>
+                            <option value="cobrados">Cobrados Recientemente</option>
+                            <option value="todos">Todos los Pedidos</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="admin-card-description">Monitoreá las comandas, registrá pagos con diferentes medios de cobro y emití los tickets correspondientes.</p>
+                
+                <div class="table-responsive">
+                    <table class="stock-table">
+                        <thead>
+                            <tr>
+                                <th>ID Pedido</th>
+                                <th>Cliente / Mesa</th>
+                                <th>Detalle</th>
+                                <th>Importe</th>
+                                <th>Cocina/Despacho</th>
+                                <th>Estado Pago</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cobranza-table-body">
+                            <!-- Renderizado dinámico -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -469,6 +506,7 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-danger" id="btn-cancel-order" onclick="ejecutarAnulacionDesdeDetalle()" style="margin-right: auto;">Anular Pedido ❌</button>
                 <button class="btn btn-peya" id="btn-print-kitchen" onclick="imprimirTicketCocina()">Comanda Cocina 🖨️</button>
                 <button class="btn btn-rappi" id="btn-print-bill" onclick="imprimirFacturaCliente()">Factura/Cuenta 🧾</button>
                 <button class="btn btn-secondary" onclick="cerrarDetallePedido()">Cerrar</button>
@@ -476,20 +514,21 @@
         </div>
     </div>
 
-    <!-- Modal de Cobro de Mesa (Caja Salón) -->
-    <div class="modal-overlay" id="checkout-table-modal">
+    <!-- Modal de Cobro General -->
+    <div class="modal-overlay" id="checkout-order-modal">
         <div class="modal-card">
             <div class="modal-header">
-                <h2>Cerrar Cuenta - Mesa <span id="checkout-mesa-nro">-</span></h2>
-                <button class="close-btn" onclick="cerrarCobrarMesa()">&times;</button>
+                <h2>Cobrar Comanda <span id="checkout-order-id">-</span></h2>
+                <button class="close-btn" onclick="cerrarCobrarPedido()">&times;</button>
             </div>
-            <form onsubmit="procesarCobrarMesa(event)">
+            <form onsubmit="procesarCobrarPedido(event)">
+                <input type="hidden" id="checkout-pedido-id-hidden">
                 <div class="modal-body">
-                    <p>Vas a proceder a cobrar los consumos de la mesa.</p>
-                    <div class="order-total-success" id="checkout-mesa-total-box">$0</div>
+                    <p>Vas a proceder a registrar el cobro de la comanda de: <strong id="checkout-order-client">-</strong></p>
+                    <div class="order-total-success" id="checkout-order-total-box">$0</div>
                     <div class="form-group">
-                        <label for="checkout-mesa-pago">Método de Cobro *</label>
-                        <select id="checkout-mesa-pago">
+                        <label for="checkout-order-pago">Método de Cobro *</label>
+                        <select id="checkout-order-pago">
                             <option value="Efectivo">💵 Efectivo / Transferencia</option>
                             <option value="Debito">💳 Tarjeta de Débito</option>
                             <option value="Credito">💳 Tarjeta de Crédito</option>
@@ -497,7 +536,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarCobrarMesa()">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" onclick="cerrarCobrarPedido()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Registrar Pago e Imprimir Factura 🧾</button>
                 </div>
             </form>
@@ -712,6 +751,7 @@
             window.addEventListener('ordersUpdated', () => {
                 renderKanban();
                 renderSalonMesas();
+                renderCobranza();
                 calcularCajaYCharts();
             });
             window.addEventListener('menuUpdated', () => {
@@ -727,7 +767,10 @@
             });
             window.addEventListener('waLogsUpdated', renderLogsWhatsApp);
             window.addEventListener('tablesUpdated', renderSalonMesas);
-            window.addEventListener('cajaUpdated', calcularCajaYCharts);
+            window.addEventListener('cajaUpdated', () => {
+                calcularCajaYCharts();
+                renderCobranza();
+            });
             window.addEventListener('cierresUpdated', renderHistoricoCierres);
             window.addEventListener('cajaEstadosUpdated', calcularCajaYCharts);
             window.addEventListener('activeRestaurantUpdated', () => {
@@ -742,6 +785,7 @@
         function inicializarAdmin() {
             renderKanban();
             renderSalonMesas();
+            renderCobranza();
             renderStockTable();
             cargarConfiguracionesForm();
             actualizarLabelsConfig();
@@ -843,6 +887,9 @@
             } else if (tabId === 'tables') {
                 document.getElementById('view-tables').classList.add('active');
                 renderSalonMesas();
+            } else if (tabId === 'cobranza') {
+                document.getElementById('view-cobranza').classList.add('active');
+                renderCobranza();
             } else if (tabId === 'stock') {
                 document.getElementById('view-stock').classList.add('active');
                 renderStockTable();
@@ -1208,46 +1255,166 @@
             alert(`¡Mesa ${waiterActiveMesa} abierta y ocupada con éxito!`);
         }
 
-        // -- COBRAR MESA --
-        function abrirCobrarMesa(nroMesa) {
-            const mesas = obtenerMesas();
-            const mesa = mesas.find(m => m.numero === nroMesa);
-            if (!mesa || !mesa.pedido_activo) return;
-
+        // -- COBRAR PEDIDO Y VISTA DE COBRO GENERAL --
+        function abrirCobrarPedidoModal(idPedido) {
             const pedidos = obtenerPedidos();
-            const pedido = pedidos.find(p => p.id_pedido === mesa.pedido_activo);
+            const pedido = pedidos.find(p => p.id_pedido === idPedido);
             if (!pedido) return;
 
-            document.getElementById('checkout-mesa-nro').innerText = nroMesa;
-            document.getElementById('checkout-mesa-total-box').innerText = `$${pedido.total.toLocaleString('es-AR')}`;
+            document.getElementById('checkout-order-id').innerText = idPedido;
+            document.getElementById('checkout-pedido-id-hidden').value = idPedido;
             
-            document.getElementById('checkout-table-modal').classList.add('active');
+            let clienteInfo = pedido.nombre_cliente;
+            if (pedido.tipo_entrega === 'mesa') {
+                clienteInfo += ` (Mesa ${pedido.nro_mesa})`;
+            }
+            document.getElementById('checkout-order-client').innerText = clienteInfo;
+            document.getElementById('checkout-order-total-box').innerText = `$${pedido.total.toLocaleString('es-AR')}`;
+            
+            document.getElementById('checkout-order-pago').value = 'Efectivo';
+            document.getElementById('checkout-order-modal').classList.add('active');
         }
 
-        function cerrarCobrarMesa() {
-            document.getElementById('checkout-table-modal').classList.remove('active');
+        function cerrarCobrarPedido() {
+            document.getElementById('checkout-order-modal').classList.remove('active');
         }
 
-        function procesarCobrarMesa(e) {
+        function procesarCobrarPedido(e) {
             e.preventDefault();
-            const nroMesa = parseInt(document.getElementById('checkout-mesa-nro').innerText);
-            const metodo = document.getElementById('checkout-mesa-pago').value;
+            const idPedido = document.getElementById('checkout-pedido-id-hidden').value;
+            const metodo = document.getElementById('checkout-order-pago').value;
 
-            const mesas = obtenerMesas();
-            const mesa = mesas.find(m => m.numero === nroMesa);
-            const idPedido = mesa.pedido_activo;
-
-            const exito = cobrarMesa(nroMesa, metodo);
+            const exito = cobrarPedido(idPedido, metodo);
             if (exito) {
-                cerrarCobrarMesa();
+                cerrarCobrarPedido();
                 renderSalonMesas();
+                renderKanban();
+                renderCobranza();
                 calcularCajaYCharts();
-                alert(`¡Mesa ${nroMesa} cobrada con éxito! Registrado en caja.`);
+                alert(`¡Pedido ${idPedido} cobrado con éxito! Registrado en caja.`);
                 
                 verDetallePedido(idPedido);
                 imprimirFacturaCliente();
             } else {
-                alert("Hubo un problema al cobrar la mesa.");
+                alert("Hubo un problema al cobrar el pedido.");
+            }
+        }
+
+        // Redirigir el cobro de mesas del salón al modal genérico
+        function abrirCobrarMesa(nroMesa) {
+            const mesas = obtenerMesas();
+            const mesa = mesas.find(m => m.numero === nroMesa);
+            if (!mesa || !mesa.pedido_activo) return;
+            abrirCobrarPedidoModal(mesa.pedido_activo);
+        }
+
+        // -- SECCIÓN DE COBRANZA Y CUENTAS --
+        function renderCobranza() {
+            const filterEstado = document.getElementById('cobranza-filter-estado').value;
+            const pedidos = obtenerPedidos();
+            const tbody = document.getElementById('cobranza-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            // Filtrar pedidos
+            let pedidosFiltrados = pedidos.filter(pedido => {
+                if (filterEstado === 'pendientes') {
+                    return !pedido.cobrado && pedido.estado !== 'Anulado';
+                } else if (filterEstado === 'cobrados') {
+                    return pedido.cobrado && pedido.estado !== 'Anulado';
+                } else if (filterEstado === 'todos') {
+                    return true;
+                }
+                return true;
+            });
+
+            // Ordenar por fecha_hora descendente (más nuevos primero)
+            pedidosFiltrados.sort((a, b) => {
+                return new Date(b.fecha_hora) - new Date(a.fecha_hora);
+            });
+
+            if (pedidosFiltrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No se encontraron pedidos con este filtro de cobranza.</td></tr>`;
+                return;
+            }
+
+            pedidosFiltrados.forEach(pedido => {
+                const tr = document.createElement('tr');
+
+                // Canal Badge
+                let canalLabel = '';
+                if (pedido.plataforma) {
+                    canalLabel = `<span class="comanda-delivery-badge ${pedido.plataforma}">${pedido.plataforma === 'pedidosya' ? '🔴 Peya' : '🍊 Rappi'}</span>`;
+                } else {
+                    canalLabel = `<span class="comanda-delivery-badge ${pedido.tipo_entrega}">${pedido.tipo_entrega === 'mesa' ? '🍽️ Mesa ' + pedido.nro_mesa : (pedido.tipo_entrega === 'envio' ? '🛵 Envío' : '🏪 Local')}</span>`;
+                }
+
+                // Cocina Badge
+                const cocinaBadge = `<span class="status-badge" style="background-color: var(--color-state-${obtenerIdEstadoString(pedido.estado)}); color: white;">${pedido.estado}</span>`;
+
+                // Pago Badge
+                let pagoBadge = '';
+                if (pedido.estado === 'Anulado') {
+                    pagoBadge = `<span class="status-badge status-unavailable">Anulado ❌</span>`;
+                } else if (pedido.cobrado) {
+                    const metodoTexto = pedido.metodo_pago ? pedido.metodo_pago.toUpperCase() : 'OK';
+                    pagoBadge = `<span class="status-badge status-available">Cobrado 🟢 (${metodoTexto})</span>`;
+                } else {
+                    pagoBadge = `<span class="status-badge status-pending">Pendiente 🟡</span>`;
+                }
+
+                // Acciones
+                let accionesHTML = '';
+                if (pedido.estado !== 'Anulado') {
+                    accionesHTML += `<button class="btn btn-secondary btn-xs" onclick="verDetallePedido('${pedido.id_pedido}')" style="margin-right: 5px;">Detalle 🔍</button>`;
+                    
+                    if (!pedido.cobrado) {
+                        accionesHTML += `<button class="btn btn-success btn-xs" onclick="abrirCobrarPedidoModal('${pedido.id_pedido}')" style="margin-right: 5px; background-color: var(--color-success); border-color: var(--color-success); color: white;">Cobrar 💵</button>`;
+                    }
+                    
+                    accionesHTML += `<button class="btn btn-danger btn-xs" onclick="ejecutarAnulacion('${pedido.id_pedido}')">Anular ❌</button>`;
+                } else {
+                    accionesHTML += `<button class="btn btn-secondary btn-xs" onclick="verDetallePedido('${pedido.id_pedido}')">Detalle 🔍</button>`;
+                }
+
+                const totalItems = pedido.items.reduce((acc, curr) => acc + curr.cantidad, 0);
+
+                tr.innerHTML = `
+                    <td><strong>${pedido.id_pedido}</strong><br><small class="text-muted">${pedido.fecha_hora.split(' ')[1] || pedido.fecha_hora}</small></td>
+                    <td><strong>${pedido.nombre_cliente}</strong></td>
+                    <td>${canalLabel}</td>
+                    <td><strong>$${pedido.total.toLocaleString('es-AR')}</strong><br><small class="text-muted">${totalItems} platos</small></td>
+                    <td>${cocinaBadge}</td>
+                    <td>${pagoBadge}</td>
+                    <td>
+                        <div class="crud-actions" style="justify-content: flex-start;">
+                            ${accionesHTML}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function ejecutarAnulacion(idPedido) {
+            if (confirm(`¿Estás seguro de que querés anular permanentemente el pedido ${idPedido}?\nSe liberará la mesa (si corresponde) y se generará un contra-asiento de egreso en caja si ya fue cobrado.`)) {
+                const exito = anularPedido(idPedido);
+                if (exito) {
+                    renderKanban();
+                    renderSalonMesas();
+                    renderCobranza();
+                    calcularCajaYCharts();
+                    alert(`El pedido ${idPedido} ha sido anulado con éxito.`);
+                } else {
+                    alert("No se pudo anular el pedido.");
+                }
+            }
+        }
+
+        function ejecutarAnulacionDesdeDetalle() {
+            if (pedidoDetalleActual) {
+                ejecutarAnulacion(pedidoDetalleActual.id_pedido);
+                cerrarDetallePedido();
             }
         }
 
