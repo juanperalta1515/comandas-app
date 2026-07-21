@@ -9,8 +9,83 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="app.css">
+    <style>
+        .auth0-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 50%, #1e1e24 0%, #0d0d11 100%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10000;
+            color: white;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .auth0-box {
+            background: #ffffff;
+            color: #1a1a24;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .auth0-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .auth0-logo {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        .auth0-header h3 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #0d0d11;
+            margin-bottom: 5px;
+        }
+        .auth0-header p {
+            font-size: 0.85rem;
+            color: #71717a;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+    </style>
 </head>
 <body class="admin-body">
+    <!-- Auth0 Login para SuperAdmin -->
+    <div id="superadmin-auth0-login" class="auth0-overlay" style="display: flex;">
+        <div class="auth0-box">
+            <div class="auth0-header">
+                <span class="auth0-logo">👑</span>
+                <h3>ComandaFlow SaaS Owner</h3>
+                <p>Identifíquese para acceder a la administración global</p>
+            </div>
+            <form onsubmit="procesarSuperAdminLogin(event)">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 5px; display: block; color: var(--color-text-main);">Email Corporativo</label>
+                    <input type="email" id="login-email" required placeholder="admin@comandaflow.com" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border);">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 5px; display: block; color: var(--color-text-main);">Contraseña</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border);">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" style="background-color: var(--color-primary); border-color: var(--color-primary); color: white;">
+                    Acceder con Auth0 🔒
+                </button>
+            </form>
+            <div style="margin-top: 15px; text-align: center;">
+                <small class="text-muted" style="font-size: 0.75rem;">Credenciales: <code>admin@comandaflow.com</code> / <code>admin123</code></small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor del Dashboard Protegido -->
+    <div id="saas-superadmin-dashboard" style="display: none;">
     <!-- Navbar del SuperAdmin -->
     <nav class="navbar navbar-admin">
         <div class="nav-container">
@@ -25,6 +100,9 @@
                 <a href="admin.html" class="btn btn-primary btn-sm btn-landing-cta">
                     <span>Ir a Cocina Demo 🍳</span>
                 </a>
+                <button class="btn btn-danger btn-sm" onclick="cerrarSesionSuperAdmin()">
+                    <span>Salir 🔓</span>
+                </button>
             </div>
         </div>
     </nav>
@@ -70,6 +148,16 @@
                     <div class="form-group">
                         <label for="saas-reg-nombre">Nombre del Comercio *</label>
                         <input type="text" id="saas-reg-nombre" required placeholder="Ej: Hamburguesería Dean & Dennys">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="saas-reg-email">Email de Administración *</label>
+                            <input type="email" id="saas-reg-email" required placeholder="Ej: contacto@local.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="saas-reg-password">Contraseña Administrativa *</label>
+                            <input type="password" id="saas-reg-password" required placeholder="Mínimo 6 caracteres" minlength="6">
+                        </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -129,16 +217,99 @@
                 </table>
             </div>
         </div>
+
+        <!-- Panel de Base de Datos & Optimización -->
+        <div class="admin-card margin-top-20">
+            <h2>Optimizador de Base de Datos y Simulación a Gran Escala</h2>
+            <p class="admin-card-description">Monitoreá la optimización física de la base de datos (Índices relacionales y procesamiento con Tablas Temporales en lote).</p>
+            
+            <div class="db-simulator-grid" style="display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap;">
+                <!-- Columna 1: Índices Activos -->
+                <div style="flex: 1; min-width: 280px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column;">
+                    <h4 style="margin-bottom: 10px; font-size: 0.95rem;">📋 Índices de Producción Activos</h4>
+                    <ul style="list-style: none; font-family: monospace; font-size: 0.8rem; line-height: 1.6; margin-bottom: 12px; flex: 1;">
+                        <li>🟢 <strong style="color: var(--color-state-confirmado);">idx_restaurant_users_email</strong> (B-Tree)</li>
+                        <li>🟢 <strong style="color: var(--color-state-confirmado);">idx_restaurants_slug</strong> (B-Tree)</li>
+                        <li>🟢 <strong style="color: var(--color-state-confirmado);">idx_menu_items_res_cat</strong> (Composite B-Tree)</li>
+                        <li>🟢 <strong style="color: var(--color-state-confirmado);">idx_orders_res_estado_fecha</strong> (Composite B-Tree)</li>
+                        <li>🟢 <strong style="color: var(--color-state-confirmado);">idx_caja_tx_res_canal_cierre</strong> (Composite B-Tree)</li>
+                    </ul>
+                    <button class="btn btn-secondary btn-xs btn-block" onclick="ejecutarTestConsultas()">
+                        Simular Rendimiento de Búsqueda (Seq vs Index) ⚡
+                    </button>
+                    <div id="query-performance-output" style="margin-top: 10px; font-family: monospace; font-size: 0.72rem; background: #111; color: #5efb6e; padding: 10px; border-radius: 5px; min-height: 80px; display: none; white-space: pre-wrap; border: 1px solid #333;"></div>
+                </div>
+
+                <!-- Columna 2: Tabla Temporal Bulk Onboarding -->
+                <div style="flex: 1; min-width: 280px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column;">
+                    <h4 style="margin-bottom: 10px; font-size: 0.95rem;">Bulk Onboarding (Tabla Temporal)</h4>
+                    <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px; flex: 1;">Simula la importación en lote de 5,000 platos de menú utilizando una tabla temporal staging para sanitizar y validar precios y categorías antes de la confirmación (COMMIT).</p>
+                    <button class="btn btn-primary btn-xs btn-block" onclick="simularImportacionTablaTemporal()" style="background-color: var(--color-primary); border-color: var(--color-primary); color: white;">
+                        Iniciar Carga Masiva (Temp Table) 🚀
+                    </button>
+                    <div id="temp-table-simulator-output" style="margin-top: 10px; font-family: monospace; font-size: 0.72rem; background: #111; color: #a5d6ff; padding: 10px; border-radius: 5px; min-height: 80px; display: none; line-height: 1.45; max-height: 120px; overflow-y: auto; text-align: left; border: 1px solid #333;"></div>
+                </div>
+            </div>
+        </div>
     </main>
+    </div>
 
     <script src="app.js?v=2"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            renderSaaSAdmin();
+            verificarAccesoSuperAdmin();
 
-            window.addEventListener('saasUpdated', renderSaaSAdmin);
-            window.addEventListener('activeRestaurantUpdated', renderSaaSAdmin);
+            window.addEventListener('saasUpdated', () => {
+                const user = obtenerUsuarioActual();
+                if (user && user.role === 'superadmin') {
+                    renderSaaSAdmin();
+                }
+            });
+            window.addEventListener('activeRestaurantUpdated', () => {
+                const user = obtenerUsuarioActual();
+                if (user && user.role === 'superadmin') {
+                    renderSaaSAdmin();
+                }
+            });
         });
+
+        function verificarAccesoSuperAdmin() {
+            const user = obtenerUsuarioActual();
+            const panel = document.getElementById('saas-superadmin-dashboard');
+            const login = document.getElementById('superadmin-auth0-login');
+            
+            if (user && user.role === 'superadmin') {
+                panel.style.display = 'block';
+                login.style.display = 'none';
+                renderSaaSAdmin();
+            } else {
+                panel.style.display = 'none';
+                login.style.display = 'flex';
+            }
+        }
+
+        function procesarSuperAdminLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-password').value.trim();
+            
+            if (email === 'admin@comandaflow.com' && pass === 'admin123') {
+                const token = generarJWT({
+                    email: email,
+                    role: 'superadmin',
+                    name: 'Super Admin'
+                });
+                guardarTokenSesion(token);
+                verificarAccesoSuperAdmin();
+            } else {
+                alert("Credenciales incorrectas. Verifique el correo y la contraseña.");
+            }
+        }
+
+        function cerrarSesionSuperAdmin() {
+            cerrarSesionActual();
+            verificarAccesoSuperAdmin();
+        }
 
         function renderSaaSAdmin() {
             const locales = obtenerLocalesSaaS();
@@ -166,22 +337,34 @@
 
             locales.forEach(loc => {
                 const tr = document.createElement('tr');
-                const isActivo = loc.estado === 'Activo';
-                const statusBadge = isActivo 
-                    ? '<span class="status-badge status-available">ACTIVO</span>' 
-                    : '<span class="status-badge status-unavailable">SUSPENDIDO</span>';
                 
-                const actionBtn = isActivo
-                    ? `<button class="btn btn-danger btn-xs" onclick="alterarEstadoRestaurante('${loc.id}', 'Inactivo')">Dar de Baja 🔴</button>`
-                    : `<button class="btn btn-primary btn-xs" onclick="alterarEstadoRestaurante('${loc.id}', 'Activo')">Dar de Alta 🟢</button>`;
+                let statusBadge = '';
+                let actionBtn = '';
                 
-                // Botón para iniciar sesión como este restaurante
-                const sessionBtn = `<button class="btn btn-secondary btn-xs margin-top-5 btn-block" onclick="seleccionarRestauranteComoActivo('${loc.id}')">Simular Login 👤</button>`;
+                if (loc.estado === 'Activo') {
+                    statusBadge = '<span class="status-badge status-available">ACTIVO</span>';
+                    actionBtn = `<button class="btn btn-danger btn-xs" onclick="alterarEstadoRestaurante('${loc.id}', 'Inactivo')">Dar de Baja 🔴</button>`;
+                } else if (loc.estado === 'Inactivo') {
+                    statusBadge = '<span class="status-badge status-unavailable">SUSPENDIDO</span>';
+                    actionBtn = `<button class="btn btn-primary btn-xs" onclick="alterarEstadoRestaurante('${loc.id}', 'Activo')">Dar de Alta 🟢</button>`;
+                } else {
+                    // Pendiente de pago / aprobación
+                    statusBadge = `<span class="status-badge status-pending" style="background-color: var(--color-accent); color: white;">PENDIENTE PAGO 🟡</span>`;
+                    const refInfo = loc.comprobante_registro ? `<br><small class="text-muted">Ref: <strong>${loc.comprobante_registro}</strong></small>` : '';
+                    statusBadge += refInfo;
+                    
+                    actionBtn = `<button class="btn btn-success btn-xs" onclick="aprobarPagoBBVA('${loc.id}')" style="background-color: var(--color-success); border-color: var(--color-success); color: white;">Aprobar Pago BBVA 🟢</button>`;
+                }
+                
+                // Botón para iniciar sesión como este restaurante (solo si está activo)
+                const sessionBtn = loc.estado === 'Activo' 
+                    ? `<button class="btn btn-secondary btn-xs margin-top-5 btn-block" onclick="seleccionarRestauranteComoActivo('${loc.id}')">Simular Login 👤</button>`
+                    : `<button class="btn btn-secondary btn-xs margin-top-5 btn-block" disabled style="opacity: 0.5; cursor: not-allowed;">Simular Login 👤</button>`;
 
                 tr.innerHTML = `
                     <td style="font-size: 1.5rem; text-align: center;">${loc.logo || '🍕'}</td>
                     <td><code>${loc.id}</code></td>
-                    <td><strong>${loc.nombre}</strong></td>
+                    <td><strong>${loc.nombre}</strong><br><small class="text-muted">${loc.email || 'Sin email registrado'}</small></td>
                     <td>${loc.cuit}</td>
                     <td>${loc.whatsapp}</td>
                     <td><span class="category-badge">${loc.plan}</span></td>
@@ -196,6 +379,17 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        function aprobarPagoBBVA(id) {
+            const locales = obtenerLocalesSaaS();
+            const idx = locales.findIndex(l => l.id === id);
+            if (idx !== -1) {
+                locales[idx].estado = 'Activo';
+                guardarLocalesSaaS(locales);
+                renderSaaSAdmin();
+                alert(`Pago verificado en la cuenta del BBVA. La licencia para "${locales[idx].nombre}" ha sido activada con éxito.`);
+            }
         }
 
         function alterarEstadoRestaurante(id, nuevoEstado) {
@@ -218,6 +412,8 @@
         function registrarManualRestaurant(e) {
             e.preventDefault();
             const nombre = document.getElementById('saas-reg-nombre').value.trim();
+            const email = document.getElementById('saas-reg-email').value.trim();
+            const password = document.getElementById('saas-reg-password').value.trim();
             const whatsapp = document.getElementById('saas-reg-whatsapp').value.trim();
             const plan = document.getElementById('saas-reg-plan').value;
 
@@ -228,8 +424,11 @@
 
             registrarLocalSaaS({
                 nombre: nombre,
+                email: email,
+                password: password,
                 whatsapp: whatsapp,
-                plan: plan
+                plan: plan,
+                metodo_pago_registro: 'MercadoPago' // Creado manualmente por SuperAdmin se asume pago automático
             });
 
             document.getElementById('saas-manual-form').reset();
@@ -237,6 +436,62 @@
             
             renderSaaSAdmin();
             alert(`¡Comercio "${nombre}" registrado y activado con éxito!`);
+        }
+
+        // -- SIMULADORES DE OPTIMIZACIÓN DE BASE DE DATOS --
+        function ejecutarTestConsultas() {
+            const output = document.getElementById('query-performance-output');
+            output.style.display = 'block';
+            output.innerText = 'Analizando plan de ejecución en base de datos de producción con 150,000 órdenes...\n\n';
+
+            setTimeout(() => {
+                output.innerText += '🔍 [TEST 1] Buscar órdenes sin índice (Canal = \'salon\'):\n';
+                output.innerText += '   -> Executing: EXPLAIN ANALYZE SELECT * FROM orders WHERE canal = \'salon\';\n';
+            }, 600);
+
+            setTimeout(() => {
+                output.innerText += '   -> Plan: Seq Scan on orders (cost=0.00..3892.15 rows=52123 width=234)\n';
+                output.innerText += '   -> Execution time: 18.72 ms (Secuencial, leyó toda la tabla)\n\n';
+            }, 1300);
+
+            setTimeout(() => {
+                output.innerText += '⚡ [TEST 2] Buscar órdenes con índice compuesto (Inquilino = \'rest-102\' y Estado = \'Confirmado\'):\n';
+                output.innerText += '   -> Executing: EXPLAIN ANALYZE SELECT * FROM orders WHERE restaurant_id = \'rest-102\' AND estado = \'Confirmado\';\n';
+            }, 2000);
+
+            setTimeout(() => {
+                output.innerText += '   -> Plan: Index Scan using idx_orders_res_estado_fecha on orders (cost=0.42..8.44 rows=4 width=234)\n';
+                output.innerText += '   -> Index Cond: (restaurant_id = \'rest-102\'::uuid AND estado = \'Confirmado\'::text)\n';
+                output.innerText += '   -> Execution time: 0.03 ms (Óptimo, lectura directa de índice B-Tree)\n\n';
+                output.innerText += '📊 CONCLUSIÓN: El uso del índice reduce el tiempo de consulta en un 99.8% a gran escala.';
+            }, 3000);
+        }
+
+        function simularImportacionTablaTemporal() {
+            const output = document.getElementById('temp-table-simulator-output');
+            output.style.display = 'block';
+            output.innerHTML = '';
+            
+            const logs = [
+                { text: '🔌 [CONN] Conectando a la base de datos PostgreSQL de producción...', time: 0 },
+                { text: '📥 [SaaS] Recibiendo paquete JSON con 5,000 ítems de menú iniciales del cliente...', time: 400 },
+                { text: '🛠️ [SQL] Creando tabla temporal en memoria:\n   CREATE TEMP TABLE temp_menu_import (nombre VARCHAR, precio NUMERIC, categoria VARCHAR) ON COMMIT DROP;', time: 900 },
+                { text: '📂 [COPY] Insertando 5,000 registros huérfanos a temp_menu_import (Time: 0.03s)...', time: 1400 },
+                { text: '🔍 [VALIDAR] Analizando inconsistencias en tabla temporal...', time: 1800 },
+                { text: '⚠️ [CORREGIR] Se encontraron 14 precios menores a $0. Corrigiendo precio a $0.00 en temp_menu_import...', time: 2300 },
+                { text: '⚠️ [CORREGIR] Se encontraron 32 categorías nulas. Completando con \'Principal\' automáticamente...', time: 2700 },
+                { text: '🔄 [MIGRAR] Insertando datos depurados y sanitizados en tabla final:\n   INSERT INTO menu_items SELECT * FROM temp_menu_import ON CONFLICT (nombre, restaurant_id) DO NOTHING;', time: 3200 },
+                { text: '💾 [SQL] COMMIT; Confirmando transacción física...', time: 3800 },
+                { text: '🗑️ [CONN] Cerrando sesión. Tabla temporal temp_menu_import eliminada de memoria.', time: 4200 },
+                { text: '✅ [ÉXITO] 4,986 platos importados. 14 corregidos. Tiempo total: 0.19s vs 8.71s (Seq Insert).', time: 4600 }
+            ];
+
+            logs.forEach(log => {
+                setTimeout(() => {
+                    output.innerText += log.text + '\n';
+                    output.scrollTop = output.scrollHeight;
+                }, log.time);
+            });
         }
     </script>
 </body>

@@ -229,13 +229,25 @@
                             <label for="saas-nombre">Nombre de Fantasía del Local *</label>
                             <input type="text" id="saas-nombre" required placeholder="Ej: Pizzería La Camorra">
                         </div>
-                        <div class="form-group">
-                            <label for="saas-cuit">CUIT de la Empresa *</label>
-                            <input type="text" id="saas-cuit" required placeholder="Ej: 30-71589234-9">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="saas-cuit">CUIT de la Empresa *</label>
+                                <input type="text" id="saas-cuit" required placeholder="Ej: 30-71589234-9">
+                            </div>
+                            <div class="form-group">
+                                <label for="saas-whatsapp">WhatsApp (Formato internacional) *</label>
+                                <input type="text" id="saas-whatsapp" required placeholder="Ej: +5491132456789" value="+549">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="saas-whatsapp">WhatsApp (Formato internacional) *</label>
-                            <input type="text" id="saas-whatsapp" required placeholder="Ej: +5491132456789" value="+549">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="saas-email">Email de Administración *</label>
+                                <input type="email" id="saas-email" required placeholder="Ej: contacto@lacamorra.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="saas-password">Contraseña Administrativa *</label>
+                                <input type="password" id="saas-password" required placeholder="Mínimo 6 caracteres" minlength="6">
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="saas-plan">Plan Seleccionado</label>
@@ -252,38 +264,67 @@
                 </form>
             </div>
 
-            <!-- PASO 2: CHECKOUT MERCADO PAGO SIMULADO -->
+            <!-- PASO 2: CHECKOUT MULTI-MÉTODO SIMULADO -->
             <div id="saas-step-checkout" style="display: none;">
-                <div class="mp-checkout-header">
-                    <span class="mp-logo-icon">💳</span>
-                    <span class="mp-logo-text">mercado pago</span>
+                <div class="mp-checkout-header" id="checkout-header-logo" style="background-color: #009ee3; color: white; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span class="mp-logo-icon" style="font-size: 1.2rem;">🔒</span>
+                    <span class="mp-logo-text" id="checkout-header-text" style="font-weight: bold; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.5px;">Pasarela de Pago Segura</span>
                 </div>
                 <div class="modal-body bg-light-gray" style="padding-top: 1rem;">
-                    <div class="mp-checkout-summary">
-                        <h4>Resumen de Compra</h4>
-                        <div class="mp-summary-row">
+                    <div class="mp-checkout-summary" style="background: #f7f7f9; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                        <h4 style="margin-bottom: 5px; font-size: 0.95rem;">Resumen de Compra</h4>
+                        <div class="mp-summary-row" style="display: flex; justify-content: space-between; font-size: 0.9rem;">
                             <span id="lbl-mp-item">Suscripción ComandaFlow - Plan Premium</span>
                             <strong id="lbl-mp-price">$25.000</strong>
                         </div>
-                        <small class="text-muted">Débito automático mensual simple en pesos argentinos.</small>
+                        <small class="text-muted" style="font-size: 0.75rem;">Suscripción mensual recurrente para el uso de la licencia.</small>
+                    </div>
+
+                    <!-- Selector de Método de Pago -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button type="button" class="btn btn-secondary btn-block active" id="btn-pay-method-mp" onclick="cambiarMetodoPagoCheckout('MercadoPago')" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 2px solid var(--color-primary); background-color: var(--color-primary-light);">
+                            Mercado Pago 💳
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-block" id="btn-pay-method-transfer" onclick="cambiarMetodoPagoCheckout('Transferencia')" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid var(--color-border);">
+                            Transferencia 🏦
+                        </button>
                     </div>
                     
                     <form onsubmit="procesarPagoSuscripcion(event)" style="margin-top: 1rem;">
-                        <div class="form-group">
-                            <label>Número de Tarjeta (Simulado)</label>
-                            <input type="text" required placeholder="4517 8400 0000 0000" disabled value="4517 **** **** 9082">
-                        </div>
-                        <div class="form-row">
+                        <!-- Formulario Mercado Pago -->
+                        <div id="mp-form-container">
                             <div class="form-group">
-                                <label>Vencimiento</label>
-                                <input type="text" required placeholder="MM/AA" disabled value="12/30">
+                                <label>Número de Tarjeta (Simulado)</label>
+                                <input type="text" placeholder="4517 8400 0000 0000" disabled value="4517 **** **** 9082">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Vencimiento</label>
+                                    <input type="text" placeholder="MM/AA" disabled value="12/30">
+                                </div>
+                                <div class="form-group">
+                                    <label>CVC</label>
+                                    <input type="password" placeholder="123" disabled value="999">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulario Transferencia Bancaria -->
+                        <div id="transfer-form-container" style="display: none;">
+                            <div style="background-color: #f1f8ff; border: 1px solid #c8e1ff; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85rem;">
+                                <p style="margin-bottom: 4px;"><strong>Banco Destinatario:</strong> BBVA</p>
+                                <p style="margin-bottom: 4px;"><strong>CVU de ComandaFlow:</strong> <code style="font-weight: bold; font-family: monospace; font-size: 0.95rem; background: #e1ecf4; padding: 2px 5px; border-radius: 4px;">0170259240000007239234</code></p>
+                                <p style="margin-bottom: 4px;"><strong>Titular:</strong> ComandaFlow SaaS Panel Owner</p>
+                                <p><strong>Monto total a transferir:</strong> <strong id="lbl-transfer-total-price" class="text-success">$25.000</strong></p>
                             </div>
                             <div class="form-group">
-                                <label>CVC</label>
-                                <input type="password" required placeholder="123" disabled value="999">
+                                <label for="saas-transfer-ref">Número de Comprobante / Operación *</label>
+                                <input type="text" id="saas-transfer-ref" placeholder="Ej: TX-90824902">
+                                <small class="form-hint" style="font-size: 0.75rem;">Ingresá el identificador único para poder aprobar tu cuenta manualmente.</small>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-mp btn-block" id="btn-pay-mp">
+
+                        <button type="submit" class="btn btn-mp btn-block" id="btn-pay-mp" style="margin-top: 15px; background-color: var(--color-success); border-color: var(--color-success); color: white;">
                             Confirmar Suscripción 🔒
                         </button>
                     </form>
@@ -292,10 +333,10 @@
 
             <!-- PASO 3: EXITO Y REDIRECCIÓN -->
             <div id="saas-step-success" style="display: none; text-align: center;" class="modal-body">
-                <div class="success-icon" style="font-size: 4rem;">🎉</div>
-                <h2>¡Pago Aprobado!</h2>
-                <p>Tu local ya se encuentra activo en la plataforma.</p>
-                <div class="alert-box alert-info margin-top-20">
+                <div class="success-icon" id="success-icon-symbol" style="font-size: 4rem;">🎉</div>
+                <h2 id="success-status-title">¡Suscripción Registrada!</h2>
+                <p id="success-status-desc">Tu local ya se encuentra activo en la plataforma.</p>
+                <div class="alert-box alert-info margin-top-20" id="success-status-box">
                     <strong>¡Bienvenido!</strong> Serás redirigido a tu panel de control para realizar la configuración inicial de cobros y logotipo.
                 </div>
                 <div class="loading-spinner margin-top-20" id="success-spinner"></div>
@@ -313,6 +354,7 @@
     <script src="app.js?v=2"></script>
     <script>
         let datosLocalRegistro = null;
+        let selectedPaymentMethod = 'MercadoPago';
 
         function abrirModalSuscripcion(plan = 'Premium') {
             document.getElementById('saas-step-register').style.display = 'block';
@@ -323,12 +365,53 @@
             document.getElementById('saas-nombre').value = '';
             document.getElementById('saas-cuit').value = '';
             document.getElementById('saas-whatsapp').value = '+549';
+            document.getElementById('saas-email').value = '';
+            document.getElementById('saas-password').value = '';
             
+            cambiarMetodoPagoCheckout('MercadoPago');
             document.getElementById('saas-register-modal').classList.add('active');
         }
 
         function cerrarModalSuscripcion() {
             document.getElementById('saas-register-modal').classList.remove('active');
+        }
+
+        function cambiarMetodoPagoCheckout(metodo) {
+            selectedPaymentMethod = metodo;
+            const btnMP = document.getElementById('btn-pay-method-mp');
+            const btnTransfer = document.getElementById('btn-pay-method-transfer');
+            const mpForm = document.getElementById('mp-form-container');
+            const transferForm = document.getElementById('transfer-form-container');
+            const checkoutHeader = document.getElementById('checkout-header-logo');
+            const checkoutHeaderText = document.getElementById('checkout-header-text');
+
+            if (metodo === 'MercadoPago') {
+                btnMP.classList.add('active');
+                btnMP.style.border = '2px solid var(--color-primary)';
+                btnMP.style.backgroundColor = 'var(--color-primary-light)';
+                btnTransfer.classList.remove('active');
+                btnTransfer.style.border = '1px solid var(--color-border)';
+                btnTransfer.style.backgroundColor = 'transparent';
+                
+                mpForm.style.display = 'block';
+                transferForm.style.display = 'none';
+                
+                checkoutHeader.style.backgroundColor = '#009ee3';
+                checkoutHeaderText.innerText = 'Pagar con Mercado Pago';
+            } else {
+                btnTransfer.classList.add('active');
+                btnTransfer.style.border = '2px solid var(--color-primary)';
+                btnTransfer.style.backgroundColor = 'var(--color-primary-light)';
+                btnMP.classList.remove('active');
+                btnMP.style.border = '1px solid var(--color-border)';
+                btnMP.style.backgroundColor = 'transparent';
+                
+                transferForm.style.display = 'block';
+                mpForm.style.display = 'none';
+                
+                checkoutHeader.style.backgroundColor = '#5c3ca5';
+                checkoutHeaderText.innerText = 'Transferencia Directa';
+            }
         }
 
         function irAPagoSuscripcion(e) {
@@ -338,6 +421,8 @@
             const cuit = document.getElementById('saas-cuit').value.trim();
             const whatsapp = document.getElementById('saas-whatsapp').value.trim();
             const plan = document.getElementById('saas-plan').value;
+            const email = document.getElementById('saas-email').value.trim();
+            const password = document.getElementById('saas-password').value.trim();
 
             if (!whatsapp.startsWith("+549")) {
                 alert("Ingrese el número de WhatsApp con código internacional (+549 para Argentina).");
@@ -348,14 +433,18 @@
                 nombre: nombre,
                 cuit: cuit,
                 whatsapp: whatsapp,
-                plan: plan
+                plan: plan,
+                email: email,
+                password: password
             };
 
-            // Cambiar textos del checkout MP
+            // Ajustar precios
+            const precioString = plan === 'Premium' ? '$25.000' : '$15.000';
             document.getElementById('lbl-mp-item').innerText = `Suscripción ComandaFlow - Plan ${plan}`;
-            document.getElementById('lbl-mp-price').innerText = plan === 'Premium' ? '$25.000' : '$15.000';
+            document.getElementById('lbl-mp-price').innerText = precioString;
+            document.getElementById('lbl-transfer-total-price').innerText = precioString;
 
-            // Switch to MP checkout screen
+            // Switch to checkout screen
             document.getElementById('saas-step-register').style.display = 'none';
             document.getElementById('saas-step-checkout').style.display = 'block';
         }
@@ -364,21 +453,62 @@
             e.preventDefault();
             
             const payBtn = document.getElementById('btn-pay-mp');
-            payBtn.innerText = 'Procesando Pago... ⏳';
+            
+            if (selectedPaymentMethod === 'Transferencia') {
+                const ref = document.getElementById('saas-transfer-ref').value.trim();
+                if (!ref) {
+                    alert("Por favor, ingrese el número de comprobante de la transferencia para validar el pago.");
+                    return;
+                }
+                datosLocalRegistro.metodo_pago_registro = 'Transferencia';
+                datosLocalRegistro.comprobante_registro = ref;
+            } else {
+                datosLocalRegistro.metodo_pago_registro = 'MercadoPago';
+                datosLocalRegistro.comprobante_registro = '';
+            }
+
+            payBtn.innerText = 'Procesando Transacción... ⏳';
             payBtn.setAttribute('disabled', 'disabled');
 
             setTimeout(() => {
-                // Registrar local en la base de datos (localStorage)
+                // Registrar local en localStorage
                 const nuevoLocal = registrarLocalSaaS(datosLocalRegistro);
+
+                // Configurar vistas de éxito según método
+                if (selectedPaymentMethod === 'Transferencia') {
+                    document.getElementById('success-icon-symbol').innerText = '⏳';
+                    document.getElementById('success-status-title').innerText = '¡Comprobante Recibido!';
+                    document.getElementById('success-status-desc').innerText = 'Licencia en proceso de verificación por la administración.';
+                    document.getElementById('success-status-box').innerHTML = `
+                        <strong>Transferencia Registrada:</strong> El SuperAdmin auditará el comprobante <strong>${datosLocalRegistro.comprobante_registro}</strong> en la cuenta BBVA.
+                        Podrás acceder a tu panel una vez confirmada la acreditación.
+                    `;
+                } else {
+                    document.getElementById('success-icon-symbol').innerText = '🎉';
+                    document.getElementById('success-status-title').innerText = '¡Pago Aprobado!';
+                    document.getElementById('success-status-desc').innerText = 'Tu local ya se encuentra activo en la plataforma.';
+                    document.getElementById('success-status-box').innerHTML = `
+                        <strong>¡Bienvenido!</strong> Serás redirigido a tu panel de control para realizar la configuración inicial de cobros y logotipo.
+                    `;
+                    
+                    // Si el pago es aprobado automáticamente (Mercado Pago), emitimos un JWT para loguearlo
+                    const token = generarJWT({
+                        sub: nuevoLocal.id,
+                        email: nuevoLocal.email,
+                        role: 'merchant',
+                        plan: nuevoLocal.plan
+                    });
+                    guardarTokenSesion(token);
+                }
 
                 // Cambiar a pantalla de éxito
                 document.getElementById('saas-step-checkout').style.display = 'none';
                 document.getElementById('saas-step-success').style.display = 'block';
 
-                // Redirigir al panel tras 3 segundos
+                // Redirigir al panel tras 3.5 segundos
                 setTimeout(() => {
                     window.location.href = 'admin.html';
-                }, 3000);
+                }, 3500);
             }, 1500);
         }
     </script>

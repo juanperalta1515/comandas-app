@@ -9,8 +9,83 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="app.css">
+    <style>
+        .auth0-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 50%, #2b154c 0%, #0d0617 100%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10000;
+            color: white;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .auth0-box {
+            background: #ffffff;
+            color: #1a1a24;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .auth0-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .auth0-logo {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        .auth0-header h3 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #0d0d11;
+            margin-bottom: 5px;
+        }
+        .auth0-header p {
+            font-size: 0.85rem;
+            color: #71717a;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+    </style>
 </head>
 <body class="admin-body">
+    <!-- Auth0 Login para Administradores de Comercios -->
+    <div id="merchant-auth0-login" class="auth0-overlay" style="display: flex;">
+        <div class="auth0-box">
+            <div class="auth0-header">
+                <span class="auth0-logo">⚡</span>
+                <h3>ComandaFlow Portal Admin</h3>
+                <p>Inicie sesión con su cuenta de comercio</p>
+            </div>
+            <form onsubmit="procesarMerchantLogin(event)">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 5px; display: block; color: var(--color-text-main);">Email del Administrador</label>
+                    <input type="email" id="merchant-login-email" required placeholder="contacto@quincho.com" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border);">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 5px; display: block; color: var(--color-text-main);">Contraseña</label>
+                    <input type="password" id="merchant-login-password" required placeholder="••••••••" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border);">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" style="background-color: var(--color-primary); border-color: var(--color-primary); color: white;">
+                    Ingresar con Auth0 🔒
+                </button>
+            </form>
+            <div style="margin-top: 15px; text-align: center;">
+                <small class="text-muted" style="font-size: 0.75rem;">Local Demo: <code>contacto@quincho.com</code> / <code>quincho123</code></small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor del Dashboard del Comercio Protegido -->
+    <div id="merchant-admin-dashboard" style="display: none; padding-bottom: 50px;">
     <!-- ================= PANTALLA DE BLOQUEO POR SUSCRIPCIÓN INACTIVA ================= -->
     <div class="saas-lock-screen" id="saas-lock-screen" style="display: none;">
         <div class="lock-card">
@@ -787,6 +862,50 @@
     <!-- Area invisible para imprimir (sólo detectado por window.print en CSS) -->
     <div id="print-area-physical" class="print-only"></div>
 
+    </div> <!-- Fin de merchant-admin-dashboard -->
+
+    <!-- ================= JWT DEBUGGER DRAWER ================= -->
+    <div id="jwt-debugger-drawer" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a24; color: white; border-top: 3px solid var(--color-primary); z-index: 9999; font-family: monospace; font-size: 0.8rem; transition: max-height 0.3s ease-out; max-height: 40px; overflow: hidden; box-shadow: 0 -5px 25px rgba(0,0,0,0.35);">
+        <div id="jwt-debugger-header" style="padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #111; user-select: none;" onclick="toggleJWTDebugger()">
+            <span>🔒 <strong>JWT Security Debugger</strong> (Simulador de Auth0 / Seguridad de Datos)</span>
+            <span id="jwt-drawer-arrow" style="font-size: 0.8rem; color: #a5d6ff;">▲ Expandir</span>
+        </div>
+        <div style="padding: 15px 20px; display: flex; gap: 20px; flex-wrap: wrap;">
+            <!-- Columna 1: Raw Token -->
+            <div style="flex: 2; min-width: 300px; display: flex; flex-direction: column; gap: 5px;">
+                <strong style="color: #ccc; font-size: 0.8rem;">Encrypted Token (JWT String):</strong>
+                <textarea id="jwt-raw-textarea" style="width: 100%; height: 95px; background: #2a2a36; border: 1px solid #444; color: #ff79c6; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.72rem; resize: none; outline: none; line-break: anywhere;" oninput="onRawTokenEdit()"></textarea>
+                <span style="font-size: 0.72rem; color: #ff5555; display: none;" id="jwt-error-message">⚠️ Token alterado / Firma no coincide</span>
+                <span style="font-size: 0.72rem; color: #50fa7b; display: none;" id="jwt-success-message">✓ Token verificado: Firma coincidente y claims intactos</span>
+            </div>
+            
+            <!-- Columna 2: Decoded Token -->
+            <div style="flex: 3; min-width: 350px; display: flex; flex-direction: column; gap: 10px;">
+                <strong style="color: #ccc; font-size: 0.8rem;">Decoded JWT Content:</strong>
+                <div style="display: flex; gap: 10px;">
+                    <!-- Header -->
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <span style="color: #ff5555; font-weight: bold; margin-bottom: 2px; font-size: 0.75rem;">Header (Rojo):</span>
+                        <pre id="jwt-decoded-header" style="background: #2a2a36; padding: 8px; border-radius: 6px; border: 1px solid #444; color: #ff5555; font-size: 0.68rem; margin: 0; min-height: 80px; font-family: monospace; overflow-x: auto;"></pre>
+                    </div>
+                    <!-- Payload -->
+                    <div style="flex: 2; display: flex; flex-direction: column;">
+                        <span style="color: #8be9fd; font-weight: bold; margin-bottom: 2px; font-size: 0.75rem;">Payload (Azul - Claims):</span>
+                        <pre id="jwt-decoded-payload" style="background: #2a2a36; padding: 8px; border-radius: 6px; border: 1px solid #444; color: #8be9fd; font-size: 0.68rem; margin: 0; min-height: 80px; font-family: monospace; overflow-x: auto;"></pre>
+                    </div>
+                    <!-- Signature -->
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <span style="color: #50fa7b; font-weight: bold; margin-bottom: 2px; font-size: 0.75rem;">Firma (Verde):</span>
+                        <pre id="jwt-decoded-signature" style="background: #2a2a36; padding: 8px; border-radius: 6px; border: 1px solid #444; color: #50fa7b; font-size: 0.68rem; margin: 0; min-height: 80px; font-family: monospace; overflow-x: auto; word-break: break-all;"></pre>
+                    </div>
+                </div>
+                <div style="font-size: 0.75rem; color: #888;">
+                    💡 <strong>Seguridad de Datos:</strong> El token contiene la firma criptográfica. Si intentás alterar el rol o local en el Payload, la firma cambiará y el sistema bloqueará el panel de manera instantánea.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js?v=2"></script>
     <script>
         let tabActiva = 'orders';
@@ -798,42 +917,63 @@
         let waiterActiveMesa = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            inicializarAdmin();
-            comprobarLicenciaSaaS();
+            verificarAccesoMerchant();
 
             // Sincronizadores en tiempo real
             window.addEventListener('ordersUpdated', () => {
-                renderKanban();
-                renderSalonMesas();
-                renderCobranza();
-                calcularCajaYCharts();
+                const user = obtenerUsuarioActual();
+                if (user && user.role === 'merchant') {
+                    renderKanban();
+                    renderSalonMesas();
+                    renderCobranza();
+                    calcularCajaYCharts();
+                }
             });
             window.addEventListener('menuUpdated', () => {
-                renderKanban();
-                renderStockTable();
-                cargarListaDesplegablePlatosDetalle();
-                cargarListaDesplegablePlatosWaiter();
+                const user = obtenerUsuarioActual();
+                if (user && user.role === 'merchant') {
+                    renderKanban();
+                    renderStockTable();
+                    cargarListaDesplegablePlatosDetalle();
+                    cargarListaDesplegablePlatosWaiter();
+                }
             });
             window.addEventListener('configUpdated', () => {
-                cargarConfiguracionesForm();
-                actualizarLabelsConfig();
-                renderKanban();
+                const user = obtenerUsuarioActual();
+                if (user && user.role === 'merchant') {
+                    cargarConfiguracionesForm();
+                    actualizarLabelsConfig();
+                    renderKanban();
+                }
             });
-            window.addEventListener('waLogsUpdated', renderLogsWhatsApp);
-            window.addEventListener('tablesUpdated', renderSalonMesas);
+            window.addEventListener('waLogsUpdated', () => {
+                if (obtenerUsuarioActual()) renderLogsWhatsApp();
+            });
+            window.addEventListener('tablesUpdated', () => {
+                if (obtenerUsuarioActual()) renderSalonMesas();
+            });
             window.addEventListener('cajaUpdated', () => {
-                calcularCajaYCharts();
-                renderCobranza();
+                const user = obtenerUsuarioActual();
+                if (user && user.role === 'merchant') {
+                    calcularCajaYCharts();
+                    renderCobranza();
+                }
             });
-            window.addEventListener('cierresUpdated', renderHistoricoCierres);
-            window.addEventListener('cajaEstadosUpdated', calcularCajaYCharts);
+            window.addEventListener('cierresUpdated', () => {
+                if (obtenerUsuarioActual()) renderHistoricoCierres();
+            });
+            window.addEventListener('cajaEstadosUpdated', () => {
+                if (obtenerUsuarioActual()) calcularCajaYCharts();
+            });
             window.addEventListener('activeRestaurantUpdated', () => {
-                comprobarLicenciaSaaS();
-                cargarConfiguracionesForm();
-                actualizarLabelsConfig();
-                actualizarLogoEncabezado();
+                verificarAccesoMerchant();
+                if (obtenerUsuarioActual()) {
+                    cargarConfiguracionesForm();
+                    actualizarLabelsConfig();
+                    actualizarLogoEncabezado();
+                }
             });
-            window.addEventListener('saasUpdated', comprobarLicenciaSaaS);
+            window.addEventListener('saasUpdated', verificarAccesoMerchant);
         });
 
         function inicializarAdmin() {
@@ -851,29 +991,172 @@
             actualizarLogoEncabezado();
         }
 
-        // -- COMPROBACIÓN SAAS & LICENCIAS --
-        function comprobarLicenciaSaaS() {
-            const activo = obtenerRestauranteActivo();
-            const lock = document.getElementById('saas-lock-screen');
-            if (!activo || activo.estado !== 'Activo') {
-                lock.style.display = 'flex';
-                document.getElementById('lock-restaurant-name').innerText = activo ? activo.nombre : 'Comercio';
-            } else {
-                lock.style.display = 'none';
-                if (activo.onboarding_complete === false) {
-                    iniciarOnboardingWizard();
+        // -- COMPROBACIÓN SAAS, LICENCIAS & INICIO DE SESIÓN --
+        function verificarAccesoMerchant() {
+            const user = obtenerUsuarioActual();
+            const panel = document.getElementById('merchant-admin-dashboard');
+            const login = document.getElementById('merchant-auth0-login');
+            
+            if (user && user.role === 'merchant') {
+                const locales = obtenerLocalesSaaS();
+                const restaurant = locales.find(l => l.id === user.sub);
+                
+                if (restaurant) {
+                    // Forzar restaurante activo coincidente con el JWT
+                    const activoActual = obtenerRestauranteActivo();
+                    if (!activoActual || activoActual.id !== restaurant.id) {
+                        guardarRestauranteActivo(restaurant);
+                    }
+                    
+                    panel.style.display = 'block';
+                    login.style.display = 'none';
+                    
+                    // Comprobar licencia (estado de suspensión)
+                    const lock = document.getElementById('saas-lock-screen');
+                    if (restaurant.estado !== 'Activo') {
+                        lock.style.display = 'flex';
+                        document.getElementById('lock-restaurant-name').innerText = restaurant.nombre;
+                        
+                        if (restaurant.estado === 'Pendiente') {
+                            lock.querySelector('h2').innerText = 'Suscripción Pendiente de Aprobación';
+                            lock.querySelector('.alert-box').innerHTML = `
+                                <strong>Verificación en Proceso:</strong> El comprobante <strong>${restaurant.comprobante_registro || ''}</strong> está siendo auditado en BBVA.
+                                El panel se desbloqueará una vez aprobado el pago.
+                            `;
+                        } else {
+                            lock.querySelector('h2').innerText = 'Suscripción Suspendida';
+                            lock.querySelector('.alert-box').innerHTML = `
+                                <strong>Aviso:</strong> El panel está inactivo por falta de pago o suspensión del administrador.
+                            `;
+                        }
+                    } else {
+                        lock.style.display = 'none';
+                        if (restaurant.onboarding_complete === false) {
+                            iniciarOnboardingWizard();
+                        } else {
+                            inicializarAdmin();
+                        }
+                    }
+                } else {
+                    cerrarSesionActual();
+                    panel.style.display = 'none';
+                    login.style.display = 'flex';
                 }
+            } else {
+                panel.style.display = 'none';
+                login.style.display = 'flex';
+            }
+            renderJWTDebugger();
+        }
+
+        function procesarMerchantLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('merchant-login-email').value.trim();
+            const pass = document.getElementById('merchant-login-password').value.trim();
+            
+            const locales = obtenerLocalesSaaS();
+            const restaurant = locales.find(l => l.email === email && l.password === pass);
+            
+            if (restaurant) {
+                const token = generarJWT({
+                    sub: restaurant.id,
+                    email: restaurant.email,
+                    role: 'merchant',
+                    plan: restaurant.plan
+                });
+                guardarTokenSesion(token);
+                verificarAccesoMerchant();
+            } else {
+                alert("Email o contraseña incorrectos. Verifique sus credenciales.");
             }
         }
 
+        function comprobarLicenciaSaaS() {
+            // Reemplazado por verificarAccesoMerchant
+            verificarAccesoMerchant();
+        }
+
         function cerrarSesionSaaS() {
-            // Cerrar sesión y volver al default para que funcione la demo
-            const locales = obtenerLocalesSaaS();
-            const localDefault = locales.find(l => l.id === 'quincho');
-            if (localDefault) {
-                guardarRestauranteActivo(localDefault);
+            cerrarSesionActual();
+            verificarAccesoMerchant();
+        }
+
+        // -- CONTROLADOR INTERACTIVO DEL DEPURADOR JWT --
+        let jwtDebuggerExpanded = false;
+
+        function toggleJWTDebugger() {
+            const drawer = document.getElementById('jwt-debugger-drawer');
+            const arrow = document.getElementById('jwt-drawer-arrow');
+            
+            if (jwtDebuggerExpanded) {
+                drawer.style.maxHeight = '40px';
+                arrow.innerText = '▲ Expandir';
+            } else {
+                drawer.style.maxHeight = '320px';
+                arrow.innerText = '▼ Contraer';
             }
-            window.location.href = 'index.html';
+            jwtDebuggerExpanded = !jwtDebuggerExpanded;
+        }
+
+        function renderJWTDebugger() {
+            const token = obtenerTokenSesion();
+            const rawTextarea = document.getElementById('jwt-raw-textarea');
+            const decHeader = document.getElementById('jwt-decoded-header');
+            const decPayload = document.getElementById('jwt-decoded-payload');
+            const decSignature = document.getElementById('jwt-decoded-signature');
+            
+            const errLabel = document.getElementById('jwt-error-message');
+            const okLabel = document.getElementById('jwt-success-message');
+
+            if (!token) {
+                rawTextarea.value = "No hay ningún token JWT activo. Inicie sesión.";
+                decHeader.innerText = "{}";
+                decPayload.innerText = "{}";
+                decSignature.innerText = "-";
+                errLabel.style.display = 'none';
+                okLabel.style.display = 'none';
+                return;
+            }
+
+            rawTextarea.value = token;
+            
+            try {
+                const parts = token.split('.');
+                if (parts.length === 3) {
+                    verificarYDecodificarJWT(token);
+                    errLabel.style.display = 'none';
+                    okLabel.style.display = 'inline-block';
+                    
+                    decHeader.innerText = JSON.stringify(JSON.parse(simularBase64URLDecode(parts[0])), null, 2);
+                    decPayload.innerText = JSON.stringify(JSON.parse(simularBase64URLDecode(parts[1])), null, 2);
+                    decSignature.innerText = simularBase64URLDecode(parts[2]);
+                } else {
+                    throw new Error("Formato inválido");
+                }
+            } catch (e) {
+                errLabel.style.display = 'inline-block';
+                okLabel.style.display = 'none';
+                
+                decHeader.innerText = "{ \"error\": \"Incapaz de decodificar\" }";
+                decPayload.innerText = "{ \"error\": \"Incapaz de decodificar claims\" }";
+                decSignature.innerText = "Firma Inválida / Token corrupto";
+            }
+        }
+
+        function onRawTokenEdit() {
+            const rawVal = document.getElementById('jwt-raw-textarea').value.trim();
+            sessionStorage.setItem('comandaflow_jwt_token', rawVal);
+            
+            try {
+                verificarYDecodificarJWT(rawVal);
+                renderJWTDebugger();
+                verificarAccesoMerchant();
+            } catch(e) {
+                renderJWTDebugger();
+                // Bloqueo inmediato de la interfaz
+                document.getElementById('merchant-admin-dashboard').style.display = 'none';
+                document.getElementById('merchant-auth0-login').style.display = 'flex';
+            }
         }
 
         // -- ONBOARDING POPUPS WIZARD --

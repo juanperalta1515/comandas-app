@@ -130,9 +130,13 @@ const LOCAL_DEFECTO_SAAS = {
     whatsapp: '+5491132456789',
     alias_cbu: 'quincho.mp',
     logo: '🍔',
-    estado: 'Activo', // Activo, Inactivo
+    estado: 'Activo', // Activo, Inactivo, Pendiente
     plan: 'Premium',
     onboarding_complete: true,
+    email: 'contacto@quincho.com',
+    password: 'quincho123',
+    metodo_pago_registro: 'MercadoPago',
+    comprobante_registro: '',
     fecha_registro: new Date().toLocaleDateString('es-AR')
 };
 
@@ -163,11 +167,29 @@ function inicializarBaseDeDatos() {
         localStorage.setItem(KEY_CAJA_ESTADOS, JSON.stringify(ESTADOS_CAJA_DEFECTO));
     }
     // Inicialización del SaaS
-    if (!localStorage.getItem(KEY_RESTAURANTS)) {
+    const localesExistentes = localStorage.getItem(KEY_RESTAURANTS);
+    if (!localesExistentes) {
         localStorage.setItem(KEY_RESTAURANTS, JSON.stringify([LOCAL_DEFECTO_SAAS]));
+    } else {
+        // Asegurar que el local de demo tenga email y contraseña cargados
+        const locales = JSON.parse(localesExistentes);
+        const idx = locales.findIndex(l => l.id === 'quincho');
+        if (idx !== -1 && !locales[idx].email) {
+            locales[idx].email = 'contacto@quincho.com';
+            locales[idx].password = 'quincho123';
+            locales[idx].metodo_pago_registro = 'MercadoPago';
+            locales[idx].comprobante_registro = '';
+            localStorage.setItem(KEY_RESTAURANTS, JSON.stringify(locales));
+        }
     }
     if (!localStorage.getItem(KEY_ACTIVE_RESTAURANT)) {
         localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(LOCAL_DEFECTO_SAAS));
+    } else {
+        // Actualizar datos del restaurante activo si es el default para evitar inconsistencias
+        const activo = JSON.parse(localStorage.getItem(KEY_ACTIVE_RESTAURANT));
+        if (activo && activo.id === 'quincho' && !activo.email) {
+            localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(LOCAL_DEFECTO_SAAS));
+        }
     }
 }
 
@@ -720,6 +742,7 @@ function agregarPlatoAlMenu(plato) {
 function registrarLocalSaaS(datosLocal) {
     const locales = obtenerLocalesSaaS();
     const nuevoId = 'rest-' + Math.floor(1000 + Math.random() * 9000);
+    const esTransfer = datosLocal.metodo_pago_registro === 'Transferencia';
     const nuevoLocal = {
         id: nuevoId,
         nombre: datosLocal.nombre,
@@ -727,9 +750,13 @@ function registrarLocalSaaS(datosLocal) {
         cuit: datosLocal.cuit || '30-' + Math.floor(10000000 + Math.random() * 90000000) + '-9',
         alias_cbu: datosLocal.alias_cbu || '',
         logo: datosLocal.logo || '🍕',
-        estado: 'Activo', // Activo automáticamente tras confirmación de pago
+        estado: esTransfer ? 'Pendiente' : 'Activo', // Queda en espera si es transferencia
         plan: datosLocal.plan || 'Premium',
         onboarding_complete: false, // Forzar wizard popups
+        email: datosLocal.email || '',
+        password: datosLocal.password || '',
+        metodo_pago_registro: datosLocal.metodo_pago_registro || 'MercadoPago',
+        comprobante_registro: datosLocal.comprobante_registro || '',
         fecha_registro: new Date().toLocaleDateString('es-AR')
     };
 
@@ -802,6 +829,117 @@ function eliminarPlatoDelMenu(idPlato) {
         return true;
     }
     return false;
+}
+
+// -- SERVICIO DE SEGURIDAD SIMULADO (JWT & AUTH0) --
+const JWT_SECRET_KEY = "comandaflow_secret_hash_2026";
+
+function simularBase64URLEncode(str) {
+    try {
+        return btoa(unescape(encodeURIComponent(str)))
+            .replace(/=/g, '')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_');
+    } catch (e) {
+        return "";
+    }
+}
+
+function simularBase64URLDecode(str) {
+    try {
+        let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) {
+            base64 += '=';
+        }
+        return decodeURIComponent(escape(atob(base64)));
+    } catch (e) {
+        return "{}";
+    }
+}
+
+// Genera un token JWT simulado con firma de integridad
+function generarJWT(payload) {
+    const header = {
+        alg: "HS256",
+        typ: "JWT"
+    };
+    const headerString = simularBase64URLEncode(JSON.stringify(header));
+    const payloadString = simularBase64URLEncode(JSON.stringify({
+        ...payload,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor((Date.now() + 3600000) / 1000) // 1 hora de validez
+    }));
+    
+    // Firma simulada utilizando HMAC-SHA256 simulado
+    const rawSignature = headerString + "." + payloadString + "." + JWT_SECRET_KEY;
+    let hash = 0;
+    for (let i = 0; i < rawSignature.length; i++) {
+        const char = rawSignature.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convertir a entero de 32 bits
+    }
+    const signatureString = simularBase64URLEncode("hash_" + Math.abs(hash));
+    
+    return headerString + "." + payloadString + "." + signatureString;
+}
+
+// Verifica el JWT simulado. Lanza error si no es válido
+function verificarYDecodificarJWT(token) {
+    if (!token) throw new Error("Token no provisto");
+    
+    const parts = token.split('.');
+    if (parts.length !== 3) throw new Error("Estructura de token inválida");
+    
+    const [headerStr, payloadStr, signatureStr] = parts;
+    
+    // Validar firma
+    const rawSignature = headerStr + "." + payloadStr + "." + JWT_SECRET_KEY;
+    let hash = 0;
+    for (let i = 0; i < rawSignature.length; i++) {
+        const char = rawSignature.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    const expectedSignature = simularBase64URLEncode("hash_" + Math.abs(hash));
+    
+    if (signatureStr !== expectedSignature) {
+        throw new Error("Firma de token inválida. Token alterado o manipulado.");
+    }
+    
+    const payload = JSON.parse(simularBase64URLDecode(payloadStr));
+    
+    // Validar expiración
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    if (payload.exp && nowInSeconds > payload.exp) {
+        throw new Error("Token expirado");
+    }
+    
+    return payload;
+}
+
+// Manejo de tokens de sesión
+function guardarTokenSesion(token) {
+    sessionStorage.setItem('comandaflow_jwt_token', token);
+}
+
+function obtenerTokenSesion() {
+    return sessionStorage.getItem('comandaflow_jwt_token');
+}
+
+function cerrarSesionActual() {
+    sessionStorage.removeItem('comandaflow_jwt_token');
+}
+
+function obtenerUsuarioActual() {
+    const token = obtenerTokenSesion();
+    if (!token) return null;
+    try {
+        return verificarYDecodificarJWT(token);
+    } catch(e) {
+        console.error("Error al verificar token de sesión:", e.message);
+        cerrarSesionActual();
+        return null;
+    }
 }
 
 /* 
