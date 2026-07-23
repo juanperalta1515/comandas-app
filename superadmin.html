@@ -250,11 +250,26 @@
                     <div id="temp-table-simulator-output" style="margin-top: 10px; font-family: monospace; font-size: 0.72rem; background: #111; color: #a5d6ff; padding: 10px; border-radius: 5px; min-height: 80px; display: none; line-height: 1.45; max-height: 120px; overflow-y: auto; text-align: left; border: 1px solid #333;"></div>
                 </div>
             </div>
+
+            <!-- ================= CONSOLA SMTP SIMULADOR DE EMAILS SALIENTES ================= -->
+            <div class="admin-card margin-top-20">
+                <div class="admin-card-header-flex" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: 10px; margin-bottom: 10px;">
+                    <div>
+                        <h2>📧 Simulador de Correos Salientes (Servidor SMTP Emulado)</h2>
+                        <p class="admin-card-description" style="margin-bottom: 0;">Inspeccioná en tiempo real las notificaciones enviadas a los correos de los comercios (Bajas de débitos, activaciones, bienvenida).</p>
+                    </div>
+                    <button class="btn btn-secondary btn-xs" onclick="limpiarEmailsConsola()" style="padding: 4px 10px; font-size: 0.75rem;">Limpiar Servidor SMTP 🗑️</button>
+                </div>
+                <div id="smtp-email-logs-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; background: #fafafa; border: 1px solid var(--color-border); padding: 10px; border-radius: 8px; min-height: 80px; text-align: left;">
+                    <!-- Se carga dinámicamente -->
+                    <div style="text-align: center; color: var(--color-text-muted); font-size: 0.85rem; padding: 20px;" id="lbl-no-emails">No hay correos salientes en la cola del servidor SMTP.</div>
+                </div>
+            </div>
         </div>
     </main>
     </div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             verificarAccesoSuperAdmin();
@@ -271,6 +286,17 @@
                     renderSaaSAdmin();
                 }
             });
+            
+            // Escuchador de correos
+            window.addEventListener('emailsUpdated', () => {
+                const user = obtenerUsuarioActual();
+                if (user && user.role === 'superadmin') {
+                    renderEmailsConsola();
+                }
+            });
+            
+            // Cargar correos al inicio
+            renderEmailsConsola();
         });
 
         function verificarAccesoSuperAdmin() {
@@ -345,15 +371,23 @@
                     statusBadge = '<span class="status-badge status-available">ACTIVO</span>';
                     actionBtn = `<button class="btn btn-danger btn-xs" onclick="alterarEstadoRestaurante('${loc.id}', 'Inactivo')">Dar de Baja 🔴</button>`;
                 } else if (loc.estado === 'Inactivo') {
-                    statusBadge = '<span class="status-badge status-unavailable">SUSPENDIDO</span>';
-                    actionBtn = `<button class="btn btn-primary btn-xs" onclick="alterarEstadoRestaurante('${loc.id}', 'Activo')">Dar de Alta 🟢</button>`;
+                    if (loc.baja_voluntaria) {
+                        statusBadge = '<span class="status-badge status-unavailable" style="background-color: var(--color-danger); color: white;">BAJA VOLUNTARIA 🔴</span>';
+                        actionBtn = `<button class="btn btn-success btn-xs" onclick="reactivarSuscripcion('${loc.id}')">Reactivar Débito 🟢</button>`;
+                    } else {
+                        statusBadge = '<span class="status-badge status-unavailable">SUSPENDIDO</span>';
+                        actionBtn = `<button class="btn btn-primary btn-xs" onclick="alterarEstadoRestaurante('${loc.id}', 'Activo')">Dar de Alta 🟢</button>`;
+                    }
                 } else {
                     // Pendiente de pago / aprobación
-                    statusBadge = `<span class="status-badge status-pending" style="background-color: var(--color-accent); color: white;">PENDIENTE PAGO 🟡</span>`;
-                    const refInfo = loc.comprobante_registro ? `<br><small class="text-muted">Ref: <strong>${loc.comprobante_registro}</strong></small>` : '';
-                    statusBadge += refInfo;
+                    statusBadge = `<span class="status-badge status-pending" style="background-color: var(--color-accent); color: white;">PENDIENTE DÉBITO CBU 🟡</span>`;
+                    if (loc.cbu_cliente) {
+                        statusBadge += `<br><small class="text-muted">CBU: <strong>${loc.cbu_cliente.substring(0, 4)}...${loc.cbu_cliente.slice(-4)}</strong></small>`;
+                    } else if (loc.comprobante_registro) {
+                        statusBadge += `<br><small class="text-muted">Ref: <strong>${loc.comprobante_registro}</strong></small>`;
+                    }
                     
-                    actionBtn = `<button class="btn btn-success btn-xs" onclick="aprobarPagoBBVA('${loc.id}')" style="background-color: var(--color-success); border-color: var(--color-success); color: white;">Aprobar Pago BBVA 🟢</button>`;
+                    actionBtn = `<button class="btn btn-success btn-xs" onclick="aprobarPagoBBVA('${loc.id}')" style="background-color: var(--color-success); border-color: var(--color-success); color: white;">Aprobar Débito BBVA 🟢</button>`;
                 }
                 
                 // Botón para iniciar sesión como este restaurante (solo si está activo)
@@ -387,8 +421,36 @@
             if (idx !== -1) {
                 locales[idx].estado = 'Activo';
                 guardarLocalesSaaS(locales);
+                
+                // Enviar email simulado de aprobación de débito por CBU
+                simularEnvioEmail(
+                    locales[idx].email,
+                    "Adhesión de Débito Aprobada - ComandaFlow 🎉",
+                    `Hola ${locales[idx].nombre}.\n\nTu solicitud de adhesión a Débito Directo CBU ha sido verificada y aprobada. Tu licencia del Plan ${locales[idx].plan} está activa.\nYa podés iniciar sesión en tu panel administrativo.\n\nAtentamente,\nEl equipo de ComandaFlow.`
+                );
+                
                 renderSaaSAdmin();
                 alert(`Pago verificado en la cuenta del BBVA. La licencia para "${locales[idx].nombre}" ha sido activada con éxito.`);
+            }
+        }
+
+        function reactivarSuscripcion(id) {
+            const locales = obtenerLocalesSaaS();
+            const idx = locales.findIndex(l => l.id === id);
+            if (idx !== -1) {
+                locales[idx].estado = 'Activo';
+                locales[idx].baja_voluntaria = false;
+                guardarLocalesSaaS(locales);
+                
+                // Enviar email simulado de reactivación
+                simularEnvioEmail(
+                    locales[idx].email,
+                    "Reactivación de Suscripción Confirmada - ComandaFlow 🎉",
+                    `Hola ${locales[idx].nombre}.\n\nTu suscripción ha sido reactivada con éxito. Hemos restablecido tu adhesión al Débito Automático mensual. Ya podés acceder a tu panel de control.\n¡Gracias por seguir confiando en nosotros!\n\nAtentamente,\nEl equipo de ComandaFlow.`
+                );
+                
+                renderSaaSAdmin();
+                alert(`Suscripción reactivada para: ${locales[idx].nombre}`);
             }
         }
 
@@ -492,6 +554,49 @@
                     output.scrollTop = output.scrollHeight;
                 }, log.time);
             });
+        }
+
+        // -- CONTROLADOR DE CONSOLA SMTP DE EMAILS --
+        function renderEmailsConsola() {
+            const logs = obtenerLogsEmail();
+            const logsList = document.getElementById('smtp-email-logs-list');
+            
+            if (logs.length === 0) {
+                logsList.innerHTML = '<div style="text-align: center; color: var(--color-text-muted); font-size: 0.85rem; padding: 20px;" id="lbl-no-emails">No hay correos salientes en la cola del servidor SMTP.</div>';
+                return;
+            }
+
+            logsList.innerHTML = '';
+            logs.forEach(mail => {
+                const mailDiv = document.createElement('div');
+                mailDiv.style.backgroundColor = '#ffffff';
+                mailDiv.style.border = '1px solid var(--color-border)';
+                mailDiv.style.borderRadius = '6px';
+                mailDiv.style.padding = '12px';
+                mailDiv.style.fontSize = '0.8rem';
+                mailDiv.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                mailDiv.style.fontFamily = 'monospace';
+                mailDiv.style.marginBottom = '5px';
+
+                mailDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #ddd; padding-bottom: 5px; margin-bottom: 8px;">
+                        <span>✉️ <strong>ID:</strong> ${mail.id}</span>
+                        <span style="color: #666;">🕒 ${mail.fecha_hora}</span>
+                    </div>
+                    <div style="margin-bottom: 2px;"><strong>Servidor SMTP:</strong> <span style="color: #4b6cb7;">${mail.smtp_server}</span></div>
+                    <div style="margin-bottom: 2px;"><strong>Destinatario:</strong> <span style="color: #2e7d32; font-weight: bold;">${mail.destinatario}</span></div>
+                    <div style="margin-bottom: 4px;"><strong>Asunto:</strong> <span style="color: #c2185b; font-weight: bold;">${mail.asunto}</span></div>
+                    <div style="margin-top: 8px; background: #fafafa; padding: 8px; border-radius: 4px; border: 1px solid #eee; white-space: pre-wrap; font-size: 0.75rem; color: #444; line-height: 1.4;">${mail.cuerpo}</div>
+                    <div style="margin-top: 5px; text-align: right; color: #43a047; font-size: 0.72rem; font-weight: bold;">Status: ${mail.status}</div>
+                `;
+                logsList.appendChild(mailDiv);
+            });
+        }
+
+        function limpiarEmailsConsola() {
+            if (confirm("¿Está seguro de que desea vaciar la cola de correos del servidor SMTP simulado?")) {
+                limpiarLogsEmail();
+            }
         }
     </script>
 </body>

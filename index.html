@@ -283,10 +283,10 @@
                     <!-- Selector de Método de Pago -->
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <button type="button" class="btn btn-secondary btn-block active" id="btn-pay-method-mp" onclick="cambiarMetodoPagoCheckout('MercadoPago')" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 2px solid var(--color-primary); background-color: var(--color-primary-light);">
-                            Mercado Pago 💳
+                            Débito Automático Tarjeta 💳
                         </button>
-                        <button type="button" class="btn btn-secondary btn-block" id="btn-pay-method-transfer" onclick="cambiarMetodoPagoCheckout('Transferencia')" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid var(--color-border);">
-                            Transferencia 🏦
+                        <button type="button" class="btn btn-secondary btn-block" id="btn-pay-method-transfer" onclick="cambiarMetodoPagoCheckout('CBU')" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid var(--color-border);">
+                            Débito Directo CBU 🏦
                         </button>
                     </div>
                     
@@ -294,7 +294,7 @@
                         <!-- Formulario Mercado Pago -->
                         <div id="mp-form-container">
                             <div class="form-group">
-                                <label>Número de Tarjeta (Simulado)</label>
+                                <label>Número de Tarjeta (Débito Recurrente)</label>
                                 <input type="text" placeholder="4517 8400 0000 0000" disabled value="4517 **** **** 9082">
                             </div>
                             <div class="form-row">
@@ -309,18 +309,17 @@
                             </div>
                         </div>
 
-                        <!-- Formulario Transferencia Bancaria -->
+                        <!-- Formulario Transferencia Bancaria / CBU -->
                         <div id="transfer-form-container" style="display: none;">
                             <div style="background-color: #f1f8ff; border: 1px solid #c8e1ff; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85rem;">
-                                <p style="margin-bottom: 4px;"><strong>Banco Destinatario:</strong> BBVA</p>
-                                <p style="margin-bottom: 4px;"><strong>CVU de ComandaFlow:</strong> <code style="font-weight: bold; font-family: monospace; font-size: 0.95rem; background: #e1ecf4; padding: 2px 5px; border-radius: 4px;">0170259240000007239234</code></p>
-                                <p style="margin-bottom: 4px;"><strong>Titular:</strong> ComandaFlow SaaS Panel Owner</p>
-                                <p><strong>Monto total a transferir:</strong> <strong id="lbl-transfer-total-price" class="text-success">$25.000</strong></p>
+                                <p style="margin-bottom: 4px;"><strong>Clearing Recaudador:</strong> BBVA (CVU <code>0170259240000007239234</code>)</p>
+                                <p style="margin-bottom: 4px;"><strong>Concepto:</strong> Adhesión a Débito Directo Recurrente</p>
+                                <p><strong>Abono Mensual Recurrente:</strong> <strong id="lbl-transfer-total-price" class="text-success">$25.000 / mes</strong></p>
                             </div>
                             <div class="form-group">
-                                <label for="saas-transfer-ref">Número de Comprobante / Operación *</label>
-                                <input type="text" id="saas-transfer-ref" placeholder="Ej: TX-90824902">
-                                <small class="form-hint" style="font-size: 0.75rem;">Ingresá el identificador único para poder aprobar tu cuenta manualmente.</small>
+                                <label for="saas-transfer-ref">Ingresá tu CBU o CVU para el Débito *</label>
+                                <input type="text" id="saas-transfer-ref" placeholder="Ej: 01700123... (22 dígitos)" maxlength="22" minlength="22">
+                                <small class="form-hint" style="font-size: 0.75rem;">Autorizás a ComandaFlow a cobrar la mensualidad debitándola automáticamente de esta cuenta.</small>
                             </div>
                         </div>
 
@@ -351,7 +350,7 @@
         </div>
     </footer>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
     <script>
         let datosLocalRegistro = null;
         let selectedPaymentMethod = 'MercadoPago';
@@ -397,7 +396,7 @@
                 transferForm.style.display = 'none';
                 
                 checkoutHeader.style.backgroundColor = '#009ee3';
-                checkoutHeaderText.innerText = 'Pagar con Mercado Pago';
+                checkoutHeaderText.innerText = 'Débito Automático con Tarjeta';
             } else {
                 btnTransfer.classList.add('active');
                 btnTransfer.style.border = '2px solid var(--color-primary)';
@@ -410,7 +409,7 @@
                 mpForm.style.display = 'none';
                 
                 checkoutHeader.style.backgroundColor = '#5c3ca5';
-                checkoutHeaderText.innerText = 'Transferencia Directa';
+                checkoutHeaderText.innerText = 'Débito Directo por CBU';
             }
         }
 
@@ -439,7 +438,7 @@
             };
 
             // Ajustar precios
-            const precioString = plan === 'Premium' ? '$25.000' : '$15.000';
+            const precioString = plan === 'Premium' ? '$25.000 / mes' : '$15.000 / mes';
             document.getElementById('lbl-mp-item').innerText = `Suscripción ComandaFlow - Plan ${plan}`;
             document.getElementById('lbl-mp-price').innerText = precioString;
             document.getElementById('lbl-transfer-total-price').innerText = precioString;
@@ -454,20 +453,22 @@
             
             const payBtn = document.getElementById('btn-pay-mp');
             
-            if (selectedPaymentMethod === 'Transferencia') {
+            if (selectedPaymentMethod === 'CBU') {
                 const ref = document.getElementById('saas-transfer-ref').value.trim();
-                if (!ref) {
-                    alert("Por favor, ingrese el número de comprobante de la transferencia para validar el pago.");
+                if (!ref || ref.length !== 22 || isNaN(ref)) {
+                    alert("Por favor, ingrese un número CBU/CVU bancario válido de 22 dígitos numéricos.");
                     return;
                 }
-                datosLocalRegistro.metodo_pago_registro = 'Transferencia';
-                datosLocalRegistro.comprobante_registro = ref;
+                datosLocalRegistro.metodo_pago_registro = 'CBU';
+                datosLocalRegistro.cbu_cliente = ref;
+                datosLocalRegistro.comprobante_registro = 'Adhesión CBU: ' + ref.substring(0, 4) + '...' + ref.substring(18);
             } else {
                 datosLocalRegistro.metodo_pago_registro = 'MercadoPago';
+                datosLocalRegistro.cbu_cliente = '';
                 datosLocalRegistro.comprobante_registro = '';
             }
 
-            payBtn.innerText = 'Procesando Transacción... ⏳';
+            payBtn.innerText = 'Procesando Adhesión... ⏳';
             payBtn.setAttribute('disabled', 'disabled');
 
             setTimeout(() => {
@@ -475,17 +476,17 @@
                 const nuevoLocal = registrarLocalSaaS(datosLocalRegistro);
 
                 // Configurar vistas de éxito según método
-                if (selectedPaymentMethod === 'Transferencia') {
+                if (selectedPaymentMethod === 'CBU') {
                     document.getElementById('success-icon-symbol').innerText = '⏳';
-                    document.getElementById('success-status-title').innerText = '¡Comprobante Recibido!';
-                    document.getElementById('success-status-desc').innerText = 'Licencia en proceso de verificación por la administración.';
+                    document.getElementById('success-status-title').innerText = '¡Débito Directo Adherido!';
+                    document.getElementById('success-status-desc').innerText = 'Adhesión en proceso de clearing bancario.';
                     document.getElementById('success-status-box').innerHTML = `
-                        <strong>Transferencia Registrada:</strong> El SuperAdmin auditará el comprobante <strong>${datosLocalRegistro.comprobante_registro}</strong> en la cuenta BBVA.
-                        Podrás acceder a tu panel una vez confirmada la acreditación.
+                        <strong>CBU Registrado:</strong> Se ha ingresado la solicitud para la cuenta CBU <strong>${datosLocalRegistro.cbu_cliente}</strong>.
+                        El SuperAdmin activará la licencia una vez confirmada la compensación en BBVA.
                     `;
                 } else {
                     document.getElementById('success-icon-symbol').innerText = '🎉';
-                    document.getElementById('success-status-title').innerText = '¡Pago Aprobado!';
+                    document.getElementById('success-status-title').innerText = '¡Suscripción de Débito Activa!';
                     document.getElementById('success-status-desc').innerText = 'Tu local ya se encuentra activo en la plataforma.';
                     document.getElementById('success-status-box').innerHTML = `
                         <strong>¡Bienvenido!</strong> Serás redirigido a tu panel de control para realizar la configuración inicial de cobros y logotipo.

@@ -742,7 +742,7 @@ function agregarPlatoAlMenu(plato) {
 function registrarLocalSaaS(datosLocal) {
     const locales = obtenerLocalesSaaS();
     const nuevoId = 'rest-' + Math.floor(1000 + Math.random() * 9000);
-    const esTransfer = datosLocal.metodo_pago_registro === 'Transferencia';
+    const esPendiente = datosLocal.metodo_pago_registro === 'Transferencia' || datosLocal.metodo_pago_registro === 'CBU';
     const nuevoLocal = {
         id: nuevoId,
         nombre: datosLocal.nombre,
@@ -750,13 +750,14 @@ function registrarLocalSaaS(datosLocal) {
         cuit: datosLocal.cuit || '30-' + Math.floor(10000000 + Math.random() * 90000000) + '-9',
         alias_cbu: datosLocal.alias_cbu || '',
         logo: datosLocal.logo || '🍕',
-        estado: esTransfer ? 'Pendiente' : 'Activo', // Queda en espera si es transferencia
+        estado: esPendiente ? 'Pendiente' : 'Activo', // Queda en espera si es transferencia o débito por CBU
         plan: datosLocal.plan || 'Premium',
         onboarding_complete: false, // Forzar wizard popups
         email: datosLocal.email || '',
         password: datosLocal.password || '',
         metodo_pago_registro: datosLocal.metodo_pago_registro || 'MercadoPago',
         comprobante_registro: datosLocal.comprobante_registro || '',
+        cbu_cliente: datosLocal.cbu_cliente || '',
         fecha_registro: new Date().toLocaleDateString('es-AR')
     };
 
@@ -765,6 +766,22 @@ function registrarLocalSaaS(datosLocal) {
     
     // Iniciar sesión del nuevo local automáticamente
     guardarRestauranteActivo(nuevoLocal);
+
+    // Enviar correos emulados de bienvenida/solicitud
+    if (nuevoLocal.estado === 'Activo') {
+        simularEnvioEmail(
+            nuevoLocal.email,
+            "¡Bienvenido a ComandaFlow! - Licencia Activa 🎉",
+            `Hola ${nuevoLocal.nombre}.\n\nTu suscripción al Plan ${nuevoLocal.plan} ha sido activada correctamente bajo la modalidad de Débito Automático con Tarjeta (Mercado Pago).\nYa podés acceder a tu panel de control y configurar tu carta digital QR.\n\nAtentamente,\nEl equipo de ComandaFlow.`
+        );
+    } else {
+        simularEnvioEmail(
+            nuevoLocal.email,
+            "Registro en Proceso - Adhesión a Débito Directo CBU ⏳",
+            `Hola ${nuevoLocal.nombre}.\n\nHemos recibido tu solicitud de adhesión al Débito Directo para la cuenta CBU/CVU: ${nuevoLocal.cbu_cliente}.\nLa habilitación de tu licencia del Plan ${nuevoLocal.plan} se completará una vez auditada la cuenta bancaria clearing en el BBVA.\n\nAtentamente,\nEl equipo de ComandaFlow.`
+        );
+    }
+
     return nuevoLocal;
 }
 
@@ -940,6 +957,36 @@ function obtenerUsuarioActual() {
         cerrarSesionActual();
         return null;
     }
+}
+
+// -- SIMULADOR DE ENVÍO DE CORREOS SMTP --
+function simularEnvioEmail(destinatario, asunto, cuerpo) {
+    if (!destinatario) return;
+    
+    const emailLog = {
+        id: 'MAIL-' + Math.floor(100000 + Math.random() * 900000),
+        timestamp: new Date().toISOString(),
+        fecha_hora: new Date().toLocaleString('es-AR'),
+        destinatario: destinatario,
+        asunto: asunto,
+        cuerpo: cuerpo,
+        smtp_server: 'smtp.comandaflow.com (SMTP SSL/TLS Emulado)',
+        status: '250 OK Message accepted'
+    };
+
+    const logs = JSON.parse(localStorage.getItem('comandas_email_logs')) || [];
+    logs.unshift(emailLog);
+    localStorage.setItem('comandas_email_logs', JSON.stringify(logs));
+    window.dispatchEvent(new Event('emailsUpdated'));
+}
+
+function obtenerLogsEmail() {
+    return JSON.parse(localStorage.getItem('comandas_email_logs')) || [];
+}
+
+function limpiarLogsEmail() {
+    localStorage.setItem('comandas_email_logs', JSON.stringify([]));
+    window.dispatchEvent(new Event('emailsUpdated'));
 }
 
 /* 

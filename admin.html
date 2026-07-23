@@ -554,6 +554,32 @@
                 </div>
 
             </div>
+
+            <!-- ================= GESTIÓN DE SUSCRIPCIÓN (DÉBITO AUTOMÁTICO / BAJA) ================= -->
+            <div class="admin-card margin-top-20">
+                <h2>Plan y Suscripción del Local 💳</h2>
+                <p class="admin-card-description">Administrá tu plan comercial y la adhesión al débito automático mensual.</p>
+                
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;">
+                    <!-- Info Plan -->
+                    <div style="flex: 1; min-width: 250px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid var(--color-border);">
+                        <h4 style="margin-bottom: 8px;">Detalles de Facturación</h4>
+                        <p style="margin-bottom: 5px;"><strong>Plan Activo:</strong> <span class="category-badge" id="lbl-sub-plan">Premium</span></p>
+                        <p style="margin-bottom: 5px;"><strong>Método de Cobro:</strong> <span id="lbl-sub-method">Débito Automático con Tarjeta</span></p>
+                        <p style="margin-bottom: 5px;"><strong>Próximo Cobro:</strong> <span id="lbl-sub-next-billing">23/08/2026</span></p>
+                        <p><strong>Estado Suscripción:</strong> <span class="status-badge status-available">ACTIVO</span></p>
+                    </div>
+                    
+                    <!-- Cancelación -->
+                    <div style="flex: 1; min-width: 250px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column; justify-content: center;">
+                        <h4 style="margin-bottom: 8px; color: var(--color-danger);">Baja del Servicio</h4>
+                        <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Al darte de baja se detendrán los cobros recurrentes de forma inmediata y se suspenderá tu carta digital QR.</p>
+                        <button class="btn btn-danger btn-xs btn-block" onclick="abrirModalSolicitudBaja()" style="background-color: var(--color-danger); border-color: var(--color-danger); color: white;">
+                            Dar de Baja mi Suscripción ❌
+                        </button>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- ================= CONSOLA DE SIMULACIÓN DE WHATSAPP BUSINESS ================= -->
@@ -574,6 +600,38 @@
         </section>
 
     </main>
+
+    <!-- Modal de Confirmación de Baja de Suscripción -->
+    <div class="modal-overlay" id="saas-cancellation-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Confirmar Cancelación de Suscripción</h2>
+                <button class="close-btn" onclick="cerrarModalSolicitudBaja()">&times;</button>
+            </div>
+            <form onsubmit="procesarBajaSuscripción(event)">
+                <div class="modal-body">
+                    <p style="margin-bottom: 10px;">Lamentamos mucho que quieras darte de baja de ComandaFlow. Al confirmar la cancelación:</p>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 15px; line-height: 1.6; font-size: 0.88rem;">
+                        <li>Se detendrán de inmediato los cobros por **débito automático**.</li>
+                        <li>Tu carta digital QR en `menu.html` quedará inaccesible para los clientes.</li>
+                        <li>Perderás acceso al panel administrativo y al historial de ventas de caja.</li>
+                    </ul>
+                    <div style="background-color: #fff0f0; border: 1px solid #ffcdd2; padding: 12px; border-radius: 8px; margin-top: 15px;">
+                        <label style="display: flex; gap: 8px; cursor: pointer; align-items: flex-start; font-size: 0.85rem; color: #b71c1c; font-weight: 500;">
+                            <input type="checkbox" id="confirm-cancellation-chk" required style="margin-top: 3px;">
+                            <span>Entiendo las consecuencias y confirmo que deseo suspender mi cuenta y dar de baja mi débito automático mensual.</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalSolicitudBaja()">Mantener mi Plan 💖</button>
+                    <button type="submit" class="btn btn-danger" style="background-color: var(--color-danger); border-color: var(--color-danger); color: white;">
+                        Confirmar Baja Inmediata 🚫
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Modal de Detalles del Pedido -->
     <div class="modal-overlay" id="order-detail-modal">
@@ -906,7 +964,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
     <script>
         let tabActiva = 'orders';
         let pedidoDetalleActual = null;
@@ -989,6 +1047,9 @@
             cargarListaDesplegablePlatosDetalle();
             cargarListaDesplegablePlatosWaiter();
             actualizarLogoEncabezado();
+            
+            // Cargar datos de suscripción
+            actualizarDatosSuscripcionUI();
         }
 
         // -- COMPROBACIÓN SAAS, LICENCIAS & INICIO DE SESIÓN --
@@ -1017,7 +1078,13 @@
                         lock.style.display = 'flex';
                         document.getElementById('lock-restaurant-name').innerText = restaurant.nombre;
                         
-                        if (restaurant.estado === 'Pendiente') {
+                        if (restaurant.baja_voluntaria) {
+                            lock.querySelector('h2').innerText = 'Suscripción Cancelada por el Usuario';
+                            lock.querySelector('.alert-box').innerHTML = `
+                                <strong>Servicio Cancelado:</strong> Has solicitado la baja voluntaria de tu cuenta.
+                                Los débitos automáticos han sido cancelados. Para reactivar tu servicio, contacta con soporte de ComandaFlow.
+                            `;
+                        } else if (restaurant.estado === 'Pendiente') {
                             lock.querySelector('h2').innerText = 'Suscripción Pendiente de Aprobación';
                             lock.querySelector('.alert-box').innerHTML = `
                                 <strong>Verificación en Proceso:</strong> El comprobante <strong>${restaurant.comprobante_registro || ''}</strong> está siendo auditado en BBVA.
@@ -1157,6 +1224,76 @@
                 document.getElementById('merchant-admin-dashboard').style.display = 'none';
                 document.getElementById('merchant-auth0-login').style.display = 'flex';
             }
+        }
+
+        // -- CONTROLADOR DE PLAN Y SUSCRIPCIÓN --
+        function actualizarDatosSuscripcionUI() {
+            const activo = obtenerRestauranteActivo();
+            if (!activo) return;
+
+            document.getElementById('lbl-sub-plan').innerText = activo.plan || 'Premium';
+            
+            let metodo = 'Débito Automático con Tarjeta';
+            if (activo.metodo_pago_registro === 'CBU') {
+                metodo = `Débito Directo CBU (${activo.cbu_cliente ? '***' + activo.cbu_cliente.slice(-4) : 'CBU'})`;
+            } else if (activo.metodo_pago_registro === 'Transferencia') {
+                metodo = 'Transferencia Manual BBVA';
+            }
+            document.getElementById('lbl-sub-method').innerText = metodo;
+
+            // Mostrar fecha de próximo cobro
+            document.getElementById('lbl-sub-next-billing').innerText = '23/08/2026';
+        }
+
+        // -- ACCIONES DE BAJA SAAS GESTIONADA --
+        function abrirModalSolicitudBaja() {
+            document.getElementById('saas-cancellation-modal').classList.add('active');
+            document.getElementById('confirm-cancellation-chk').checked = false;
+        }
+
+        function cerrarModalSolicitudBaja() {
+            document.getElementById('saas-cancellation-modal').classList.remove('active');
+        }
+
+        function procesarBajaSuscripción(e) {
+            e.preventDefault();
+            
+            const checkbox = document.getElementById('confirm-cancellation-chk');
+            if (!checkbox.checked) {
+                alert("Por favor tilde la casilla de confirmación para proceder con la cancelación.");
+                return;
+            }
+
+            const activo = obtenerRestauranteActivo();
+            if (activo) {
+                const locales = obtenerLocalesSaaS();
+                const idx = locales.findIndex(l => l.id === activo.id);
+                if (idx !== -1) {
+                    locales[idx].estado = 'Inactivo';
+                    locales[idx].baja_voluntaria = true;
+                    guardarLocalesSaaS(locales);
+                    
+                    // Enviar email simulado de confirmación de baja
+                    simularEnvioEmail(
+                        locales[idx].email,
+                        "Baja de Suscripción Confirmada - ComandaFlow 🚫",
+                        `Hola ${locales[idx].nombre}.\n\nConfirmamos que hemos procesado la solicitud de baja de tu cuenta. Tu adhesión al Débito Automático mensual ha sido cancelada y los servicios de carta digital QR y panel han sido suspendidos.\nLamentamos mucho tu partida y esperamos volver a verte en el futuro.\n\nAtentamente,\nEl equipo de ComandaFlow.`
+                    );
+                }
+            }
+
+            cerrarModalSolicitudBaja();
+            cerrarSesionActual();
+            
+            // Cambiar textos del lock screen para indicar que se auto-canceló
+            const lock = document.getElementById('saas-lock-screen');
+            lock.querySelector('h2').innerText = 'Suscripción Cancelada por el Usuario';
+            lock.querySelector('.alert-box').innerHTML = `
+                <strong>Servicio Cancelado:</strong> Has solicitado la baja voluntaria de tu cuenta.
+                Los débitos automáticos han sido cancelados. Para reactivar tu servicio, contacta con soporte de ComandaFlow.
+            `;
+            lock.style.display = 'flex';
+            document.getElementById('merchant-admin-dashboard').style.display = 'none';
         }
 
         // -- ONBOARDING POPUPS WIZARD --
