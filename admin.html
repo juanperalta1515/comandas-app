@@ -97,6 +97,9 @@
             </div>
             <div class="lock-actions">
                 <a href="index.html#pricing" class="btn btn-primary btn-block">Pagar Suscripción en Landing 💳</a>
+                <button class="btn btn-danger btn-block margin-top-10" onclick="abrirModalSolicitudBaja()" style="background-color: var(--color-danger); border-color: var(--color-danger); color: white;">
+                    Dar de Baja Suscripción Definitiva ❌
+                </button>
                 <button class="btn btn-secondary btn-block margin-top-10" onclick="cerrarSesionSaaS()">Cerrar Sesión / Cambiar Comercio</button>
             </div>
         </div>
@@ -964,7 +967,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
     <script>
         let tabActiva = 'orders';
         let pedidoDetalleActual = null;

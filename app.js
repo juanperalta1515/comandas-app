@@ -1,5 +1,9 @@
 // -- CONFIGURACIÓN INICIAL Y BASE DE DATOS LOCAL (LOCALSTORAGE) --
 
+// Claves secretas de seguridad y cifrado (inicializadas al principio para evitar TDZ)
+const SAAS_SECRET_SALT = "ComandaFlowSecureSalt102!";
+const JWT_SECRET_KEY = "comandaflow_secret_hash_2026";
+
 // Claves de localStorage
 const KEY_MENU = 'comandas_menu';
 const KEY_ORDERS = 'comandas_orders';
@@ -873,7 +877,6 @@ function eliminarPlatoDelMenu(idPlato) {
 }
 
 // -- SERVICIO DE SEGURIDAD SIMULADO (JWT & AUTH0) --
-const JWT_SECRET_KEY = "comandaflow_secret_hash_2026";
 
 function simularBase64URLEncode(str) {
     try {
@@ -1014,7 +1017,6 @@ function limpiarLogsEmail() {
 }
 
 // -- CRIPTOGRAFÍA SIMULADA Y SANITIZACIÓN PARA SEGURIDAD DE DATOS --
-const SAAS_SECRET_SALT = "ComandaFlowSecureSalt102!";
 
 function ofuscarDatoSensible(texto) {
     if (!texto) return "";
