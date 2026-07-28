@@ -976,6 +976,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             verificarAccesoMerchant();
+            if (!validarAislamientoTenant()) return;
 
             // Sincronizadores en tiempo real
             window.addEventListener('ordersUpdated', () => {
@@ -1025,6 +1026,7 @@
             });
             window.addEventListener('activeRestaurantUpdated', () => {
                 verificarAccesoMerchant();
+                if (!validarAislamientoTenant()) return;
                 if (obtenerUsuarioActual()) {
                     cargarConfiguracionesForm();
                     actualizarLabelsConfig();
@@ -1436,7 +1438,7 @@
                         </span>
                     </div>
                     <div class="card-body-comanda">
-                        <h4 class="comanda-cliente">${pedido.nombre_cliente}</h4>
+                        <h4 class="comanda-cliente">${escaparHTML(pedido.nombre_cliente)}</h4>
                         <p class="comanda-meta">${countItems} platos • ${pedido.fecha_hora_entrega === 'Lo antes posible' ? 'Inmediato' : 'Programado'}</p>
                         <p class="comanda-total">Total: ${totalFormateado}</p>
                     </div>

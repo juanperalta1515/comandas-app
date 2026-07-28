@@ -166,29 +166,53 @@ function inicializarBaseDeDatos() {
     if (!localStorage.getItem(KEY_CAJA_ESTADOS)) {
         localStorage.setItem(KEY_CAJA_ESTADOS, JSON.stringify(ESTADOS_CAJA_DEFECTO));
     }
-    // Inicialización del SaaS
+    // Inicialización del SaaS con soporte para cifrado
     const localesExistentes = localStorage.getItem(KEY_RESTAURANTS);
     if (!localesExistentes) {
-        localStorage.setItem(KEY_RESTAURANTS, JSON.stringify([LOCAL_DEFECTO_SAAS]));
+        const localDefault = {...LOCAL_DEFECTO_SAAS};
+        localDefault.password = ofuscarDatoSensible(localDefault.password);
+        localStorage.setItem(KEY_RESTAURANTS, JSON.stringify([localDefault]));
     } else {
-        // Asegurar que el local de demo tenga email y contraseña cargados
         const locales = JSON.parse(localesExistentes);
+        let modificado = false;
+
+        // Asegurar que el local de demo tenga email y contraseña cargados y cifrados
         const idx = locales.findIndex(l => l.id === 'quincho');
         if (idx !== -1 && !locales[idx].email) {
             locales[idx].email = 'contacto@quincho.com';
             locales[idx].password = 'quincho123';
             locales[idx].metodo_pago_registro = 'MercadoPago';
             locales[idx].comprobante_registro = '';
+            modificado = true;
+        }
+
+        // Cifrar datos que estén guardados en texto plano en la migración
+        locales.forEach(loc => {
+            if (loc.password && !loc.password.startsWith("enc::")) {
+                loc.password = ofuscarDatoSensible(loc.password);
+                modificado = true;
+            }
+            if (loc.cbu_cliente && !loc.cbu_cliente.startsWith("enc::")) {
+                loc.cbu_cliente = ofuscarDatoSensible(loc.cbu_cliente);
+                modificado = true;
+            }
+        });
+
+        if (modificado) {
             localStorage.setItem(KEY_RESTAURANTS, JSON.stringify(locales));
         }
     }
+    
     if (!localStorage.getItem(KEY_ACTIVE_RESTAURANT)) {
-        localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(LOCAL_DEFECTO_SAAS));
+        const localDefault = {...LOCAL_DEFECTO_SAAS};
+        localDefault.password = ofuscarDatoSensible(localDefault.password);
+        localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(localDefault));
     } else {
-        // Actualizar datos del restaurante activo si es el default para evitar inconsistencias
         const activo = JSON.parse(localStorage.getItem(KEY_ACTIVE_RESTAURANT));
         if (activo && activo.id === 'quincho' && !activo.email) {
-            localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(LOCAL_DEFECTO_SAAS));
+            const localDefault = {...LOCAL_DEFECTO_SAAS};
+            localDefault.password = ofuscarDatoSensible(localDefault.password);
+            localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(localDefault));
         }
     }
 }
@@ -987,6 +1011,73 @@ function obtenerLogsEmail() {
 function limpiarLogsEmail() {
     localStorage.setItem('comandas_email_logs', JSON.stringify([]));
     window.dispatchEvent(new Event('emailsUpdated'));
+}
+
+// -- CRIPTOGRAFÍA SIMULADA Y SANITIZACIÓN PARA SEGURIDAD DE DATOS --
+const SAAS_SECRET_SALT = "ComandaFlowSecureSalt102!";
+
+function ofuscarDatoSensible(texto) {
+    if (!texto) return "";
+    if (texto.startsWith("enc::")) return texto;
+    
+    let resultado = "";
+    for (let i = 0; i < texto.length; i++) {
+        const charCode = texto.charCodeAt(i);
+        const saltChar = SAAS_SECRET_SALT.charCodeAt(i % SAAS_SECRET_SALT.length);
+        const cipheredVal = charCode ^ saltChar;
+        resultado += String.fromCharCode(cipheredVal);
+    }
+    return "enc::" + btoa(unescape(encodeURIComponent(resultado)));
+}
+
+function desofuscarDatoSensible(textoOfuscado) {
+    if (!textoOfuscado) return "";
+    if (!textoOfuscado.startsWith("enc::")) return textoOfuscado;
+    
+    try {
+        const ciphertext = textoOfuscado.substring(5); // Remover "enc::"
+        const raw = decodeURIComponent(escape(atob(ciphertext)));
+        let resultado = "";
+        for (let i = 0; i < raw.length; i++) {
+            const charCode = raw.charCodeAt(i);
+            const saltChar = SAAS_SECRET_SALT.charCodeAt(i % SAAS_SECRET_SALT.length);
+            const decipheredVal = charCode ^ saltChar;
+            resultado += String.fromCharCode(decipheredVal);
+        }
+        return resultado;
+    } catch (e) {
+        console.error("Error al desofuscar dato sensible:", e.message);
+        return "";
+    }
+}
+
+function escaparHTML(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/[&<>"']/g, function(match) {
+        switch (match) {
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case "'": return '&#x27;';
+            default: return match;
+        }
+    });
+}
+
+function validarAislamientoTenant() {
+    const user = obtenerUsuarioActual();
+    if (user && user.role === 'merchant') {
+        const activo = obtenerRestauranteActivo();
+        if (activo && activo.id !== user.sub) {
+            console.warn("⚠️ ALERTA DE SEGURIDAD: El ID del local seleccionado (" + (activo.id || 'N/A') + ") no coincide con el tenant registrado en el token JWT (" + user.sub + "). Posible secuestro de tenant. Bloqueando sesión.");
+            cerrarSesionActual();
+            alert("Acceso denegado: Inconsistencia de seguridad detectada (Tenant Mismatch).");
+            window.location.href = 'admin.html';
+            return false;
+        }
+    }
+    return true;
 }
 
 /* 
