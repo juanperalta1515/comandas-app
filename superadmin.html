@@ -382,9 +382,10 @@
                     // Pendiente de pago / aprobación
                     statusBadge = `<span class="status-badge status-pending" style="background-color: var(--color-accent); color: white;">PENDIENTE DÉBITO CBU 🟡</span>`;
                     if (loc.cbu_cliente) {
-                        statusBadge += `<br><small class="text-muted">CBU: <strong>${loc.cbu_cliente.substring(0, 4)}...${loc.cbu_cliente.slice(-4)}</strong></small>`;
+                        const cbuLimpio = desofuscarDatoSensible(loc.cbu_cliente);
+                        statusBadge += `<br><small class="text-muted">CBU: <strong>${escaparHTML(cbuLimpio.substring(0, 4))}...${escaparHTML(cbuLimpio.slice(-4))}</strong></small>`;
                     } else if (loc.comprobante_registro) {
-                        statusBadge += `<br><small class="text-muted">Ref: <strong>${loc.comprobante_registro}</strong></small>`;
+                        statusBadge += `<br><small class="text-muted">Ref: <strong>${escaparHTML(loc.comprobante_registro)}</strong></small>`;
                     }
                     
                     actionBtn = `<button class="btn btn-success btn-xs" onclick="aprobarPagoBBVA('${loc.id}')" style="background-color: var(--color-success); border-color: var(--color-success); color: white;">Aprobar Débito BBVA 🟢</button>`;
@@ -396,13 +397,13 @@
                     : `<button class="btn btn-secondary btn-xs margin-top-5 btn-block" disabled style="opacity: 0.5; cursor: not-allowed;">Simular Login 👤</button>`;
 
                 tr.innerHTML = `
-                    <td style="font-size: 1.5rem; text-align: center;">${loc.logo || '🍕'}</td>
-                    <td><code>${loc.id}</code></td>
-                    <td><strong>${loc.nombre}</strong><br><small class="text-muted">${loc.email || 'Sin email registrado'}</small></td>
-                    <td>${loc.cuit}</td>
-                    <td>${loc.whatsapp}</td>
-                    <td><span class="category-badge">${loc.plan}</span></td>
-                    <td>${loc.fecha_registro}</td>
+                    <td style="font-size: 1.5rem; text-align: center;">${escaparHTML(loc.logo || '🍕')}</td>
+                    <td><code>${escaparHTML(loc.id)}</code></td>
+                    <td><strong>${escaparHTML(loc.nombre)}</strong><br><small class="text-muted">${escaparHTML(loc.email || 'Sin email registrado')}</small></td>
+                    <td>${escaparHTML(loc.cuit)}</td>
+                    <td>${escaparHTML(loc.whatsapp)}</td>
+                    <td><span class="category-badge">${escaparHTML(loc.plan)}</span></td>
+                    <td>${escaparHTML(loc.fecha_registro)}</td>
                     <td>${statusBadge}</td>
                     <td>
                         <div class="crud-actions" style="flex-direction: column;">
@@ -580,14 +581,14 @@
 
                 mailDiv.innerHTML = `
                     <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #ddd; padding-bottom: 5px; margin-bottom: 8px;">
-                        <span>✉️ <strong>ID:</strong> ${mail.id}</span>
-                        <span style="color: #666;">🕒 ${mail.fecha_hora}</span>
+                        <span>✉️ <strong>ID:</strong> ${escaparHTML(mail.id)}</span>
+                        <span style="color: #666;">🕒 ${escaparHTML(mail.fecha_hora)}</span>
                     </div>
-                    <div style="margin-bottom: 2px;"><strong>Servidor SMTP:</strong> <span style="color: #4b6cb7;">${mail.smtp_server}</span></div>
-                    <div style="margin-bottom: 2px;"><strong>Destinatario:</strong> <span style="color: #2e7d32; font-weight: bold;">${mail.destinatario}</span></div>
-                    <div style="margin-bottom: 4px;"><strong>Asunto:</strong> <span style="color: #c2185b; font-weight: bold;">${mail.asunto}</span></div>
-                    <div style="margin-top: 8px; background: #fafafa; padding: 8px; border-radius: 4px; border: 1px solid #eee; white-space: pre-wrap; font-size: 0.75rem; color: #444; line-height: 1.4;">${mail.cuerpo}</div>
-                    <div style="margin-top: 5px; text-align: right; color: #43a047; font-size: 0.72rem; font-weight: bold;">Status: ${mail.status}</div>
+                    <div style="margin-bottom: 2px;"><strong>Servidor SMTP:</strong> <span style="color: #4b6cb7;">${escaparHTML(mail.smtp_server)}</span></div>
+                    <div style="margin-bottom: 2px;"><strong>Destinatario:</strong> <span style="color: #2e7d32; font-weight: bold;">${escaparHTML(mail.destinatario)}</span></div>
+                    <div style="margin-bottom: 4px;"><strong>Asunto:</strong> <span style="color: #c2185b; font-weight: bold;">${escaparHTML(mail.asunto)}</span></div>
+                    <div style="margin-top: 8px; background: #fafafa; padding: 8px; border-radius: 4px; border: 1px solid #eee; white-space: pre-wrap; font-size: 0.75rem; color: #444; line-height: 1.4;">${escaparHTML(mail.cuerpo)}</div>
+                    <div style="margin-top: 5px; text-align: right; color: #43a047; font-size: 0.72rem; font-weight: bold;">Status: ${escaparHTML(mail.status)}</div>
                 `;
                 logsList.appendChild(mailDiv);
             });

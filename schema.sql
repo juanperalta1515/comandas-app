@@ -219,3 +219,36 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============================================================================
+-- GUÍA DE SEGURIDAD CONTRA SQL INJECTION (PREVENCIÓN DE INYECCIONES EN BASE DE DATOS)
+-- ============================================================================
+--
+-- 1. CONSULTA VULNERABLE (NO HACER EN PRODUCCIÓN):
+--    El uso de concatenación directa de strings permite a los atacantes inyectar
+--    comandos que alteran la estructura lógica de la consulta SQL.
+--    Ejemplo:
+--    SELECT * FROM restaurant_users WHERE email = '' OR '1'='1' AND password_hash = '...';
+--
+--    Código Vulnerable (Node.js/JS):
+--    const query = `SELECT * FROM restaurant_users WHERE email = '${req.body.email}' AND password_hash = '${req.body.pass}'`;
+--
+-- 2. CONSULTA SEGURA (USAR SIEMPRE EN PRODUCCIÓN):
+--    Se debe utilizar siempre parametrización (Prepared Statements / placeholders).
+--    Los drivers de base de datos (como pg para PostgreSQL en Node) envían por separado
+--    la estructura de la consulta y los datos provistos por el usuario, evitando que
+--    cualquier input sea interpretado como código ejecutable.
+--
+--    Código Seguro (Node.js/JS pg-pool):
+--    const query = 'SELECT * FROM restaurant_users WHERE email = $1 AND password_hash = $2';
+--    const values = [req.body.email, req.body.pass];
+--    const res = await pool.query(query, values);
+--
+-- 3. SEGURIDAD EN PROCEDIMIENTOS ALMACENADOS (PL/pgSQL):
+--    Dentro de funciones PL/pgSQL, evite ejecutar strings concatenados dinámicamente mediante 'EXECUTE'.
+--    Si es mandatorio usar dynamic SQL, emplee la cláusula 'USING' para parametrizar valores de forma segura:
+--
+--    Procedimiento Dinámico Seguro:
+--    EXECUTE 'SELECT * FROM orders WHERE restaurant_id = $1 AND estado = $2'
+--    USING p_restaurant_id, p_estado;
+-- ============================================================================
