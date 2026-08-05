@@ -78,6 +78,11 @@
                     Ingresar con Auth0 🔒
                 </button>
             </form>
+            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" class="btn btn-secondary btn-block" onclick="ingresarComoDemo()" style="background-color: var(--color-success); border-color: var(--color-success); color: white; font-weight: bold;">
+                    Probar Demo (Acceso un Clic) 🚀
+                </button>
+            </div>
             <div style="margin-top: 15px; text-align: center;">
                 <small class="text-muted" style="font-size: 0.75rem;">Local Demo: <code>contacto@quincho.com</code> / <code>quincho123</code></small>
             </div>
@@ -674,10 +679,10 @@
                     
                     <!-- Cancelación -->
                     <div style="flex: 1; min-width: 250px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column; justify-content: center;">
-                        <h4 style="margin-bottom: 8px; color: var(--color-danger);">Baja del Servicio</h4>
-                        <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Al darte de baja se detendrán los cobros recurrentes de forma inmediata y se suspenderá tu carta digital QR.</p>
+                        <h4 style="margin-bottom: 8px; color: var(--color-danger);">Baja del Servicio (Botón de Arrepentimiento) 🚫</h4>
+                        <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Al solicitar la baja se detendrán los cobros de débito automático de forma inmediata (derecho de arrepentimiento) y se suspenderá tu carta digital QR.</p>
                         <button class="btn btn-danger btn-xs btn-block" onclick="abrirModalSolicitudBaja()" style="background-color: var(--color-danger); border-color: var(--color-danger); color: white;">
-                            Dar de Baja mi Suscripción ❌
+                            Solicitar Baja Inmediata ❌
                         </button>
                     </div>
                 </div>
@@ -1077,7 +1082,12 @@
         let waiterActiveMesa = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            verificarAccesoMerchant();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('demo') === 'true') {
+                ingresarComoDemo();
+            } else {
+                verificarAccesoMerchant();
+            }
             if (!validarAislamientoTenant()) return;
 
             // Sincronizadores en tiempo real
@@ -1218,6 +1228,19 @@
                 login.style.display = 'flex';
             }
             renderJWTDebugger();
+        }
+
+        function ingresarComoDemo() {
+            const locales = obtenerLocalesSaaS();
+            const demoLocal = locales.find(l => l.id === 'quincho') || LOCAL_DEFECTO_SAAS;
+            const token = generarJWT({
+                sub: demoLocal.id,
+                email: demoLocal.email || 'contacto@quincho.com',
+                role: 'merchant',
+                plan: demoLocal.plan || 'Premium'
+            });
+            guardarTokenSesion(token);
+            verificarAccesoMerchant();
         }
 
         function procesarMerchantLogin(e) {
@@ -2977,11 +3000,6 @@ ${aliasPago}
         </div>
     </div>
 
-    <!-- Simulador Offline Flotante -->
-    <div id="dev-offline-simulator" class="offline-simulator-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000;">
-        <button id="btn-toggle-offline" onclick="toggleSimularRed()" class="dev-sim-btn">
-            🔌 Simular Corte de Internet
-        </button>
-    </div>
+
 </body>
 </html>

@@ -478,14 +478,15 @@ hr {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background-color: rgba(24, 15, 15, 0.4);
     backdrop-filter: blur(4px);
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
     transition: opacity var(--transition-normal), visibility var(--transition-normal);
+    overflow: hidden;
 }
 
 .cart-overlay.active {
@@ -2532,14 +2533,40 @@ hr {
     
     /* Carrito y Drawer lateral */
     .cart-drawer {
+        width: 100% !important;
         max-width: 100% !important;
         right: -100% !important;
+        height: 100% !important;
+        height: 100dvh !important;
     }
     .cart-overlay.active .cart-drawer {
         right: 0 !important;
     }
     .delivery-options {
         grid-template-columns: 1fr;
+    }
+    .delivery-card-content {
+        flex-direction: row !important;
+        align-items: center !important;
+        text-align: left !important;
+        padding: 0.5rem 0.75rem !important;
+        gap: 0.5rem !important;
+    }
+    .delivery-emoji {
+        margin-bottom: 0 !important;
+        font-size: 1.25rem !important;
+    }
+    .delivery-title {
+        font-size: 0.8rem !important;
+    }
+    .delivery-price {
+        margin-left: auto !important;
+        font-size: 0.8rem !important;
+    }
+    
+    /* Botones de navegación barra */
+    .nav-actions .btn-text {
+        display: none !important;
     }
     
     /* Modales y Formularios */

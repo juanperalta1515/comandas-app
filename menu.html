@@ -21,10 +21,10 @@
             </a>
             <div class="nav-actions">
                 <a href="index.html" class="btn btn-secondary btn-sm nav-link-home">
-                    <span>Inicio 🏠</span>
+                    <span class="btn-text">Inicio</span> <span class="btn-icon">🏠</span>
                 </a>
                 <a href="admin.html" class="btn btn-secondary btn-sm nav-link-admin">
-                    <span>Panel Cocina 🍳</span>
+                    <span class="btn-text">Panel Cocina</span> <span class="btn-icon">🍳</span>
                 </a>
                 <button class="cart-trigger" id="cart-trigger" onclick="toggleCart()">
                     <span class="cart-icon">🛒</span>
@@ -223,6 +223,13 @@
 
                         <!-- Formulario de Tarjeta Seguro (Simulado) -->
                         <div id="card-form-container" style="display: none;" class="card-details-form">
+                            <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 0.8rem; color: #065f46; display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.1rem;">🔒</span>
+                                <div>
+                                    <strong>Conexión Encriptada Segura (SSL 256-bit)</strong><br>
+                                    Los datos de tu tarjeta se procesan en forma directa por la pasarela de pagos. Nunca se almacenan en el restaurante.
+                                </div>
+                            </div>
                             <h4>Datos de la Tarjeta</h4>
                             <div class="form-group">
                                 <label>Nombre del Titular (Como figura en la tarjeta)</label>
@@ -1146,11 +1153,6 @@
         </div>
     </div>
 
-    <!-- Simulador Offline Flotante -->
-    <div id="dev-offline-simulator" class="offline-simulator-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000;">
-        <button id="btn-toggle-offline" onclick="toggleSimularRed()" class="dev-sim-btn">
-            🔌 Simular Corte de Internet
-        </button>
-    </div>
+
 </body>
 </html>
