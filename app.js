@@ -27,7 +27,19 @@ const PLATOS_INICIALES = [
         precio: 6500, 
         categoria: 'Principal', 
         disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80'
+        imagen: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80',
+        opciones: {
+            tamanos: [
+                { nombre: 'Chica', recargo: 0 },
+                { nombre: 'Mediana', recargo: 1500 },
+                { nombre: 'Familiar', recargo: 3000 }
+            ],
+            adicionales: [
+                { nombre: 'Extra Queso', recargo: 800 },
+                { nombre: 'Huevo Frito', recargo: 500 },
+                { nombre: 'Panceta', recargo: 1000 }
+            ]
+        }
     },
     { 
         id: 2, 
@@ -45,7 +57,14 @@ const PLATOS_INICIALES = [
         precio: 950, 
         categoria: 'Entrada', 
         disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1556040885-3571d79435b6?auto=format&fit=crop&w=400&q=80'
+        imagen: 'https://images.unsplash.com/photo-1556040885-3571d79435b6?auto=format&fit=crop&w=400&q=80',
+        opciones: {
+            tamanos: [],
+            adicionales: [
+                { nombre: 'Frita', recargo: 0, exclusivo: true },
+                { nombre: 'Al Horno', recargo: 0, exclusivo: true }
+            ]
+        }
     },
     { 
         id: 4, 
@@ -270,6 +289,38 @@ function guardarMesas(mesas) {
     window.dispatchEvent(new Event('tablesUpdated'));
 }
 
+// -- HELPERS DEL SIMULADOR OFFLINE --
+const KEY_OFFLINE_SIMULATED = 'comandas_offline_simulated';
+const KEY_OFFLINE_QUEUE = 'comandas_offline_queue';
+
+function isOffline() {
+    return localStorage.getItem(KEY_OFFLINE_SIMULATED) === 'true';
+}
+
+function setOfflineMode(value) {
+    localStorage.setItem(KEY_OFFLINE_SIMULATED, value ? 'true' : 'false');
+    window.dispatchEvent(new Event('networkStatusChanged'));
+}
+
+function obtenerColaOffline() {
+    const queue = localStorage.getItem(KEY_OFFLINE_QUEUE);
+    return queue ? JSON.parse(queue) : [];
+}
+
+function guardarColaOffline(cola) {
+    localStorage.setItem(KEY_OFFLINE_QUEUE, JSON.stringify(cola));
+    window.dispatchEvent(new Event('offlineQueueUpdated'));
+}
+
+window.addEventListener('storage', (e) => {
+    if (e.key === KEY_OFFLINE_SIMULATED) {
+        window.dispatchEvent(new Event('networkStatusChanged'));
+    }
+    if (e.key === KEY_OFFLINE_QUEUE) {
+        window.dispatchEvent(new Event('offlineQueueUpdated'));
+    }
+});
+
 function obtenerCaja() {
     return JSON.parse(localStorage.getItem(KEY_CAJA)) || [];
 }
@@ -456,6 +507,21 @@ function enviarNotificacionWhatsApp(pedido) {
 
 // -- CREAR NUEVO PEDIDO --
 function crearPedido(datosPedido) {
+    if (isOffline() && !datosPedido.bypassOffline) {
+        const cola = obtenerColaOffline();
+        const pedidoOffline = {
+            id_pedido: 'PED-' + Math.floor(1000 + Math.random() * 9000),
+            fecha_hora: new Date().toLocaleString('es-AR'),
+            estado: 'Pendiente', 
+            cobrado: datosPedido.cobrado !== undefined ? datosPedido.cobrado : (datosPedido.plataforma ? true : false),
+            ...datosPedido,
+            esOffline: true
+        };
+        cola.push(pedidoOffline);
+        guardarColaOffline(cola);
+        return pedidoOffline;
+    }
+
     const pedidos = obtenerPedidos();
     const nuevoPedido = {
         id_pedido: 'PED-' + Math.floor(1000 + Math.random() * 9000),
