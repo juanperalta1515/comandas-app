@@ -642,7 +642,34 @@
                         <p style="margin-bottom: 5px;"><strong>Plan Activo:</strong> <span class="category-badge" id="lbl-sub-plan">Premium</span></p>
                         <p style="margin-bottom: 5px;"><strong>Método de Cobro:</strong> <span id="lbl-sub-method">Débito Automático con Tarjeta</span></p>
                         <p style="margin-bottom: 5px;"><strong>Próximo Cobro:</strong> <span id="lbl-sub-next-billing">23/08/2026</span></p>
+                        <p style="margin-bottom: 5px;"><strong>Abono Mensual:</strong> <span id="lbl-sub-price" style="font-weight: bold;">$25.000</span></p>
                         <p><strong>Estado Suscripción:</strong> <span class="status-badge status-available">ACTIVO</span></p>
+                    </div>
+
+                    <!-- Programa de Referidos -->
+                    <div style="flex: 1; min-width: 250px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column;">
+                        <h4 style="margin-bottom: 8px; color: var(--color-primary);">Programa de Referidos 🎁</h4>
+                        <div id="referral-info-block">
+                            <p style="margin-bottom: 5px; font-size: 0.85rem;"><strong>Tu Código para Referir:</strong> <code class="text-success" style="font-weight: bold; font-size: 0.95rem; background: #e8f5e9; padding: 2px 6px; border-radius: 4px;" id="lbl-my-referral-code">CF-XXXX</code></p>
+                            <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 10px;">Compartí este código con otro negocio. Cuando se registren y te entreguen su código de activación único, ingresalo abajo para obtener 30% OFF por 2 meses.</p>
+                            
+                            <div id="referral-action-container">
+                                <!-- Si no hay descuento activo -->
+                                <div id="referral-input-container">
+                                    <label for="input-claim-code" style="font-size: 0.78rem; font-weight: 600; display: block; margin-bottom: 4px;">Ingresar código de recomendado:</label>
+                                    <div style="display: flex; gap: 5px;">
+                                        <input type="text" id="input-claim-code" placeholder="Ej: CF-A1B2C" style="flex: 1; padding: 5px 8px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--color-border); text-transform: uppercase;">
+                                        <button type="button" class="btn btn-primary btn-xs" onclick="procesarReclamoReferido()" style="padding: 5px 10px; font-size: 0.8rem; background-color: var(--color-primary); border-color: var(--color-primary); color: white;">Activar</button>
+                                    </div>
+                                </div>
+                                <!-- Si hay descuento activo -->
+                                <div id="referral-discount-active" style="display: none; background: #f3e8ff; border: 1px solid #d8b4fe; padding: 10px; border-radius: 6px; text-align: center; color: #6b21a8; font-size: 0.82rem;">
+                                    <strong>🎉 ¡Descuento de Referido Activo! 🎉</strong><br>
+                                    Ahorrando un 30% en tu cuota mensual.<br>
+                                    <span id="lbl-referral-months-left" style="font-weight: bold;">Meses restantes: 2</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Cancelación -->
@@ -1309,14 +1336,19 @@
 
         // -- CONTROLADOR DE PLAN Y SUSCRIPCIÓN --
         function actualizarDatosSuscripcionUI() {
-            const activo = obtenerRestauranteActivo();
-            if (!activo) return;
+            const locales = obtenerLocalesSaaS();
+            const activoSesion = obtenerRestauranteActivo();
+            if (!activoSesion) return;
+            
+            // Buscar la versión más actualizada del local en la base de datos simulada
+            const activo = locales.find(l => l.id === activoSesion.id) || activoSesion;
 
             document.getElementById('lbl-sub-plan').innerText = activo.plan || 'Premium';
             
             let metodo = 'Débito Automático con Tarjeta';
             if (activo.metodo_pago_registro === 'CBU') {
-                metodo = `Débito Directo CBU (${activo.cbu_cliente ? '***' + activo.cbu_cliente.slice(-4) : 'CBU'})`;
+                const cbuDesofuscada = desofuscarDatoSensible(activo.cbu_cliente);
+                metodo = `Débito Directo CBU (${cbuDesofuscada ? '***' + cbuDesofuscada.slice(-4) : 'CBU'})`;
             } else if (activo.metodo_pago_registro === 'Transferencia') {
                 metodo = 'Transferencia Manual BBVA';
             }
@@ -1324,6 +1356,54 @@
 
             // Mostrar fecha de próximo cobro
             document.getElementById('lbl-sub-next-billing').innerText = '23/08/2026';
+
+            // Abono mensual con descuento si aplica
+            const precioBase = activo.plan === 'Premium' ? 25000 : 15000;
+            const precioFinal = obtenerAbonoMensual(activo);
+            const lblPrice = document.getElementById('lbl-sub-price');
+            if (activo.descuento_activo && activo.descuento_meses_restantes > 0) {
+                lblPrice.innerHTML = `<span style="text-decoration: line-through; color: #888; font-size: 0.85rem; margin-right: 5px;">$${precioBase.toLocaleString('es-AR')}</span> <span style="color: var(--color-success); font-weight: bold;">$${precioFinal.toLocaleString('es-AR')} (30% OFF)</span>`;
+            } else {
+                lblPrice.innerHTML = `$${precioBase.toLocaleString('es-AR')}`;
+            }
+
+            // Programa de referidos
+            document.getElementById('lbl-my-referral-code').innerText = activo.referral_code || 'CF-XXXX';
+            
+            const inputContainer = document.getElementById('referral-input-container');
+            const discountActive = document.getElementById('referral-discount-active');
+            
+            if (activo.descuento_activo && activo.descuento_meses_restantes > 0) {
+                inputContainer.style.display = 'none';
+                discountActive.style.display = 'block';
+                document.getElementById('lbl-referral-months-left').innerText = `Meses restantes: ${activo.descuento_meses_restantes}`;
+            } else {
+                inputContainer.style.display = 'block';
+                discountActive.style.display = 'none';
+            }
+        }
+
+        function procesarReclamoReferido() {
+            const input = document.getElementById('input-claim-code');
+            const codigo = input.value.trim();
+            if (!codigo) {
+                alert("Por favor, ingrese un código de activación.");
+                return;
+            }
+            
+            const activo = obtenerRestauranteActivo();
+            if (!activo) return;
+            
+            const res = validarYCanjearCodigoReferido(activo.id, codigo);
+            
+            if (res.exito) {
+                alert(res.mensaje);
+                input.value = '';
+                // Recargar interfaz de suscripción
+                actualizarDatosSuscripcionUI();
+            } else {
+                alert(res.mensaje);
+            }
         }
 
         // -- ACCIONES DE BAJA SAAS GESTIONADA --

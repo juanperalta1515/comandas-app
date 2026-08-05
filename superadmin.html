@@ -349,7 +349,11 @@
             locales.forEach(loc => {
                 if (loc.estado === 'Activo') {
                     activos++;
-                    mrr += loc.plan === 'Premium' ? 25000 : 15000;
+                    let cuota = loc.plan === 'Premium' ? 25000 : 15000;
+                    if (loc.descuento_activo && loc.descuento_meses_restantes > 0) {
+                        cuota = cuota * (1 - (loc.descuento_porcentaje || 30) / 100);
+                    }
+                    mrr += cuota;
                 }
             });
 
@@ -369,6 +373,9 @@
                 
                 if (loc.estado === 'Activo') {
                     statusBadge = '<span class="status-badge status-available">ACTIVO</span>';
+                    if (loc.descuento_activo && loc.descuento_meses_restantes > 0) {
+                        statusBadge += `<br><span class="status-badge" style="background-color: var(--color-primary-light); color: var(--color-primary); border: 1px solid var(--color-primary); font-size: 0.72rem; margin-top: 4px; display: inline-block;">🎁 30% OFF (${loc.descuento_meses_restantes}m)</span>`;
+                    }
                     actionBtn = `<button class="btn btn-danger btn-xs" onclick="alterarEstadoRestaurante('${loc.id}', 'Inactivo')">Dar de Baja 🔴</button>`;
                 } else if (loc.estado === 'Inactivo') {
                     if (loc.baja_voluntaria) {
@@ -399,7 +406,11 @@
                 tr.innerHTML = `
                     <td style="font-size: 1.5rem; text-align: center;">${escaparHTML(loc.logo || '🍕')}</td>
                     <td><code>${escaparHTML(loc.id)}</code></td>
-                    <td><strong>${escaparHTML(loc.nombre)}</strong><br><small class="text-muted">${escaparHTML(loc.email || 'Sin email registrado')}</small></td>
+                    <td>
+                        <strong>${escaparHTML(loc.nombre)}</strong><br>
+                        <small class="text-muted">${escaparHTML(loc.email || 'Sin email registrado')}</small><br>
+                        <small style="color: #666;">Ref: <code>${escaparHTML(loc.referral_code || 'N/A')}</code></small>
+                    </td>
                     <td>${escaparHTML(loc.cuit)}</td>
                     <td>${escaparHTML(loc.whatsapp)}</td>
                     <td><span class="category-badge">${escaparHTML(loc.plan)}</span></td>

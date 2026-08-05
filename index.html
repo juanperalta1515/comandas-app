@@ -214,6 +214,39 @@
         </div>
     </section>
 
+    <!-- ================= MODAL PROMOCIONAL DE REFERIDOS ================= -->
+    <div class="modal-overlay" id="referral-promo-modal">
+        <div class="modal-card" style="max-width: 480px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; position: relative;">
+                <h2 style="font-weight: 800; color: var(--color-primary); font-size: 1.5rem; display: flex; align-items: center; gap: 8px;">
+                    🎉 ¡Promo Referidos! 🎁
+                </h2>
+                <button class="close-btn" onclick="cerrarPromoReferido()" style="position: absolute; right: 20px;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 2rem 1.5rem;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem; animation: pulse 2s infinite;">🍕</div>
+                <h3 style="margin-bottom: 12px; font-weight: 700; font-size: 1.15rem; color: #1a1a24;">¿Recomendás ComandaFlow a otro negocio?</h3>
+                <p style="font-size: 0.92rem; color: #52525b; line-height: 1.6; margin-bottom: 20px;">
+                    ¡Te regalamos un <strong>30% de descuento por 2 meses</strong> en tu abono mensual! 
+                </p>
+                <div style="background-color: #f5f3ff; border: 1px solid #ddd6fe; padding: 15px; border-radius: 12px; text-align: left; font-size: 0.85rem; color: #4c1d95; line-height: 1.5; margin-bottom: 25px;">
+                    <p style="margin-bottom: 8px;"><strong>¿Cómo activar el beneficio?</strong></p>
+                    <ol style="margin-left: 1.2rem; padding-left: 0;">
+                        <li style="margin-bottom: 4px;">Registrá tu cuenta ahora y obtené tu <strong>código único</strong> de activación.</li>
+                        <li style="margin-bottom: 4px;">Compartilo con el negocio que quieras recomendar.</li>
+                        <li>Una vez que se registren, ingresá el código de ellos en tu panel para activar tus <strong>2 meses al 30% OFF</strong>.</li>
+                    </ol>
+                </div>
+                <div style="display: flex; gap: 10px; flex-direction: column;">
+                    <button class="btn btn-primary btn-block" onclick="continuarAlRegistroSuscripcion()" style="background-color: var(--color-primary); border-color: var(--color-primary); color: white;">
+                        Registrar mi Local 🚀
+                    </button>
+                    <button class="btn btn-secondary btn-block" onclick="cerrarPromoReferido()">Más tarde</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= MODAL DE REGISTRO & CHECKOUT SAAS (MERCADO PAGO) ================= -->
     <div class="modal-overlay" id="saas-register-modal">
         <div class="modal-card">
@@ -393,12 +426,26 @@
         let datosLocalRegistro = null;
         let selectedPaymentMethod = 'MercadoPago';
 
+        let planSeleccionadoParaRegistro = 'Premium';
+
         function abrirModalSuscripcion(plan = 'Premium') {
+            planSeleccionadoParaRegistro = plan;
+            // Mostrar primero el popup promocional de referidos
+            document.getElementById('referral-promo-modal').classList.add('active');
+        }
+
+        function cerrarPromoReferido() {
+            document.getElementById('referral-promo-modal').classList.remove('active');
+        }
+
+        function continuarAlRegistroSuscripcion() {
+            cerrarPromoReferido();
+            
             document.getElementById('saas-step-register').style.display = 'block';
             document.getElementById('saas-step-checkout').style.display = 'none';
             document.getElementById('saas-step-success').style.display = 'none';
             
-            document.getElementById('saas-plan').value = plan;
+            document.getElementById('saas-plan').value = planSeleccionadoParaRegistro;
             document.getElementById('saas-nombre').value = '';
             document.getElementById('saas-cuit').value = '';
             document.getElementById('saas-whatsapp').value = '+549';
@@ -520,14 +567,18 @@
                     document.getElementById('success-status-desc').innerText = 'Adhesión en proceso de clearing bancario.';
                     document.getElementById('success-status-box').innerHTML = `
                         <strong>CBU Registrado:</strong> Se ha ingresado la solicitud para la cuenta CBU <strong>${datosLocalRegistro.cbu_cliente}</strong>.
-                        El SuperAdmin activará la licencia una vez confirmada la compensación en BBVA.
+                        El SuperAdmin activará la licencia una vez confirmada la compensación en BBVA.<br><br>
+                        🎁 <strong>Código de activación único para referir:</strong> <code style="font-size: 1.1rem; padding: 4px 8px; background: #e0f2fe; border-radius: 4px; color: #0369a1; font-weight: bold;">${nuevoLocal.referral_code}</code><br>
+                        <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">Entregáselo al comercio que te recomendó para que active sus 2 meses de descuento.</small>
                     `;
                 } else {
                     document.getElementById('success-icon-symbol').innerText = '🎉';
                     document.getElementById('success-status-title').innerText = '¡Suscripción de Débito Activa!';
                     document.getElementById('success-status-desc').innerText = 'Tu local ya se encuentra activo en la plataforma.';
                     document.getElementById('success-status-box').innerHTML = `
-                        <strong>¡Bienvenido!</strong> Serás redirigido a tu panel de control para realizar la configuración inicial de cobros y logotipo.
+                        <strong>¡Bienvenido!</strong> Serás redirigido a tu panel de control para realizar la configuración inicial de cobros y logotipo.<br><br>
+                        🎁 <strong>Código de activación único para referir:</strong> <code style="font-size: 1.1rem; padding: 4px 8px; background: #f3e8ff; border-radius: 4px; color: #6b21a8; font-weight: bold;">${nuevoLocal.referral_code}</code><br>
+                        <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">Entregáselo al comercio que te recomendó para que active sus 2 meses de descuento.</small>
                     `;
                     
                     // Si el pago es aprobado automáticamente (Mercado Pago), emitimos un JWT para loguearlo
@@ -544,10 +595,10 @@
                 document.getElementById('saas-step-checkout').style.display = 'none';
                 document.getElementById('saas-step-success').style.display = 'block';
 
-                // Redirigir al panel tras 3.5 segundos
+                // Redirigir al panel tras 5.5 segundos para que copien el código
                 setTimeout(() => {
                     window.location.href = 'admin.html';
-                }, 3500);
+                }, 5500);
             }, 1500);
         }
 

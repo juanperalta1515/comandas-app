@@ -160,7 +160,13 @@ const LOCAL_DEFECTO_SAAS = {
     password: 'quincho123',
     metodo_pago_registro: 'MercadoPago',
     comprobante_registro: '',
-    fecha_registro: new Date().toLocaleDateString('es-AR')
+    fecha_registro: new Date().toLocaleDateString('es-AR'),
+    referral_code: 'CF-QUINCHO',
+    referral_claimed: false,
+    referral_claimed_by: null,
+    descuento_activo: false,
+    descuento_meses_restantes: 0,
+    descuento_porcentaje: 30
 };
 
 // -- INICIALIZACIÓN DE DATOS --
@@ -209,7 +215,7 @@ function inicializarBaseDeDatos() {
             modificado = true;
         }
 
-        // Cifrar datos que estén guardados en texto plano en la migración
+        // Cifrar datos que estén guardados en texto plano en la migración e inicializar referidos
         locales.forEach(loc => {
             if (loc.password && !loc.password.startsWith("enc::")) {
                 loc.password = ofuscarDatoSensible(loc.password);
@@ -217,6 +223,15 @@ function inicializarBaseDeDatos() {
             }
             if (loc.cbu_cliente && !loc.cbu_cliente.startsWith("enc::")) {
                 loc.cbu_cliente = ofuscarDatoSensible(loc.cbu_cliente);
+                modificado = true;
+            }
+            if (!loc.referral_code) {
+                loc.referral_code = loc.id === 'quincho' ? 'CF-QUINCHO' : 'CF-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+                loc.referral_claimed = false;
+                loc.referral_claimed_by = null;
+                loc.descuento_activo = false;
+                loc.descuento_meses_restantes = 0;
+                loc.descuento_porcentaje = 30;
                 modificado = true;
             }
         });
@@ -852,7 +867,13 @@ function registrarLocalSaaS(datosLocal) {
         metodo_pago_registro: datosLocal.metodo_pago_registro || 'MercadoPago',
         comprobante_registro: datosLocal.comprobante_registro || '',
         cbu_cliente: datosLocal.cbu_cliente || '',
-        fecha_registro: new Date().toLocaleDateString('es-AR')
+        fecha_registro: new Date().toLocaleDateString('es-AR'),
+        referral_code: 'CF-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+        referral_claimed: false,
+        referral_claimed_by: null,
+        descuento_activo: false,
+        descuento_meses_restantes: 0,
+        descuento_porcentaje: 30
     };
 
     locales.push(nuevoLocal);
@@ -897,6 +918,78 @@ function actualizarEstadoLocalSaaS(idLocal, estado) {
         return true;
     }
     return false;
+}
+
+// -- LÓGICA DE REFERIDOS Y VALIDACIÓN --
+function validarYCanjearCodigoReferido(idLocalRecommender, codigo) {
+    if (!codigo) {
+        return { exito: false, mensaje: "Debe ingresar un código de activación." };
+    }
+    
+    const codigoLimpio = codigo.trim().toUpperCase();
+    const locales = obtenerLocalesSaaS();
+    
+    // Buscar el local recomendado que posee ese código
+    const localRecomendado = locales.find(l => l.referral_code === codigoLimpio);
+    
+    if (!localRecomendado) {
+        return { exito: false, mensaje: "Código de referido inválido." };
+    }
+    
+    if (localRecomendado.id === idLocalRecommender) {
+        return { exito: false, mensaje: "No puedes ingresar tu propio código." };
+    }
+    
+    if (localRecomendado.estado !== 'Activo') {
+        return { exito: false, mensaje: "El comercio recomendado aún no está activo." };
+    }
+    
+    if (localRecomendado.referral_claimed) {
+        return { exito: false, mensaje: "Este código ya ha sido canjeado." };
+    }
+    
+    // Obtener recomendador
+    const idxRecommender = locales.findIndex(l => l.id === idLocalRecommender);
+    if (idxRecommender === -1) {
+        return { exito: false, mensaje: "Comercio recomendador no encontrado." };
+    }
+    
+    const localRecommender = locales[idxRecommender];
+    
+    // Aplicar descuento
+    localRecomendado.referral_claimed = true;
+    localRecomendado.referral_claimed_by = idLocalRecommender;
+    
+    localRecommender.descuento_activo = true;
+    localRecommender.descuento_meses_restantes = 2;
+    localRecommender.descuento_porcentaje = 30;
+    
+    // Guardar cambios
+    guardarLocalesSaaS(locales);
+    
+    // Si el local recomendador es el activo, actualizar la sesión
+    const activo = obtenerRestauranteActivo();
+    if (activo && activo.id === idLocalRecommender) {
+        activo.descuento_activo = true;
+        activo.descuento_meses_restantes = 2;
+        activo.descuento_porcentaje = 30;
+        localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(activo));
+        window.dispatchEvent(new Event('activeRestaurantUpdated'));
+    }
+    
+    return { 
+        exito: true, 
+        mensaje: `¡Código validado! Se aplicó un 30% de descuento por 2 meses en el abono de "${localRecommender.nombre}".` 
+    };
+}
+
+function obtenerAbonoMensual(local) {
+    const precioBase = local.plan === 'Premium' ? 25000 : 15000;
+    if (local.descuento_activo && local.descuento_meses_restantes > 0) {
+        const descuento = (precioBase * (local.descuento_porcentaje || 30)) / 100;
+        return precioBase - descuento;
+    }
+    return precioBase;
 }
 
 function actualizarConfiguracionOnboarding(idLocal, datosConfig) {
