@@ -52,7 +52,7 @@ La aplicación actual funciona como una maqueta interactiva 100% funcional del l
 * **Criptografía**: Ofuscación reversible simple utilizando compresión XOR con una semilla y codificación Base64 para almacenar contraseñas y alias de CBU de manera segura en el almacenamiento local.
 * **Aislamiento de Inquilino (Tenant Isolation)**: Validación automática en tiempo real que compara el ID del local activo en el navegador con el ID del inquilino incrustado en el token JWT para prevenir vulnerabilidades de secuestro de cuenta (IDOR / Tenant Mismatch).
 
-### Estructura de Base de Datos Relacional (`schema.sql`)
+### Estructura de Base de Datos Relacional (`db/schema.sql`)
 La estructura de producción diseñada para PostgreSQL incluye las siguientes tablas normalizadas:
 1. `superadmins`: Datos de acceso de los dueños de la plataforma.
 2. `restaurants`: Entidad de Inquilinos (Tenants) con atributos de plan, estado del servicio, CUIT e información de cobro CBU.
@@ -68,4 +68,4 @@ La estructura de producción diseñada para PostgreSQL incluye las siguientes ta
 
 ## Descarga y Acceso
 
-Esta documentación se encuentra guardada en el archivo `DOCUMENTACION.md` en el directorio raíz de tu proyecto. Podés abrirla en cualquier lector de Markdown (como VS Code) o descargarla/copiarla directamente para tus registros funcionales o técnicos.
+Esta documentación se encuentra guardada en el archivo `DOCUMENTACION.md` dentro de la carpeta `docs/` de tu proyecto. Podés abrirla en cualquier lector de Markdown (como VS Code) o descargarla/copiarla directamente para tus registros funcionales o técnicos.
