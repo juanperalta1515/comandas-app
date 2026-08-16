@@ -22,7 +22,6 @@
                 <a href="#features" class="nav-link-landing">Características</a>
                 <a href="#pricing" class="nav-link-landing">Precios</a>
                 <button class="btn btn-secondary btn-sm" onclick="abrirModalSuscripcion()">Registrar mi Local 🚀</button>
-                <a href="superadmin.html" class="btn btn-secondary btn-sm">SuperAdmin 👑</a>
                 <a href="admin.html?demo=true" class="btn btn-primary btn-sm btn-landing-cta">Probar Demo</a>
             </div>
         </div>
@@ -199,7 +198,7 @@
             <div class="pricing-card popular">
                 <div class="popular-ribbon">MÁS ELEGIDO</div>
                 <h3>Plan Full Premium</h3>
-                <div class="price">$25.000 <span>/ mes</span></div>
+                <div class="price">$30.000 <span>/ mes</span></div>
                 <p class="plan-desc">Perfecto para restaurantes y cocinas con alto volumen de comandas.</p>
                 <ul class="plan-features">
                     <li>✔️ Menú Digital QR ilimitado</li>
@@ -285,7 +284,7 @@
                         <div class="form-group">
                             <label for="saas-plan">Plan Seleccionado</label>
                             <select id="saas-plan">
-                                <option value="Premium">Plan Full Premium ($25.000 / mes)</option>
+                                <option value="Premium">Plan Full Premium ($30.000 / mes)</option>
                                 <option value="Básico">Plan Básico ($15.000 / mes)</option>
                             </select>
                         </div>
@@ -308,7 +307,7 @@
                         <h4 style="margin-bottom: 5px; font-size: 0.95rem;">Resumen de Compra</h4>
                         <div class="mp-summary-row" style="display: flex; justify-content: space-between; font-size: 0.9rem;">
                             <span id="lbl-mp-item">Suscripción ComandaFlow - Plan Premium</span>
-                            <strong id="lbl-mp-price">$25.000</strong>
+                            <strong id="lbl-mp-price">$30.000</strong>
                         </div>
                     </div>
                     
@@ -355,7 +354,7 @@
                             <div style="background-color: #f1f8ff; border: 1px solid #c8e1ff; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85rem;">
                                 <p style="margin-bottom: 4px;"><strong>Clearing Recaudador:</strong> BBVA (CVU <code>0170259240000007239234</code>)</p>
                                 <p style="margin-bottom: 4px;"><strong>Concepto:</strong> Adhesión a Débito Directo Recurrente</p>
-                                <p><strong>Abono Mensual Recurrente:</strong> <strong id="lbl-transfer-total-price" class="text-success">$25.000 / mes</strong></p>
+                                <p><strong>Abono Mensual Recurrente:</strong> <strong id="lbl-transfer-total-price" class="text-success">$30.000 / mes</strong></p>
                             </div>
                             <div class="form-group">
                                 <label for="saas-transfer-ref">Ingresá tu CBU o CVU para el Débito *</label>
@@ -493,7 +492,7 @@
             };
 
             // Ajustar precios
-            const precioString = plan === 'Premium' ? '$25.000 / mes' : '$15.000 / mes';
+            const precioString = plan === 'Premium' ? '$30.000 / mes' : '$15.000 / mes';
             document.getElementById('lbl-mp-item').innerText = `Suscripción ComandaFlow - Plan ${plan}`;
             document.getElementById('lbl-mp-price').innerText = precioString;
             document.getElementById('lbl-transfer-total-price').innerText = precioString;

@@ -89,7 +89,7 @@
     <!-- Navbar del SuperAdmin -->
     <nav class="navbar navbar-admin">
         <div class="nav-container">
-            <a href="superadmin.html" class="nav-brand" style="display: flex; align-items: center;">
+            <a href="superadmin_privado.html" class="nav-brand" style="display: flex; align-items: center;">
                 <img src="logo.png" alt="ComandaFlow Logo" style="height: 32px; margin-right: 8px; object-fit: contain; border-radius: 4px;">
                 <span>ComandaFlow SaaS Owner Panel <span class="rest-badge premium">SUPERADMIN</span></span>
             </a>
@@ -167,7 +167,7 @@
                         <div class="form-group">
                             <label for="saas-reg-plan">Plan Comercial</label>
                             <select id="saas-reg-plan">
-                                <option value="Premium">Plan Premium ($25.000 / mes)</option>
+                                <option value="Premium">Plan Premium ($30.000 / mes)</option>
                                 <option value="Básico">Plan Básico ($15.000 / mes)</option>
                             </select>
                         </div>
@@ -349,7 +349,7 @@
             locales.forEach(loc => {
                 if (loc.estado === 'Activo') {
                     activos++;
-                    let cuota = loc.plan === 'Premium' ? 25000 : 15000;
+                    let cuota = loc.plan === 'Premium' ? 30000 : 15000;
                     if (loc.descuento_activo && loc.descuento_meses_restantes > 0) {
                         cuota = cuota * (1 - (loc.descuento_porcentaje || 30) / 100);
                     }

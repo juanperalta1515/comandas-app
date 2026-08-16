@@ -984,7 +984,7 @@ function validarYCanjearCodigoReferido(idLocalRecommender, codigo) {
 }
 
 function obtenerAbonoMensual(local) {
-    const precioBase = local.plan === 'Premium' ? 25000 : 15000;
+    const precioBase = local.plan === 'Premium' ? 30000 : 15000;
     if (local.descuento_activo && local.descuento_meses_restantes > 0) {
         const descuento = (precioBase * (local.descuento_porcentaje || 30)) / 100;
         return precioBase - descuento;

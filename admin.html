@@ -1381,7 +1381,7 @@
             document.getElementById('lbl-sub-next-billing').innerText = '23/08/2026';
 
             // Abono mensual con descuento si aplica
-            const precioBase = activo.plan === 'Premium' ? 25000 : 15000;
+            const precioBase = activo.plan === 'Premium' ? 30000 : 15000;
             const precioFinal = obtenerAbonoMensual(activo);
             const lblPrice = document.getElementById('lbl-sub-price');
             if (activo.descuento_activo && activo.descuento_meses_restantes > 0) {
