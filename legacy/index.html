@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComandaFlow | Sistema de Pedidos y Menú Digital para Restaurantes</title>
+    <!-- Google Fonts para tipografía premium -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="landing-body">
+    <!-- Navbar de la Landing Page -->
+    <nav class="navbar landing-navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand" style="display: flex; align-items: center;">
+                <img src="assets/logo.png" alt="ComandaFlow Logo" style="height: 32px; margin-right: 8px; object-fit: contain; border-radius: 4px;">
+                <span class="brand-text">ComandaFlow</span>
+            </a>
+            <div class="nav-actions landing-nav-links">
+                <a href="#features" class="nav-link-landing">Características</a>
+                <a href="#pricing" class="nav-link-landing">Precios</a>
+                <button class="btn btn-secondary btn-sm" onclick="abrirModalSuscripcion()">Registrar mi Local 🚀</button>
+                <a href="admin.html?demo=true" class="btn btn-primary btn-sm btn-landing-cta">Probar Demo</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="landing-hero">
+        <div class="hero-bg-glow"></div>
+        <div class="landing-hero-content">
+            <span class="hero-badge-pill">⚡ Acelerá un 80% tus pedidos</span>
+            <h1>El sistema de pedidos online y comandas para tu restaurante</h1>
+            <p>Automatizá las comandas de tu cocina en tiempo real, recibí pedidos directo por WhatsApp y gestioná tu stock en segundos. Sin pagar comisiones abusivas.</p>
+            
+            <div class="hero-cta-group">
+                <a href="menu.html" target="_blank" class="btn btn-primary btn-lg">
+                    <span>Probar Demo Cliente 📱</span>
+                </a>
+                <a href="admin.html?demo=true" target="_blank" class="btn btn-secondary btn-lg">
+                    <span>Ver Panel Cocina 🍳</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Vista previa interactiva de dispositivo (CSS Mockup) -->
+        <div class="hero-mockup-container">
+            <div class="phone-mockup">
+                <div class="phone-speaker"></div>
+                <div class="phone-screen">
+                    <div class="mock-nav">
+                        <span>🍔 El Quincho Porteño</span>
+                        <span class="mock-cart">🛒 <small class="mock-badge">2</small></span>
+                    </div>
+                    <div class="mock-hero"></div>
+                    <div class="mock-categories">
+                        <span class="mock-cat active">Todos</span>
+                        <span class="mock-cat">Entradas</span>
+                        <span class="mock-cat">Principales</span>
+                    </div>
+                    <div class="mock-list">
+                        <div class="mock-item">
+                            <div class="mock-item-text">
+                                <h5>Pizza Especial</h5>
+                                <p>$6.500</p>
+                            </div>
+                            <span class="mock-btn-add">+</span>
+                        </div>
+                        <div class="mock-item">
+                            <div class="mock-item-text">
+                                <h5>Empanada Carne</h5>
+                                <p>$950</p>
+                            </div>
+                            <span class="mock-btn-add">+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mockup de Cocina (Kanban) -->
+            <div class="kitchen-mockup">
+                <div class="mock-kitchen-header">
+                    <span>🍳 Panel Cocina (Comandas)</span>
+                </div>
+                <div class="mock-kanban">
+                    <div class="mock-col">
+                        <h6>Pendiente (1)</h6>
+                        <div class="mock-card">
+                            <div class="mock-card-header">#PED-1934 🛵</div>
+                            <p>Juan P. • 2 platos</p>
+                            <span class="mock-badge-status ready">Avanzar ▶</span>
+                        </div>
+                    </div>
+                    <div class="mock-col">
+                        <h6>En Prep (1)</h6>
+                        <div class="mock-card">
+                            <div class="mock-card-header">#PED-4820 🏪</div>
+                            <p>María L. • 3 platos</p>
+                            <span class="mock-badge-status in-prep">Preparando</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Logo Ribbon -->
+    <section class="brand-ribbon-section">
+        <div class="ribbon-title">Marcas gastronómicas que confían en ComandaFlow</div>
+        <div class="logo-slider-container">
+            <div class="logo-slider-track">
+                <div class="logo-slide">🍕 Bella Italia</div>
+                <div class="logo-slide">🍔 Burger Zone</div>
+                <div class="logo-slide">🌮 Taco Loco</div>
+                <div class="logo-slide">🍣 Sushi Wave</div>
+                <div class="logo-slide">🥩 Parrilla Don Julio</div>
+                <div class="logo-slide">🍺 Beer Garden</div>
+                <div class="logo-slide">🧁 Sweet Palace</div>
+                <div class="logo-slide">🌯 Wrap & Roll</div>
+                <!-- Duplicate -->
+                <div class="logo-slide">🍕 Bella Italia</div>
+                <div class="logo-slide">🍔 Burger Zone</div>
+                <div class="logo-slide">🌮 Taco Loco</div>
+                <div class="logo-slide">🍣 Sushi Wave</div>
+                <div class="logo-slide">🥩 Parrilla Don Julio</div>
+                <div class="logo-slide">🍺 Beer Garden</div>
+                <div class="logo-slide">🧁 Sweet Palace</div>
+                <div class="logo-slide">🌯 Wrap & Roll</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="landing-features">
+        <div class="section-header">
+            <h2>Todo lo que necesitás para digitalizar tu negocio</h2>
+            <p>Diseñado especialmente para restaurantes, cafeterías, dark kitchens y locales de comida.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🍽️</div>
+                <h3>Gestión de Mesas y Salón</h3>
+                <p>Tus comensales escanean el QR, ordenan a su mesa y solicitan la cuenta. Tu staff gestiona los pedidos directamente e imprime tickets al instante.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Caja Segregada del Día</h3>
+                <p>Llevá tus ingresos en orden dividiendo tus flujos en Caja Salón, Caja Plataformas y Caja Venta Directa, con cierres de turno y reportes históricos.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🍳</div>
+                <h3>Tablero Kanban en Tiempo Real</h3>
+                <p>Un panel interactivo para la cocina. Controlá el stock de platos, editá precios o cargá nuevas recetas sobre la marcha desde el gestor de menú.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛵</div>
+                <h3>Simulador de Plataformas</h3>
+                <p>Probá cómo entran comandas directas desde PedidosYa y Rappi para unificar tu cocina en una sola pantalla integrada.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🖨️</div>
+                <h3>Comandera y Facturación AFIP</h3>
+                <p>Conectá tu tickeadora térmica. Generá facturas de cliente formato AFIP con CUIT/CAE e imprime comandas de cocina simplificadas.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Onboarding Instantáneo</h3>
+                <p>Suscribite en segundos. Registrá tu comercio, realiza la simulación de pago y accedé al asistente interactivo para configurar tu CBU y logo.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="landing-pricing">
+        <div class="section-header">
+            <h2>Planes simples y transparentes</h2>
+            <p>Comenzá hoy mismo sin contratos a largo plazo ni costos de instalación.</p>
+        </div>
+
+        <div class="pricing-cards-container">
+            <div class="pricing-card">
+                <h3>Plan Básico</h3>
+                <div class="price">$15.000 <span>/ mes</span></div>
+                <p class="plan-desc">Ideal para cafeterías o locales que recién comienzan.</p>
+                <ul class="plan-features">
+                    <li>✔️ Menú Digital QR ilimitado</li>
+                    <li>✔️ Pedidos directos a WhatsApp</li>
+                    <li>✔️ Soporte por correo</li>
+                    <li>❌ Panel Kanban de Cocina</li>
+                    <li>❌ Caja Chica y Mesas</li>
+                </ul>
+                <button class="btn btn-secondary btn-block" onclick="abrirModalSuscripcion('Básico')">Suscribirme hoy</button>
+            </div>
+
+            <div class="pricing-card popular">
+                <div class="popular-ribbon">MÁS ELEGIDO</div>
+                <h3>Plan Full Premium</h3>
+                <div class="price">$30.000 <span>/ mes</span></div>
+                <p class="plan-desc">Perfecto para restaurantes y cocinas con alto volumen de comandas.</p>
+                <ul class="plan-features">
+                    <li>✔️ Menú Digital QR ilimitado</li>
+                    <li>✔️ Panel Kanban de Cocina</li>
+                    <li>✔️ Gestión de Salón y Mesas</li>
+                    <li>✔️ Caja Segregada & Finanzas</li>
+                    <li>✔️ Simulador PedidosYa / Rappi</li>
+                    <li>✔️ Impresión de Comandas y Facturas</li>
+                </ul>
+                <button class="btn btn-primary btn-block" onclick="abrirModalSuscripcion('Premium')">Suscribirme hoy 🚀</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= MODAL PROMOCIONAL DE REFERIDOS ================= -->
+    <div class="modal-overlay" id="referral-promo-modal">
+        <div class="modal-card" style="max-width: 480px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; position: relative;">
+                <h2 style="font-weight: 800; color: var(--color-primary); font-size: 1.5rem; display: flex; align-items: center; gap: 8px;">
+                    🎉 ¡Promo Referidos! 🎁
+                </h2>
+                <button class="close-btn" onclick="cerrarPromoReferido()" style="position: absolute; right: 20px;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 2rem 1.5rem;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem; animation: pulse 2s infinite;">🍕</div>
+                <h3 style="margin-bottom: 12px; font-weight: 700; font-size: 1.15rem; color: #1a1a24;">¿Recomendás ComandaFlow a otro negocio?</h3>
+                <p style="font-size: 0.92rem; color: #52525b; line-height: 1.6; margin-bottom: 20px;">
+                    ¡Te regalamos un <strong>30% de descuento por 2 meses</strong> en tu abono mensual! 
+                </p>
+                <div style="background-color: #f5f3ff; border: 1px solid #ddd6fe; padding: 15px; border-radius: 12px; text-align: left; font-size: 0.85rem; color: #4c1d95; line-height: 1.5; margin-bottom: 25px;">
+                    <p style="margin-bottom: 8px;"><strong>¿Cómo activar el beneficio?</strong></p>
+                    <ol style="margin-left: 1.2rem; padding-left: 0;">
+                        <li style="margin-bottom: 4px;">Registrá tu cuenta ahora y obtené tu <strong>código único</strong> de activación.</li>
+                        <li style="margin-bottom: 4px;">Compartilo con el negocio que quieras recomendar.</li>
+                        <li>Una vez que se registren, ingresá el código de ellos en tu panel para activar tus <strong>2 meses al 30% OFF</strong>.</li>
+                    </ol>
+                </div>
+                <div style="display: flex; gap: 10px; flex-direction: column;">
+                    <button class="btn btn-primary btn-block" onclick="continuarAlRegistroSuscripcion()" style="background-color: var(--color-primary); border-color: var(--color-primary); color: white;">
+                        Registrar mi Local 🚀
+                    </button>
+                    <button class="btn btn-secondary btn-block" onclick="cerrarPromoReferido()">Más tarde</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL DE REGISTRO & CHECKOUT SAAS (MERCADO PAGO) ================= -->
+    <div class="modal-overlay" id="saas-register-modal">
+        <div class="modal-card">
+            <!-- PASO 1: REGISTRO DE DATOS -->
+            <div id="saas-step-register">
+                <div class="modal-header">
+                    <h2>Registrar mi Restaurante</h2>
+                    <button class="close-btn" onclick="cerrarModalSuscripcion()">&times;</button>
+                </div>
+                <form onsubmit="irAPagoSuscripcion(event)">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="saas-nombre">Nombre de Fantasía del Local *</label>
+                            <input type="text" id="saas-nombre" required placeholder="Ej: Pizzería La Camorra">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="saas-cuit">CUIT de la Empresa *</label>
+                                <input type="text" id="saas-cuit" required placeholder="Ej: 30-71589234-9">
+                            </div>
+                            <div class="form-group">
+                                <label for="saas-whatsapp">WhatsApp (Formato internacional) *</label>
+                                <input type="text" id="saas-whatsapp" required placeholder="Ej: +5491132456789" value="+549">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="saas-email">Email de Administración *</label>
+                                <input type="email" id="saas-email" required placeholder="Ej: contacto@lacamorra.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="saas-password">Contraseña Administrativa *</label>
+                                <input type="password" id="saas-password" required placeholder="Mínimo 6 caracteres" minlength="6">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="saas-plan">Plan Seleccionado</label>
+                            <select id="saas-plan">
+                                <option value="Premium">Plan Full Premium ($30.000 / mes)</option>
+                                <option value="Básico">Plan Básico ($15.000 / mes)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="cerrarModalSuscripcion()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Ir al Pago Mensual 💳</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- PASO 2: CHECKOUT MULTI-MÉTODO SIMULADO -->
+            <div id="saas-step-checkout" style="display: none;">
+                <div class="mp-checkout-header" id="checkout-header-logo" style="background-color: #009ee3; color: white; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span class="mp-logo-icon" style="font-size: 1.2rem;">🔒</span>
+                    <span class="mp-logo-text" id="checkout-header-text" style="font-weight: bold; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.5px;">Pasarela de Pago Segura</span>
+                </div>
+                <div class="modal-body bg-light-gray" style="padding-top: 1rem;">
+                    <div class="mp-checkout-summary" style="background: #f7f7f9; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                        <h4 style="margin-bottom: 5px; font-size: 0.95rem;">Resumen de Compra</h4>
+                        <div class="mp-summary-row" style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span id="lbl-mp-item">Suscripción ComandaFlow - Plan Premium</span>
+                            <strong id="lbl-mp-price">$30.000</strong>
+                        </div>
+                    </div>
+                    
+                    <!-- Mensaje de Seguridad de Pago -->
+                    <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.78rem; color: #166534; display: flex; gap: 8px; align-items: flex-start;">
+                        <span style="font-size: 1.1rem; margin-top: -2px;">🛡️</span>
+                        <div>
+                            <strong>Pasarela Segura Tokenizada (PCI-DSS Compliant)</strong><br>
+                            Tus datos personales y de tarjeta de crédito están protegidos con encriptación AES-256 de extremo a extremo. Los cobros son delegados a procesadores bancarios directos sin almacenamiento de tarjeta, garantizando inmunidad ante robo de datos.
+                        </div>
+                    </div>
+
+                    <!-- Selector de Método de Pago -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button type="button" class="btn btn-secondary btn-block active" id="btn-pay-method-mp" onclick="cambiarMetodoPagoCheckout('MercadoPago')" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 2px solid var(--color-primary); background-color: var(--color-primary-light);">
+                            Débito Automático Tarjeta 💳
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-block" id="btn-pay-method-transfer" onclick="cambiarMetodoPagoCheckout('CBU')" style="flex: 1; padding: 8px 12px; font-size: 0.85rem; border: 1px solid var(--color-border);">
+                            Débito Directo CBU 🏦
+                        </button>
+                    </div>
+                    
+                    <form onsubmit="procesarPagoSuscripcion(event)" style="margin-top: 1rem;">
+                        <!-- Formulario Mercado Pago -->
+                        <div id="mp-form-container">
+                            <div class="form-group">
+                                <label>Número de Tarjeta (Débito Recurrente)</label>
+                                <input type="text" placeholder="4517 8400 0000 0000" disabled value="4517 **** **** 9082">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Vencimiento</label>
+                                    <input type="text" placeholder="MM/AA" disabled value="12/30">
+                                </div>
+                                <div class="form-group">
+                                    <label>CVC</label>
+                                    <input type="password" placeholder="123" disabled value="999">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulario Transferencia Bancaria / CBU -->
+                        <div id="transfer-form-container" style="display: none;">
+                            <div style="background-color: #f1f8ff; border: 1px solid #c8e1ff; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85rem;">
+                                <p style="margin-bottom: 4px;"><strong>Clearing Recaudador:</strong> BBVA (CVU <code>0170259240000007239234</code>)</p>
+                                <p style="margin-bottom: 4px;"><strong>Concepto:</strong> Adhesión a Débito Directo Recurrente</p>
+                                <p><strong>Abono Mensual Recurrente:</strong> <strong id="lbl-transfer-total-price" class="text-success">$30.000 / mes</strong></p>
+                            </div>
+                            <div class="form-group">
+                                <label for="saas-transfer-ref">Ingresá tu CBU o CVU para el Débito *</label>
+                                <input type="text" id="saas-transfer-ref" placeholder="Ej: 01700123... (22 dígitos)" maxlength="22" minlength="22">
+                                <small class="form-hint" style="font-size: 0.75rem;">Autorizás a ComandaFlow a cobrar la mensualidad debitándola automáticamente de esta cuenta.</small>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-mp btn-block" id="btn-pay-mp" style="margin-top: 15px; background-color: var(--color-success); border-color: var(--color-success); color: white;">
+                            Confirmar Suscripción 🔒
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- PASO 3: EXITO Y REDIRECCIÓN -->
+            <div id="saas-step-success" style="display: none; text-align: center;" class="modal-body">
+                <div class="success-icon" id="success-icon-symbol" style="font-size: 4rem;">🎉</div>
+                <h2 id="success-status-title">¡Suscripción Registrada!</h2>
+                <p id="success-status-desc">Tu local ya se encuentra activo en la plataforma.</p>
+                <div class="alert-box alert-info margin-top-20" id="success-status-box">
+                    <strong>¡Bienvenido!</strong> Serás redirigido a tu panel de control para realizar la configuración inicial de cobros y logotipo.
+                </div>
+                <div class="loading-spinner margin-top-20" id="success-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+        <div class="footer-container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <p>&copy; 2026 ComandaFlow. Todos los derechos reservados. Desarrollado para el crecimiento de tu restaurante.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js?v=4"></script>
+    <script>
+        let datosLocalRegistro = null;
+        let selectedPaymentMethod = 'MercadoPago';
+
+        let planSeleccionadoParaRegistro = 'Premium';
+
+        function abrirModalSuscripcion(plan = 'Premium') {
+            planSeleccionadoParaRegistro = plan;
+            // Mostrar primero el popup promocional de referidos
+            document.getElementById('referral-promo-modal').classList.add('active');
+        }
+
+        function cerrarPromoReferido() {
+            document.getElementById('referral-promo-modal').classList.remove('active');
+        }
+
+        function continuarAlRegistroSuscripcion() {
+            cerrarPromoReferido();
+            
+            document.getElementById('saas-step-register').style.display = 'block';
+            document.getElementById('saas-step-checkout').style.display = 'none';
+            document.getElementById('saas-step-success').style.display = 'none';
+            
+            document.getElementById('saas-plan').value = planSeleccionadoParaRegistro;
+            document.getElementById('saas-nombre').value = '';
+            document.getElementById('saas-cuit').value = '';
+            document.getElementById('saas-whatsapp').value = '+549';
+            document.getElementById('saas-email').value = '';
+            document.getElementById('saas-password').value = '';
+            
+            cambiarMetodoPagoCheckout('MercadoPago');
+            document.getElementById('saas-register-modal').classList.add('active');
+        }
+
+        function cerrarModalSuscripcion() {
+            document.getElementById('saas-register-modal').classList.remove('active');
+        }
+
+        function cambiarMetodoPagoCheckout(metodo) {
+            selectedPaymentMethod = metodo;
+            const btnMP = document.getElementById('btn-pay-method-mp');
+            const btnTransfer = document.getElementById('btn-pay-method-transfer');
+            const mpForm = document.getElementById('mp-form-container');
+            const transferForm = document.getElementById('transfer-form-container');
+            const checkoutHeader = document.getElementById('checkout-header-logo');
+            const checkoutHeaderText = document.getElementById('checkout-header-text');
+
+            if (metodo === 'MercadoPago') {
+                btnMP.classList.add('active');
+                btnMP.style.border = '2px solid var(--color-primary)';
+                btnMP.style.backgroundColor = 'var(--color-primary-light)';
+                btnTransfer.classList.remove('active');
+                btnTransfer.style.border = '1px solid var(--color-border)';
+                btnTransfer.style.backgroundColor = 'transparent';
+                
+                mpForm.style.display = 'block';
+                transferForm.style.display = 'none';
+                
+                checkoutHeader.style.backgroundColor = '#009ee3';
+                checkoutHeaderText.innerText = 'Débito Automático con Tarjeta';
+            } else {
+                btnTransfer.classList.add('active');
+                btnTransfer.style.border = '2px solid var(--color-primary)';
+                btnTransfer.style.backgroundColor = 'var(--color-primary-light)';
+                btnMP.classList.remove('active');
+                btnMP.style.border = '1px solid var(--color-border)';
+                btnMP.style.backgroundColor = 'transparent';
+                
+                transferForm.style.display = 'block';
+                mpForm.style.display = 'none';
+                
+                checkoutHeader.style.backgroundColor = '#5c3ca5';
+                checkoutHeaderText.innerText = 'Débito Directo por CBU';
+            }
+        }
+
+        function irAPagoSuscripcion(e) {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('saas-nombre').value.trim();
+            const cuit = document.getElementById('saas-cuit').value.trim();
+            const whatsapp = document.getElementById('saas-whatsapp').value.trim();
+            const plan = document.getElementById('saas-plan').value;
+            const email = document.getElementById('saas-email').value.trim();
+            const password = document.getElementById('saas-password').value.trim();
+
+            if (!whatsapp.startsWith("+549")) {
+                alert("Ingrese el número de WhatsApp con código internacional (+549 para Argentina).");
+                return;
+            }
+
+            datosLocalRegistro = {
+                nombre: nombre,
+                cuit: cuit,
+                whatsapp: whatsapp,
+                plan: plan,
+                email: email,
+                password: password
+            };
+
+            // Ajustar precios
+            const precioString = plan === 'Premium' ? '$30.000 / mes' : '$15.000 / mes';
+            document.getElementById('lbl-mp-item').innerText = `Suscripción ComandaFlow - Plan ${plan}`;
+            document.getElementById('lbl-mp-price').innerText = precioString;
+            document.getElementById('lbl-transfer-total-price').innerText = precioString;
+
+            // Switch to checkout screen
+            document.getElementById('saas-step-register').style.display = 'none';
+            document.getElementById('saas-step-checkout').style.display = 'block';
+        }
+
+        function procesarPagoSuscripcion(e) {
+            e.preventDefault();
+            
+            const payBtn = document.getElementById('btn-pay-mp');
+            
+            if (selectedPaymentMethod === 'CBU') {
+                const ref = document.getElementById('saas-transfer-ref').value.trim();
+                if (!ref || ref.length !== 22 || isNaN(ref)) {
+                    alert("Por favor, ingrese un número CBU/CVU bancario válido de 22 dígitos numéricos.");
+                    return;
+                }
+                datosLocalRegistro.metodo_pago_registro = 'CBU';
+                datosLocalRegistro.cbu_cliente = ref;
+                datosLocalRegistro.comprobante_registro = 'Adhesión CBU: ' + ref.substring(0, 4) + '...' + ref.substring(18);
+            } else {
+                datosLocalRegistro.metodo_pago_registro = 'MercadoPago';
+                datosLocalRegistro.cbu_cliente = '';
+                datosLocalRegistro.comprobante_registro = '';
+            }
+
+            payBtn.innerText = 'Procesando Adhesión... ⏳';
+            payBtn.setAttribute('disabled', 'disabled');
+
+            setTimeout(() => {
+                // Registrar local en localStorage
+                const nuevoLocal = registrarLocalSaaS(datosLocalRegistro);
+
+                // Configurar vistas de éxito según método
+                if (selectedPaymentMethod === 'CBU') {
+                    document.getElementById('success-icon-symbol').innerText = '⏳';
+                    document.getElementById('success-status-title').innerText = '¡Débito Directo Adherido!';
+                    document.getElementById('success-status-desc').innerText = 'Adhesión en proceso de clearing bancario.';
+                    document.getElementById('success-status-box').innerHTML = `
+                        <strong>CBU Registrado:</strong> Se ha ingresado la solicitud para la cuenta CBU <strong>${datosLocalRegistro.cbu_cliente}</strong>.
+                        El SuperAdmin activará la licencia una vez confirmada la compensación en BBVA.<br><br>
+                        🎁 <strong>Código de activación único para referir:</strong> <code style="font-size: 1.1rem; padding: 4px 8px; background: #e0f2fe; border-radius: 4px; color: #0369a1; font-weight: bold;">${nuevoLocal.referral_code}</code><br>
+                        <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">Entregáselo al comercio que te recomendó para que active sus 2 meses de descuento.</small>
+                    `;
+                } else {
+                    document.getElementById('success-icon-symbol').innerText = '🎉';
+                    document.getElementById('success-status-title').innerText = '¡Suscripción de Débito Activa!';
+                    document.getElementById('success-status-desc').innerText = 'Tu local ya se encuentra activo en la plataforma.';
+                    document.getElementById('success-status-box').innerHTML = `
+                        <strong>¡Bienvenido!</strong> Serás redirigido a tu panel de control para realizar la configuración inicial de cobros y logotipo.<br><br>
+                        🎁 <strong>Código de activación único para referir:</strong> <code style="font-size: 1.1rem; padding: 4px 8px; background: #f3e8ff; border-radius: 4px; color: #6b21a8; font-weight: bold;">${nuevoLocal.referral_code}</code><br>
+                        <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">Entregáselo al comercio que te recomendó para que active sus 2 meses de descuento.</small>
+                    `;
+                    
+                    // Si el pago es aprobado automáticamente (Mercado Pago), emitimos un JWT para loguearlo
+                    const token = generarJWT({
+                        sub: nuevoLocal.id,
+                        email: nuevoLocal.email,
+                        role: 'merchant',
+                        plan: nuevoLocal.plan
+                    });
+                    guardarTokenSesion(token);
+                }
+
+                // Cambiar a pantalla de éxito
+                document.getElementById('saas-step-checkout').style.display = 'none';
+                document.getElementById('saas-step-success').style.display = 'block';
+
+                // Redirigir al panel tras 5.5 segundos para que copien el código
+                setTimeout(() => {
+                    window.location.href = 'admin.html';
+                }, 5500);
+            }, 1500);
+        }
+
+
+    </script>
+</body>
+</html>
