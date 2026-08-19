@@ -585,12 +585,16 @@ export function DbProvider({ children }) {
 
     // -- GESTIÓN DE PEDIDOS --
     const crearPedido = (datosPedido) => {
+        const isPaidInitially = datosPedido.cobrado !== undefined 
+            ? datosPedido.cobrado 
+            : (datosPedido.plataforma || datosPedido.metodo_pago === 'debito' || datosPedido.metodo_pago === 'credito' ? true : false);
+
         if (offlineMode && !datosPedido.bypassOffline) {
             const pedidoOffline = {
                 id_pedido: 'PED-' + Math.floor(1000 + Math.random() * 9000),
                 fecha_hora: new Date().toLocaleString('es-AR'),
                 estado: 'Pendiente', 
-                cobrado: datosPedido.cobrado !== undefined ? datosPedido.cobrado : (datosPedido.plataforma ? true : false),
+                cobrado: isPaidInitially,
                 ...datosPedido,
                 esOffline: true
             };
@@ -603,12 +607,25 @@ export function DbProvider({ children }) {
             id_pedido: 'PED-' + Math.floor(1000 + Math.random() * 9000),
             fecha_hora: new Date().toLocaleString('es-AR'),
             estado: datosPedido.estado || 'Pendiente', 
-            cobrado: datosPedido.cobrado !== undefined ? datosPedido.cobrado : (datosPedido.plataforma ? true : false),
+            cobrado: isPaidInitially,
             ...datosPedido
         };
         
         const nextOrders = [...orders, nuevoPedido];
         updateOrders(nextOrders);
+        
+        if (nuevoPedido.cobrado) {
+            let canal = 'directo';
+            let descripcion = `Venta Directa - Pedido #${nuevoPedido.id_pedido}`;
+            if (nuevoPedido.tipo_entrega === 'mesa') {
+                canal = 'salon';
+                descripcion = `Venta Mesa ${nuevoPedido.nro_mesa} - Pedido #${nuevoPedido.id_pedido}`;
+            } else if (nuevoPedido.plataforma) {
+                canal = 'plataformas';
+                descripcion = `Venta ${nuevoPedido.plataforma.toUpperCase()} - Pedido #${nuevoPedido.id_pedido}`;
+            }
+            registrarTransaccionCaja('ingreso', descripcion, nuevoPedido.total, nuevoPedido.metodo_pago || 'Efectivo', canal);
+        }
         
         if (nuevoPedido.tipo_entrega === 'mesa') {
             const nroMesa = parseInt(nuevoPedido.nro_mesa);

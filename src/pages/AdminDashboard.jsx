@@ -94,6 +94,10 @@ function AdminDashboard() {
     const [editOrderMesa, setEditOrderMesa] = useState('1');
     const [editOrderItems, setEditOrderItems] = useState([]);
 
+    // Reportes, PDF, Cierres y Gráficos
+    const [chartPeriod, setChartPeriod] = useState('day'); // 'day', 'month', 'year'
+    const [selectedCierreDetalle, setSelectedCierreDetalle] = useState(null);
+
     // Auto-login con ?demo=true
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
@@ -449,16 +453,291 @@ function AdminDashboard() {
         alert("Pedido actualizado con éxito.");
     };
 
-    // Estadísticas contables (Turno de caja activo)
-    const countPedidos = orders.filter(o => o.estado !== 'Anulado').length;
+    // -- EXPORTAR PDF / IMPRIMIR JORNADA ACTIVA --
+    const handlePrintActiveJornada = () => {
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        
+        let totalIngresos = 0;
+        let totalEgresos = 0;
+        let totalSalon = 0;
+        let totalPlataformas = 0;
+        let totalDirecto = 0;
+        const metodoCounts = {};
+
+        caja.forEach(tx => {
+            const factor = tx.tipo === 'ingreso' ? 1 : -1;
+            const monto = tx.monto * factor;
+            
+            if (tx.tipo === 'ingreso') totalIngresos += tx.monto;
+            else totalEgresos += tx.monto;
+
+            if (tx.canal === 'salon') totalSalon += monto;
+            else if (tx.canal === 'plataformas') totalPlataformas += monto;
+            else if (tx.canal === 'directo') totalDirecto += monto;
+
+            const m = tx.metodoPago || 'Efectivo';
+            metodoCounts[m] = (metodoCounts[m] || 0) + tx.monto;
+        });
+
+        const totalGeneral = totalSalon + totalPlataformas + totalDirecto;
+
+        const txRowsHtml = caja.length === 0 
+            ? '<tr><td colspan="6" style="text-align: center; color: #999; padding: 10px;">Sin movimientos activos hoy</td></tr>'
+            : caja.map(tx => `
+                <tr>
+                    <td>${tx.fecha_hora.split(' ')[1] || tx.fecha_hora}</td>
+                    <td style="text-transform: uppercase;">${tx.tipo}</td>
+                    <td>${tx.descripcion}</td>
+                    <td>${tx.metodoPago}</td>
+                    <td style="text-transform: capitalize;">${tx.canal}</td>
+                    <td style="text-align: right; color: ${tx.tipo === 'ingreso' ? '#2e7d32' : '#c62828'}">$${tx.monto.toLocaleString('es-AR')}</td>
+                </tr>
+            `).join('');
+
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Cierre de Caja Diario - ComandaFlow</title>
+                <style>
+                    body { font-family: 'Courier New', Courier, monospace; color: #111; padding: 20px; line-height: 1.4; }
+                    .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 15px; margin-bottom: 20px; }
+                    .header h1 { margin: 0; font-size: 1.5rem; }
+                    .header p { margin: 5px 0 0 0; font-size: 0.9rem; }
+                    .section { margin-bottom: 20px; }
+                    .section-title { font-weight: bold; border-bottom: 1px dashed #333; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-size: 1rem; }
+                    .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                    .summary-table td { padding: 5px 0; }
+                    .summary-table td.right { text-align: right; }
+                    .summary-table tr.total { font-weight: bold; border-top: 1px dashed #333; border-bottom: 1px dashed #333; }
+                    .details-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+                    .details-table th, .details-table td { padding: 6px 4px; text-align: left; border-bottom: 1px solid #eee; }
+                    .details-table th { border-bottom: 1px dashed #333; text-transform: uppercase; }
+                    .footer { text-align: center; margin-top: 40px; border-top: 2px dashed #333; padding-top: 15px; font-size: 0.8rem; }
+                    @media print {
+                        body { padding: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>${activeRestaurant.nombre}</h1>
+                    <p>REPORTE DE JORNADA ACTIVA (PRE-CIERRE)</p>
+                    <p>Fecha/Hora Emisión: ${new Date().toLocaleString('es-AR')}</p>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Resumen Financiero</div>
+                    <table class="summary-table">
+                        <tr>
+                            <td>Total Ingresos Caja:</td>
+                            <td class="right">$${totalIngresos.toLocaleString('es-AR')}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Egresos/Retiros:</td>
+                            <td class="right">-$${totalEgresos.toLocaleString('es-AR')}</td>
+                        </tr>
+                        <tr class="total">
+                            <td>SALDO EN ARQUEO DE CAJA:</td>
+                            <td class="right">$${totalGeneral.toLocaleString('es-AR')}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Participación por Canales</div>
+                    <table class="summary-table">
+                        <tr>
+                            <td>🍽️ Caja Salón (Mesas):</td>
+                            <td class="right">$${totalSalon.toLocaleString('es-AR')}</td>
+                        </tr>
+                        <tr>
+                            <td>🛵 Caja Plataformas (PedidosYa/Rappi):</td>
+                            <td class="right">$${totalPlataformas.toLocaleString('es-AR')}</td>
+                        </tr>
+                        <tr>
+                            <td>🏪 Caja Venta Directa (Mostrador):</td>
+                            <td class="right">$${totalDirecto.toLocaleString('es-AR')}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Medios de Pago Recaudados</div>
+                    <table class="summary-table">
+                        ${Object.keys(metodoCounts).length === 0 
+                            ? '<tr><td colspan="2" style="text-align: center; color: #999;">Sin recaudaciones hoy</td></tr>'
+                            : Object.entries(metodoCounts).map(([method, amount]) => `
+                            <tr>
+                                <td>💳 ${method}:</td>
+                                <td class="right">$${amount.toLocaleString('es-AR')}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Libro de Caja - Detalle de Movimientos</div>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th>Pago</th>
+                                <th>Canal</th>
+                                <th style="text-align: right;">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${txRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="footer">
+                    <p>ComandaFlow SaaS - Control Operativo Comercial</p>
+                    <p>Firma Responsable Caja: ___________________________</p>
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+
+    // -- EXPORTAR PDF / IMPRIMIR CIERRE HISTÓRICO --
+    const handlePrintHistoricalCierre = (cierre) => {
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        
+        const historicoTx = JSON.parse(localStorage.getItem('comandas_caja_historico')) || [];
+        const txsCierre = historicoTx.filter(tx => tx.id_cierre === cierre.id_cierre);
+
+        const txRowsHtml = txsCierre.length === 0
+            ? '<tr><td colspan="6" style="text-align: center; color: #999; padding: 10px;">Sin movimientos detallados archivados</td></tr>'
+            : txsCierre.map(tx => `
+                <tr>
+                    <td>${tx.fecha_hora.split(' ')[1] || tx.fecha_hora}</td>
+                    <td style="text-transform: uppercase;">${tx.tipo}</td>
+                    <td>${tx.descripcion}</td>
+                    <td>${tx.metodoPago || 'Efectivo'}</td>
+                    <td style="text-transform: capitalize;">${tx.canal}</td>
+                    <td style="text-align: right; color: ${tx.tipo === 'ingreso' ? '#2e7d32' : '#c62828'}">$${tx.monto.toLocaleString('es-AR')}</td>
+                </tr>
+            `).join('');
+
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Cierre Consolidado #${cierre.id_cierre} - ComandaFlow</title>
+                <style>
+                    body { font-family: 'Courier New', Courier, monospace; color: #111; padding: 20px; line-height: 1.4; }
+                    .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 15px; margin-bottom: 20px; }
+                    .header h1 { margin: 0; font-size: 1.5rem; }
+                    .header p { margin: 5px 0 0 0; font-size: 0.9rem; }
+                    .section { margin-bottom: 20px; }
+                    .section-title { font-weight: bold; border-bottom: 1px dashed #333; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-size: 1rem; }
+                    .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                    .summary-table td { padding: 5px 0; }
+                    .summary-table td.right { text-align: right; }
+                    .summary-table tr.total { font-weight: bold; border-top: 1px dashed #333; border-bottom: 1px dashed #333; }
+                    .details-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+                    .details-table th, .details-table td { padding: 6px 4px; text-align: left; border-bottom: 1px solid #eee; }
+                    .details-table th { border-bottom: 1px dashed #333; text-transform: uppercase; }
+                    .footer { text-align: center; margin-top: 40px; border-top: 2px dashed #333; padding-top: 15px; font-size: 0.8rem; }
+                    @media print {
+                        body { padding: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>${activeRestaurant.nombre}</h1>
+                    <p>REPORTE DE CIERRE DIARIO CONSOLIDADO</p>
+                    <p>Cierre ID: <strong>${cierre.id_cierre}</strong></p>
+                    <p>Fecha/Hora de Cierre: ${cierre.fecha} ${cierre.hora}</p>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Totales del Cierre</div>
+                    <table class="summary-table">
+                        <tr>
+                            <td>🍽️ Facturación Salón (Mesas):</td>
+                            <td class="right">$${cierre.total_salon.toLocaleString('es-AR')}</td>
+                        </tr>
+                        <tr>
+                            <td>🛵 Facturación Plataformas:</td>
+                            <td class="right">$${cierre.total_plataformas.toLocaleString('es-AR')}</td>
+                        </tr>
+                        <tr>
+                            <td>🏪 Facturación Venta Directa:</td>
+                            <td class="right">$${cierre.total_directo.toLocaleString('es-AR')}</td>
+                        </tr>
+                        <tr class="total">
+                            <td>TOTAL CONSOLIDADO NETO:</td>
+                            <td class="right">$${cierre.total_general.toLocaleString('es-AR')}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Libro Diario de Caja Archivada - Detalle</div>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th>Pago</th>
+                                <th>Canal</th>
+                                <th style="text-align: right;">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${txRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="footer">
+                    <p>ComandaFlow SaaS - Control Histórico Contable</p>
+                    <p>Firma Responsable Caja: ___________________________</p>
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+
+    // Estadísticas contables (Turno de caja activo y ventas)
+    const ordersActivasNoAnuladas = orders.filter(o => o.estado !== 'Anulado');
+    const ordersCobradas = ordersActivasNoAnuladas.filter(o => o.cobrado);
     
+    const countPedidos = ordersActivasNoAnuladas.length;
+    const countPedidosCobrados = ordersCobradas.length;
+    
+    // Total Facturado (Ventas cobradas)
+    const totalFacturadoHoy = ordersCobradas.reduce((acc, o) => acc + o.total, 0);
+
+    // Saldo en Arqueo de Caja Chica
     let totalCajaMonto = 0;
     caja.forEach(tx => {
         const factor = tx.tipo === 'ingreso' ? 1 : -1;
         totalCajaMonto += tx.monto * factor;
     });
 
-    const ticketPromedio = countPedidos > 0 ? (totalCajaMonto / countPedidos) : 0;
+    // Ticket promedio basado en ventas cobradas
+    const ticketPromedio = countPedidosCobrados > 0 ? (totalFacturadoHoy / countPedidosCobrados) : 0;
 
     // Calcular distribución horaria para gráficos
     const horasCount = { almuerzo: 0, tarde: 0, cena_temprana: 0, cena_tarde: 0 };
@@ -480,17 +759,29 @@ function AdminDashboard() {
     const hCenTemPct = (horasCount.cena_temprana / maxHoras) * 110;
     const hCenTarPct = (horasCount.cena_tarde / maxHoras) * 110;
 
-    // Top Platos
-    const platosVendidos = {};
-    orders.forEach(p => {
-        if (p.estado === 'Anulado') return;
+    // Ventas discriminadas por plato / ítem
+    const itemsVentasDetalle = {};
+    ordersCobradas.forEach(p => {
         p.items.forEach(it => {
-            platosVendidos[it.nombre] = (platosVendidos[it.nombre] || 0) + it.cantidad;
+            if (!itemsVentasDetalle[it.nombre]) {
+                const menuItem = menu.find(m => m.nombre === it.nombre) || {};
+                itemsVentasDetalle[it.nombre] = {
+                    nombre: it.nombre,
+                    categoria: menuItem.categoria || 'Principal',
+                    cantidad: 0,
+                    precioUnitario: it.precio || menuItem.precio || 0,
+                    subtotal: 0
+                };
+            }
+            itemsVentasDetalle[it.nombre].cantidad += it.cantidad;
+            itemsVentasDetalle[it.nombre].subtotal += (it.precio || itemsVentasDetalle[it.nombre].precioUnitario) * it.cantidad;
         });
     });
-    const topPlatos = Object.entries(platosVendidos)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
+    const listaItemsVentas = Object.values(itemsVentasDetalle).sort((a, b) => b.subtotal - a.subtotal);
+    const totalRecaudadoProductos = listaItemsVentas.reduce((acc, it) => acc + it.subtotal, 0);
+
+    // Top Platos (para compatibilidad)
+    const topPlatos = listaItemsVentas.map(it => [it.nombre, it.cantidad]).slice(0, 5);
 
     // Filtrar cobranzas
     const matchCobranzas = orders.filter(o => {
@@ -859,71 +1150,189 @@ function AdminDashboard() {
                         <div style={{ display: 'flex', gap: '15px', marginTop: '20px', flexWrap: 'wrap' }}>
                             <div className="feature-card" style={{ flex: 1, minWidth: '200px', textAlign: 'center' }}>
                                 <span style={{ fontSize: '0.8rem', color: '#666' }}>TOTAL FACTURADO</span>
-                                <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>${totalCajaMonto.toLocaleString('es-AR')}</h2>
+                                <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>${totalFacturadoHoy.toLocaleString('es-AR')}</h2>
                             </div>
                             <div className="feature-card" style={{ flex: 1, minWidth: '200px', textAlign: 'center' }}>
                                 <span style={{ fontSize: '0.8rem', color: '#666' }}>TICKET PROMEDIO</span>
                                 <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>${Math.round(ticketPromedio).toLocaleString('es-AR')}</h2>
                             </div>
                             <div className="feature-card" style={{ flex: 1, minWidth: '200px', textAlign: 'center' }}>
-                                <span style={{ fontSize: '0.8rem', color: '#666' }}>CANTIDAD PEDIDOS</span>
-                                <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>{countPedidos}</h2>
+                                <span style={{ fontSize: '0.8rem', color: '#666' }}>PEDIDOS COBRADOS</span>
+                                <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>{countPedidosCobrados}</h2>
+                            </div>
+                            <div className="feature-card" style={{ flex: 1, minWidth: '200px', textAlign: 'center' }}>
+                                <span style={{ fontSize: '0.8rem', color: '#666' }}>ARQUEO DE CAJA CHICA</span>
+                                <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>${totalCajaMonto.toLocaleString('es-AR')}</h2>
                             </div>
                         </div>
 
                         {/* Gráficos CSS */}
-                        <div className="financial-charts" style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap' }}>
-                            <div className="admin-card" style={{ flex: 1, minWidth: '300px' }}>
-                                <h4>Ventas por Franja Horaria (CSS Chart)</h4>
-                                <div style={{ height: '140px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', paddingBottom: '10px', borderBottom: '1px solid var(--color-border)', marginBottom: '8px' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '22%' }}>
-                                        <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{horasCount.almuerzo}</span>
-                                        <div style={{ width: '100%', height: `${Math.max(8, hAlmPct)}px`, background: 'linear-gradient(to top, var(--color-info), #60a5fa)', borderRadius: '4px 4px 0 0' }}></div>
-                                        <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Almuerzo</span>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '22%' }}>
-                                        <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{horasCount.tarde}</span>
-                                        <div style={{ width: '100%', height: `${Math.max(8, hTarPct)}px`, background: 'linear-gradient(to top, var(--color-warning), #fbbf24)', borderRadius: '4px 4px 0 0' }}></div>
-                                        <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Tarde</span>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '22%' }}>
-                                        <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{horasCount.cena_temprana}</span>
-                                        <div style={{ width: '100%', height: `${Math.max(8, hCenTemPct)}px`, background: 'linear-gradient(to top, var(--color-accent), #f59e0b)', borderRadius: '4px 4px 0 0' }}></div>
-                                        <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Cena Temprana</span>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '22%' }}>
-                                        <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{horasCount.cena_tarde}</span>
-                                        <div style={{ width: '100%', height: `${Math.max(8, hCenTarPct)}px`, background: 'linear-gradient(to top, var(--color-primary), #f87171)', borderRadius: '4px 4px 0 0' }}></div>
-                                        <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Cena Tarde</span>
-                                    </div>
-                                </div>
-                            </div>
+                        {(() => {
+                            const dailyTotals = {};
+                            for (let i = 6; i >= 0; i--) {
+                                const d = new Date();
+                                d.setDate(d.getDate() - i);
+                                const dateStr = d.toLocaleDateString('es-AR');
+                                dailyTotals[dateStr] = 0;
+                            }
+                            cierres.forEach(c => {
+                                if (dailyTotals[c.fecha] !== undefined) {
+                                    dailyTotals[c.fecha] += c.total_general;
+                                }
+                            });
+                            const hoyStr = new Date().toLocaleDateString('es-AR');
+                            if (dailyTotals[hoyStr] !== undefined) {
+                                dailyTotals[hoyStr] += totalCajaMonto;
+                            }
+                            const maxDaily = Math.max(1, ...Object.values(dailyTotals));
 
-                            {/* Top Platos */}
-                            <div className="admin-card" style={{ flex: 1, minWidth: '300px' }}>
-                                <h4>Platos Más Vendidos</h4>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
-                                    {topPlatos.length === 0 ? (
-                                        <div className="text-muted text-center">Sin ventas cargadas.</div>
-                                    ) : (
-                                        topPlatos.map(([name, cant], idx) => (
-                                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', borderBottom: '1px solid #f9f9f9', paddingBottom: '4px' }}>
-                                                <span>{idx+1}. {name}</span>
-                                                <strong>{cant} u.</strong>
+                            const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                            const monthlyTotals = Array(12).fill(0);
+                            cierres.forEach(c => {
+                                const parts = c.fecha.split('/');
+                                if (parts.length === 3) {
+                                    const mIdx = parseInt(parts[1]) - 1;
+                                    const y = parseInt(parts[2]);
+                                    if (y === new Date().getFullYear() && mIdx >= 0 && mIdx < 12) {
+                                        monthlyTotals[mIdx] += c.total_general;
+                                    }
+                                }
+                            });
+                            const mHoy = new Date().getMonth();
+                            monthlyTotals[mHoy] += totalCajaMonto;
+                            const maxMonthly = Math.max(1, ...monthlyTotals);
+
+                            return (
+                                <div className="financial-charts" style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap' }}>
+                                    <div className="admin-card" style={{ flex: 1, minWidth: '300px' }}>
+                                        <div className="admin-card-header-flex">
+                                            <h4>Análisis de Ventas (Gráficos CSS)</h4>
+                                            <div style={{ display: 'flex', gap: '5px' }}>
+                                                <button type="button" className={`btn btn-xs ${chartPeriod === 'day' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setChartPeriod('day')}>Día</button>
+                                                <button type="button" className={`btn btn-xs ${chartPeriod === 'month' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setChartPeriod('month')}>Mes</button>
+                                                <button type="button" className={`btn btn-xs ${chartPeriod === 'year' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setChartPeriod('year')}>Año</button>
                                             </div>
-                                        ))
-                                    )}
+                                        </div>
+                                        
+                                        {chartPeriod === 'day' && (
+                                            <div style={{ height: '140px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', paddingBottom: '10px', borderBottom: '1px solid var(--color-border)', marginBottom: '8px', marginTop: '15px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '22%' }}>
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{horasCount.almuerzo}</span>
+                                                    <div style={{ width: '100%', height: `${Math.max(8, hAlmPct)}px`, background: 'linear-gradient(to top, var(--color-info), #60a5fa)', borderRadius: '4px 4px 0 0' }}></div>
+                                                    <span style={{ fontSize: '0.72rem', marginTop: '4px', fontWeight: 'bold' }}>Almuerzo</span>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '22%' }}>
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{horasCount.tarde}</span>
+                                                    <div style={{ width: '100%', height: `${Math.max(8, hTarPct)}px`, background: 'linear-gradient(to top, var(--color-warning), #fbbf24)', borderRadius: '4px 4px 0 0' }}></div>
+                                                    <span style={{ fontSize: '0.72rem', marginTop: '4px', fontWeight: 'bold' }}>Tarde</span>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '22%' }}>
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{horasCount.cena_temprana}</span>
+                                                    <div style={{ width: '100%', height: `${Math.max(8, hCenTemPct)}px`, background: 'linear-gradient(to top, var(--color-accent), #f59e0b)', borderRadius: '4px 4px 0 0' }}></div>
+                                                    <span style={{ fontSize: '0.72rem', marginTop: '4px', fontWeight: 'bold' }}>Cena T.</span>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '22%' }}>
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{horasCount.cena_tarde}</span>
+                                                    <div style={{ width: '100%', height: `${Math.max(8, hCenTarPct)}px`, background: 'linear-gradient(to top, var(--color-primary), #f87171)', borderRadius: '4px 4px 0 0' }}></div>
+                                                    <span style={{ fontSize: '0.72rem', marginTop: '4px', fontWeight: 'bold' }}>Cena O.</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {chartPeriod === 'month' && (
+                                            <div style={{ height: '140px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', paddingBottom: '10px', borderBottom: '1px solid var(--color-border)', marginBottom: '8px', marginTop: '15px' }}>
+                                                {Object.entries(dailyTotals).map(([dateStr, total]) => {
+                                                    const dayLabel = dateStr.split('/')[0] + '/' + dateStr.split('/')[1];
+                                                    const pct = (total / maxDaily) * 110;
+                                                    return (
+                                                        <div key={dateStr} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '12%' }}>
+                                                            <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>${Math.round(total/1000)}k</span>
+                                                            <div style={{ width: '100%', height: `${Math.max(8, pct)}px`, background: 'linear-gradient(to top, var(--color-success), #4ade80)', borderRadius: '4px 4px 0 0' }}></div>
+                                                            <span style={{ fontSize: '0.65rem', marginTop: '4px' }}>{dayLabel}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {chartPeriod === 'year' && (
+                                            <div style={{ height: '140px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', paddingBottom: '10px', borderBottom: '1px solid var(--color-border)', marginBottom: '8px', marginTop: '15px' }}>
+                                                {monthNames.map((name, idx) => {
+                                                    const total = monthlyTotals[idx];
+                                                    const pct = (total / maxMonthly) * 110;
+                                                    return (
+                                                        <div key={name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '7%' }}>
+                                                            {total > 0 && <span style={{ fontSize: '0.58rem', fontWeight: 700 }}>${Math.round(total/1000)}k</span>}
+                                                            <div style={{ width: '100%', height: `${Math.max(8, pct)}px`, background: 'linear-gradient(to top, var(--color-primary), #60a5fa)', borderRadius: '4px 4px 0 0' }}></div>
+                                                            <span style={{ fontSize: '0.62rem', marginTop: '4px', fontWeight: 'bold' }}>{name}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Ventas discriminadas por plato / ítem */}
+                                    <div className="admin-card" style={{ flex: 2, minWidth: '350px' }}>
+                                        <h4>Ventas Discriminadas por Producto (Jornada Activa)</h4>
+                                        <p className="admin-card-description" style={{ fontSize: '0.8rem', marginBottom: '10px' }}>Detalle de las unidades vendidas e ingresos generados por cada plato o bebida hoy.</p>
+                                        <div className="table-responsive" style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                                            <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                                                <thead>
+                                                    <tr style={{ backgroundColor: '#fafafa', borderBottom: '2px solid #eee' }}>
+                                                        <th style={{ textAlign: 'left', padding: '6px' }}>Producto</th>
+                                                        <th style={{ textAlign: 'left', padding: '6px' }}>Categoría</th>
+                                                        <th style={{ textAlign: 'center', padding: '6px' }}>Unidades</th>
+                                                        <th style={{ textAlign: 'right', padding: '6px' }}>Precio</th>
+                                                        <th style={{ textAlign: 'right', padding: '6px' }}>Subtotal</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {listaItemsVentas.length === 0 ? (
+                                                        <tr>
+                                                            <td colSpan="5" className="text-center" style={{ padding: '15px', color: '#999' }}>No hay ventas registradas hoy.</td>
+                                                        </tr>
+                                                    ) : (
+                                                        listaItemsVentas.map(it => (
+                                                            <tr key={it.nombre} style={{ borderBottom: '1px solid #eee' }}>
+                                                                <td style={{ padding: '6px' }}><strong>{it.nombre}</strong></td>
+                                                                <td style={{ padding: '6px' }}><span className="status-badge" style={{ fontSize: '0.68rem', padding: '2px 4px' }}>{it.categoria}</span></td>
+                                                                <td style={{ textAlign: 'center', padding: '6px' }}><strong>{it.cantidad} u.</strong></td>
+                                                                <td style={{ textAlign: 'right', padding: '6px' }}>${it.precioUnitario.toLocaleString('es-AR')}</td>
+                                                                <td style={{ textAlign: 'right', padding: '6px' }}><strong>${it.subtotal.toLocaleString('es-AR')}</strong></td>
+                                                            </tr>
+                                                        ))
+                                                    )}
+                                                </tbody>
+                                                {listaItemsVentas.length > 0 && (
+                                                    <tfoot>
+                                                        <tr style={{ borderTop: '2px solid #eee', fontWeight: 'bold', backgroundColor: '#fafafa', fontSize: '0.85rem' }}>
+                                                            <td colSpan="2" style={{ padding: '8px 6px' }}>TOTAL RECAUDADO (ÍTEMS)</td>
+                                                            <td style={{ textAlign: 'center', padding: '8px 6px' }}>{listaItemsVentas.reduce((acc, it) => acc + it.cantidad, 0)} u.</td>
+                                                            <td style={{ padding: '8px 6px' }}></td>
+                                                            <td style={{ textAlign: 'right', padding: '8px 6px', color: '#2e7d32' }}>${totalRecaudadoProductos.toLocaleString('es-AR')}</td>
+                                                        </tr>
+                                                    </tfoot>
+                                                )}
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            );
+                        })()}
 
                         {/* Transacciones recientes */}
                         <div className="admin-card" style={{ marginTop: '20px' }}>
                             <div className="admin-card-header-flex">
                                 <h3>Libro Diario de Caja Activa</h3>
-                                <button className="btn btn-danger btn-sm" onClick={() => { if(confirm("¿Cerrar jornada completa contable? Se limpiarán las comandas activas del día.")) cerrarJornadaCompleta(); alert("Jornada cerrada correctamente."); }}>
-                                    Cerrar Jornada Completa 🚪
-                                </button>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button type="button" className="btn btn-secondary btn-sm" onClick={handlePrintActiveJornada}>
+                                        Exportar PDF / Imprimir Caja Activa 📄
+                                    </button>
+                                    <button className="btn btn-danger btn-sm" onClick={() => { if(confirm("🚨 ATENCIÓN CIERRE DE JORNADA 🚨\n\n¿Estás seguro de que querés cerrar la jornada de hoy?\n\nEsto consolidará los totales, creará un cierre histórico y reseteará las comandas a $0.")) { cerrarJornadaCompleta(); alert("Jornada cerrada y archivada correctamente."); } }}>
+                                        Cerrar Jornada Completa 🚪
+                                    </button>
+                                </div>
                             </div>
                             <table className="admin-table margin-top-15" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
@@ -959,6 +1368,56 @@ function AdminDashboard() {
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Historial de Cierres Consolidados */}
+                        <div className="admin-card" style={{ marginTop: '20px' }}>
+                            <h2>Historial de Cierres Consolidados (Jornadas Archivadas) 🏁</h2>
+                            <p className="admin-card-description">Historial de cajas archivadas al cerrar la jornada laboral al final del día. Hacé clic en Imprimir para obtener la tira física en papel o exportarla como PDF.</p>
+                            
+                            <div className="table-responsive">
+                                <table className="admin-table margin-top-15" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr style={{ backgroundColor: '#fafafa', borderBottom: '2px solid #eee' }}>
+                                            <th>ID Cierre</th>
+                                            <th>Fecha / Hora</th>
+                                            <th>Salón 🍽️</th>
+                                            <th>Plataformas 🛵</th>
+                                            <th>Mostrador 🏪</th>
+                                            <th>Total Neto</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {cierres.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="text-center" style={{ padding: '15px', color: '#999' }}>No hay registros de jornadas cerradas anteriormente.</td>
+                                            </tr>
+                                        ) : (
+                                            cierres.map(c => (
+                                                <tr key={c.id_cierre} style={{ borderBottom: '1px solid #eee', fontSize: '0.85rem' }}>
+                                                    <td><strong>#{c.id_cierre}</strong></td>
+                                                    <td>{c.fecha} {c.hora}</td>
+                                                    <td>${c.total_salon.toLocaleString('es-AR')}</td>
+                                                    <td>${c.total_plataformas.toLocaleString('es-AR')}</td>
+                                                    <td>${c.total_directo.toLocaleString('es-AR')}</td>
+                                                    <td><strong>${c.total_general.toLocaleString('es-AR')}</strong></td>
+                                                    <td>
+                                                        <div className="crud-actions">
+                                                            <button type="button" className="btn btn-secondary btn-xs" onClick={() => handlePrintHistoricalCierre(c)}>
+                                                                Imprimir / PDF 🧾
+                                                            </button>
+                                                            <button type="button" className="btn btn-primary btn-xs" onClick={() => setSelectedCierreDetalle(c)}>
+                                                                Ver Detalle 🔍
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </section>
                 )}
@@ -1240,7 +1699,63 @@ function AdminDashboard() {
                                                     </div>
                                                 </div>
                                             )}
-                                        </div>
+
+            {/* MODAL DETALLE DE CIERRE HISTÓRICO */}
+            {selectedCierreDetalle && (
+                <div className="modal-overlay active" style={{ zIndex: 10500 }}>
+                    <div className="modal-card" style={{ maxWidth: '700px', width: '90%' }}>
+                        <div className="modal-header">
+                            <h2>Movimientos Archivados - Cierre #{selectedCierreDetalle.id_cierre}</h2>
+                            <button className="close-btn" onClick={() => setSelectedCierreDetalle(null)}>&times;</button>
+                        </div>
+                        <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', background: '#fafafa', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '15px', border: '1px solid #eee' }}>
+                                <span>Fecha: <strong>{selectedCierreDetalle.fecha}</strong></span>
+                                <span>Hora: <strong>{selectedCierreDetalle.hora}</strong></span>
+                                <span>Total General: <strong style={{ color: '#2e7d32' }}>${selectedCierreDetalle.total_general.toLocaleString('es-AR')}</strong></span>
+                            </div>
+                            <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ backgroundColor: '#fafafa', borderBottom: '2px solid #eee', fontSize: '0.8rem' }}>
+                                        <th>Hora</th>
+                                        <th>Tipo</th>
+                                        <th>Descripción</th>
+                                        <th>Pago</th>
+                                        <th>Canal</th>
+                                        <th style={{ textAlign: 'right' }}>Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(() => {
+                                        const historicoTx = JSON.parse(localStorage.getItem('comandas_caja_historico')) || [];
+                                        const filtered = historicoTx.filter(tx => tx.id_cierre === selectedCierreDetalle.id_cierre);
+                                        if (filtered.length === 0) {
+                                            return <tr><td colSpan="6" className="text-center" style={{ padding: '15px', color: '#999' }}>No se encontraron transacciones detalladas para este cierre.</td></tr>;
+                                        }
+                                        return filtered.map(tx => (
+                                            <tr key={tx.id} style={{ borderBottom: '1px solid #eee', fontSize: '0.8rem' }}>
+                                                <td>{tx.fecha_hora.split(' ')[1] || tx.fecha_hora}</td>
+                                                <td><span className={`status-badge ${tx.tipo === 'ingreso' ? 'status-available' : 'status-unavailable'}`}>{tx.tipo}</span></td>
+                                                <td>{tx.descripcion}</td>
+                                                <td style={{ textTransform: 'capitalize' }}>{tx.metodoPago || 'Efectivo'}</td>
+                                                <td style={{ textTransform: 'capitalize' }}>{tx.canal}</td>
+                                                <td style={{ textAlign: 'right', fontWeight: 'bold', color: tx.tipo === 'ingreso' ? '#2e7d32' : '#c62828' }}>${tx.monto.toLocaleString('es-AR')}</td>
+                                            </tr>
+                                        ));
+                                    })()}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" onClick={() => setSelectedCierreDetalle(null)}>Cerrar Ventana</button>
+                            <button type="button" className="btn btn-primary" onClick={() => handlePrintHistoricalCierre(selectedCierreDetalle)}>
+                                Imprimir / PDF 🧾
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 
