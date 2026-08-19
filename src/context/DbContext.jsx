@@ -707,6 +707,48 @@ export function DbProvider({ children }) {
         return true;
     };
 
+    const actualizarPedido = (idPedido, updatedFields) => {
+        const index = orders.findIndex(p => p.id_pedido === idPedido);
+        if (index === -1) return false;
+        
+        const oldPedido = orders[index];
+        
+        // Si cambió la mesa o cambió el tipo de entrega, debemos liberar la mesa vieja y ocupar la nueva!
+        if (oldPedido.tipo_entrega === 'mesa' && (updatedFields.tipo_entrega !== 'mesa' || updatedFields.nro_mesa !== oldPedido.nro_mesa)) {
+            // Liberar mesa vieja
+            const nroOld = parseInt(oldPedido.nro_mesa);
+            const nextTables = tables.map(m => {
+                if (m.numero === nroOld && m.pedido_activo === idPedido) {
+                    return { ...m, estado: 'Libre', pedido_activo: null };
+                }
+                return m;
+            });
+            updateTables(nextTables);
+        }
+        
+        if (updatedFields.tipo_entrega === 'mesa' && (oldPedido.tipo_entrega !== 'mesa' || updatedFields.nro_mesa !== oldPedido.nro_mesa)) {
+            // Ocupar mesa nueva
+            const nroNew = parseInt(updatedFields.nro_mesa);
+            const nextTables = tables.map(m => {
+                if (m.numero === nroNew) {
+                    return { ...m, estado: 'Ocupada', pedido_activo: idPedido };
+                }
+                return m;
+            });
+            updateTables(nextTables);
+        }
+
+        const nextOrders = orders.map(p => {
+            if (p.id_pedido === idPedido) {
+                return { ...p, ...updatedFields };
+            }
+            return p;
+        });
+        
+        updateOrders(nextOrders);
+        return true;
+    };
+
     const cobrarPedido = (idPedido, metodoPago) => {
         const index = orders.findIndex(p => p.id_pedido === idPedido);
         if (index === -1) return false;
@@ -1172,6 +1214,7 @@ export function DbProvider({ children }) {
             registrarTransaccionCaja,
             actualizarEstadoPedido,
             actualizarItemsPedido,
+            actualizarPedido,
             cobrarPedido,
             cobrarMesa,
             anularPedido,

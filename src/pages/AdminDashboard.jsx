@@ -22,6 +22,7 @@ function AdminDashboard() {
         logoutAuth0,
         validarAislamientoTenant,
         actualizarEstadoPedido,
+        actualizarPedido,
         cobrarPedido,
         cobrarMesa,
         anularPedido,
@@ -84,6 +85,14 @@ function AdminDashboard() {
     const [confCostoEnvio, setConfCostoEnvio] = useState(config.costoEnvio);
     const [confMontoGratis, setConfMontoGratis] = useState(config.montoEnvioGratis);
     const [confInteres, setConfInteres] = useState(config.interesCredito);
+
+    // Modal Editar Pedido
+    const [isEditOrderModalOpen, setIsEditOrderModalOpen] = useState(false);
+    const [editOrderTarget, setEditOrderTarget] = useState(null);
+    const [editOrderClientName, setEditOrderClientName] = useState('');
+    const [editOrderDeliveryType, setEditOrderDeliveryType] = useState('retiro');
+    const [editOrderMesa, setEditOrderMesa] = useState('1');
+    const [editOrderItems, setEditOrderItems] = useState([]);
 
     // Auto-login con ?demo=true
     useEffect(() => {
@@ -377,6 +386,69 @@ function AdminDashboard() {
         alert("Configuración del local guardada con éxito.");
     };
 
+    // Funciones Editar Pedido
+    const abrirEditarPedidoModal = (pedido) => {
+        setEditOrderTarget(pedido);
+        setEditOrderClientName(pedido.nombre_cliente);
+        setEditOrderDeliveryType(pedido.tipo_entrega);
+        setEditOrderMesa(pedido.nro_mesa || '1');
+        setEditOrderItems([...pedido.items]);
+        setIsEditOrderModalOpen(true);
+    };
+
+    const handleEditOrderAddItem = (plato) => {
+        setEditOrderItems(prev => {
+            const existing = prev.find(it => it.id === plato.id);
+            if (existing) {
+                return prev.map(it => it.id === plato.id ? { ...it, cantidad: it.cantidad + 1 } : it);
+            } else {
+                return [...prev, { id: plato.id, nombre: plato.nombre, precio: plato.precio, cantidad: 1 }];
+            }
+        });
+    };
+
+    const handleEditOrderRemoveItem = (platoId) => {
+        setEditOrderItems(prev => {
+            const existing = prev.find(it => it.id === platoId);
+            if (!existing) return prev;
+            if (existing.cantidad > 1) {
+                return prev.map(it => it.id === platoId ? { ...it, cantidad: it.cantidad - 1 } : it);
+            } else {
+                return prev.filter(it => it.id !== platoId);
+            }
+        });
+    };
+
+    const handleSaveEditOrder = (e) => {
+        e.preventDefault();
+        if (editOrderItems.length === 0) {
+            alert("El pedido debe contener al menos un plato.");
+            return;
+        }
+
+        let subtotal = 0;
+        editOrderItems.forEach(it => {
+            subtotal += it.precio * it.cantidad;
+        });
+
+        const costos = calcularCostosPedido(subtotal, editOrderDeliveryType);
+
+        const updatedFields = {
+            nombre_cliente: editOrderClientName,
+            tipo_entrega: editOrderDeliveryType,
+            nro_mesa: editOrderDeliveryType === 'mesa' ? editOrderMesa : null,
+            items: editOrderItems,
+            subtotal: subtotal,
+            costo_envio: costos.costoEnvio,
+            total: costos.total
+        };
+
+        actualizarPedido(editOrderTarget.id_pedido, updatedFields);
+        setIsEditOrderModalOpen(false);
+        setEditOrderTarget(null);
+        alert("Pedido actualizado con éxito.");
+    };
+
     // Estadísticas contables (Turno de caja activo)
     const countPedidos = orders.filter(o => o.estado !== 'Anulado').length;
     
@@ -529,6 +601,11 @@ function AdminDashboard() {
                                                         {!p.cobrado && colState === 'Entregado' && (
                                                             <button className="btn btn-secondary btn-xs" onClick={() => { setCobroPedidoTarget(p); setCobroMethod('Efectivo'); setIsCobroModalOpen(true); }}>
                                                                 Cobrar 💳
+                                                            </button>
+                                                        )}
+                                                        {colState !== 'Entregado' && (
+                                                            <button className="btn btn-secondary btn-xs" onClick={() => abrirEditarPedidoModal(p)}>
+                                                                Editar 📝
                                                             </button>
                                                         )}
                                                         {colState !== 'Entregado' && (
@@ -1067,14 +1144,103 @@ function AdminDashboard() {
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setIsStockModalOpen(false)}>Cancelar</button>
-                                <button type="submit" className="btn btn-primary">Guardar Plato</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-        </div>
+                                                                <button type="button" className="btn btn-secondary" onClick={() => setIsStockModalOpen(false)}>Cancelar</button>
+                                                                <button type="submit" className="btn btn-primary">Guardar Plato</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* MODAL EDITAR PEDIDO */}
+                                            {isEditOrderModalOpen && editOrderTarget && (
+                                                <div className="modal-overlay active" style={{ zIndex: 10500 }}>
+                                                    <div className="modal-card" style={{ maxWidth: '600px', width: '90%' }}>
+                                                        <div className="modal-header">
+                                                            <h2>Editar Pedido #{editOrderTarget.id_pedido}</h2>
+                                                            <button className="close-btn" onClick={() => { setIsEditOrderModalOpen(false); setEditOrderTarget(null); }}>&times;</button>
+                                                        </div>
+                                                        <form onSubmit={handleSaveEditOrder}>
+                                                            <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+                                                                <div className="form-group">
+                                                                    <label>Nombre del Cliente *</label>
+                                                                    <input type="text" required value={editOrderClientName} onChange={(e) => setEditOrderClientName(e.target.value)} className="form-control" />
+                                                                </div>
+                                                                <div className="form-row">
+                                                                    <div className="form-group">
+                                                                        <label>Tipo de Entrega *</label>
+                                                                        <select value={editOrderDeliveryType} onChange={(e) => setEditOrderDeliveryType(e.target.value)} className="form-control">
+                                                                            <option value="mesa">🍽️ Mesa (Consumo en Salón)</option>
+                                                                            <option value="retiro">🏪 Take Away / Retiro Local</option>
+                                                                            <option value="envio">🛵 Delivery / Envío</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    {editOrderDeliveryType === 'mesa' && (
+                                                                        <div className="form-group">
+                                                                            <label>Número de Mesa *</label>
+                                                                            <select value={editOrderMesa} onChange={(e) => setEditOrderMesa(e.target.value)} className="form-control">
+                                                                                {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
+                                                                                    <option key={num} value={num.toString()}>Mesa {num}</option>
+                                                                                ))}
+                                                                            </select>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                                <h4 className="margin-top-15">Items en la Comanda:</h4>
+                                                                <div style={{ border: '1px solid #eee', padding: '10px', borderRadius: '8px', background: '#fafafa', marginTop: '5px' }}>
+                                                                    {editOrderItems.length === 0 ? (
+                                                                        <div className="text-muted text-center" style={{ padding: '10px' }}>No hay platos en la comanda. Agrega algunos abajo.</div>
+                                                                    ) : (
+                                                                        editOrderItems.map(it => (
+                                                                            <div key={it.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #eee' }}>
+                                                                                <div>
+                                                                                    <strong>{it.nombre}</strong><br/>
+                                                                                    <small className="text-muted">${it.precio.toLocaleString('es-AR')} c/u</small>
+                                                                                </div>
+                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                                                    <span>Subtotal: <strong>${(it.precio * it.cantidad).toLocaleString('es-AR')}</strong></span>
+                                                                                    <div className="quantity-controls" style={{ transform: 'scale(0.8)' }}>
+                                                                                        <button type="button" onClick={() => handleEditOrderRemoveItem(it.id)}>-</button>
+                                                                                        <span>{it.cantidad}</span>
+                                                                                        <button type="button" onClick={() => {
+                                                                                            const plato = menu.find(p => p.id === it.id);
+                                                                                            if (plato) handleEditOrderAddItem(plato);
+                                                                                        }}>+</button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))
+                                                                    )}
+                                                                </div>
+
+                                                                <h4 className="margin-top-20">Agregar otros platos del Menú:</h4>
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto', border: '1px solid #eee', padding: '10px', borderRadius: '8px', marginTop: '5px' }}>
+                                                                    {menu.filter(p => p.disponible).map(plato => (
+                                                                        <div key={plato.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', padding: '4px 0', borderBottom: '1px solid #f9f9f9' }}>
+                                                                            <span>{plato.nombre} - <strong>${plato.precio.toLocaleString('es-AR')}</strong></span>
+                                                                            <button type="button" className="btn btn-secondary btn-xs" onClick={() => handleEditOrderAddItem(plato)}>
+                                                                                + Agregar
+                                                                            </button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+
+                                                                <div style={{ marginTop: '20px', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '12px', borderRadius: '8px', fontSize: '0.9rem', color: '#166534', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                    <span>Subtotal: <strong>${editOrderItems.reduce((acc, it) => acc + (it.precio * it.cantidad), 0).toLocaleString('es-AR')}</strong></span>
+                                                                    <span>Costo Envío: <strong>${calcularCostosPedido(editOrderItems.reduce((acc, it) => acc + (it.precio * it.cantidad), 0), editOrderDeliveryType).costoEnvio.toLocaleString('es-AR')}</strong></span>
+                                                                    <span style={{ fontSize: '1.05rem' }}>Total: <strong>${calcularCostosPedido(editOrderItems.reduce((acc, it) => acc + (it.precio * it.cantidad), 0), editOrderDeliveryType).total.toLocaleString('es-AR')}</strong></span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="modal-footer">
+                                                                <button type="button" className="btn btn-secondary" onClick={() => { setIsEditOrderModalOpen(false); setEditOrderTarget(null); }}>Cancelar</button>
+                                                                <button type="submit" className="btn btn-primary">Guardar Cambios 💾</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
     );
 }
 
