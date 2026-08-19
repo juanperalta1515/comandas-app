@@ -2,6 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Redirección automática de producción en GitHub Pages para evitar página en blanco si no se configuró la carpeta /docs en las opciones del repositorio
+      if (window.location.hostname.includes('github.io') && !window.location.pathname.includes('/docs/')) {
+        window.location.replace(window.location.pathname + 'docs/' + window.location.hash);
+      }
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>temp-vite</title>
