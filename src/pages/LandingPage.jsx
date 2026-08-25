@@ -5,7 +5,7 @@ import logoImg from '../assets/logo.png';
 
 function LandingPage() {
     const navigate = useNavigate();
-    const { registrarLocalSaaS, loginWithAuth0 } = useDb();
+    const { registrarLocalSaaS, loginWithAuth0, saasConfig } = useDb();
 
     // Modales y Steps
     const [referralModalOpen, setReferralModalOpen] = useState(false);
@@ -258,11 +258,6 @@ function LandingPage() {
                         <p>Un panel interactivo para la cocina. Controlá el stock de platos, editá precios o cargá nuevas recetas sobre la marcha desde el gestor de menú.</p>
                     </div>
                     <div className="feature-card">
-                        <div className="feature-icon">🛵</div>
-                        <h3>Simulador de Plataformas</h3>
-                        <p>Probá cómo entran comandas directas desde PedidosYa y Rappi para unificar tu cocina en una sola pantalla integrada.</p>
-                    </div>
-                    <div className="feature-card">
                         <div className="feature-icon">🖨️</div>
                         <h3>Comandera y Facturación AFIP</h3>
                         <p>Conectá tu tickeadora térmica. Generá facturas de cliente formato AFIP con CUIT/CAE e imprime comandas de cocina simplificadas.</p>
@@ -270,7 +265,7 @@ function LandingPage() {
                     <div className="feature-card">
                         <div className="feature-icon">🚀</div>
                         <h3>Onboarding Instantáneo</h3>
-                        <p>Suscribite en segundos. Registrá tu comercio, realiza la simulación de pago y accedé al asistente interactivo para configurar tu CBU y logo.</p>
+                        <p>Suscribite en segundos. Registrá tu comercio, realiza tu pago en línea y accedé al asistente interactivo para configurar tu CBU y logo.</p>
                     </div>
                 </div>
             </section>
@@ -307,7 +302,7 @@ function LandingPage() {
                             <li>✔️ Panel Kanban de Cocina</li>
                             <li>✔️ Gestión de Salón y Mesas</li>
                             <li>✔️ Caja Segregada & Finanzas</li>
-                            <li>✔️ Simulador PedidosYa / Rappi</li>
+                            <li>✔️ WhatsApp Cloud API Integrada</li>
                             <li>✔️ Impresión de Comandas y Facturas</li>
                         </ul>
                         <button className="btn btn-primary btn-block" onClick={() => abrirModalSuscripcion('Premium')}>Suscribirme hoy 🚀</button>
@@ -465,7 +460,7 @@ function LandingPage() {
                                         ) : (
                                             <div>
                                                 <div style={{ backgroundColor: '#f1f8ff', border: '1px solid #c8e1ff', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontSize: '0.85rem' }}>
-                                                    <p style={{ marginBottom: '4px' }}><strong>Clearing Recaudador:</strong> BBVA (CVU <code>0170259240000007239234</code>)</p>
+                                                    <p style={{ marginBottom: '4px' }}><strong>Clearing Recaudador:</strong> {saasConfig.owner_banco} (CBU/CVU <code>{saasConfig.owner_cbu}</code>)</p>
                                                     <p style={{ marginBottom: '4px' }}><strong>Concepto:</strong> Adhesión a Débito Directo Recurrente</p>
                                                     <p><strong>Abono Mensual Recurrente:</strong> <strong className="text-success">{precioString} / mes</strong></p>
                                                 </div>
@@ -478,7 +473,7 @@ function LandingPage() {
                                         )}
 
                                         <button type="submit" className="btn btn-mp btn-block" disabled={isSubmitting} style={{ marginTop: '15px', backgroundColor: 'var(--color-success)', borderColor: 'var(--color-success)', color: 'white' }}>
-                                            {isSubmitting ? 'Procesando Adhesión... ⏳' : 'Confirmar Suscripción 🔒'}
+                                            {isSubmitting ? 'Procesando Registro... ⏳' : 'Confirmar y Pagar Suscripción 🔒'}
                                         </button>
                                     </form>
                                 </div>

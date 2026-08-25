@@ -21,6 +21,16 @@ const KEY_OFFLINE_SIMULATED = 'comandas_offline_simulated';
 const KEY_OFFLINE_QUEUE = 'comandas_offline_queue';
 const KEY_EMAIL_LOGS = 'comandas_email_logs';
 const KEY_CAJA_HISTORICO = 'comandas_caja_historico';
+const KEY_SAAS_CONFIG = 'comandas_saas_config';
+
+const SAAS_CONFIG_DEFECTO = {
+    owner_mp_public_key: 'APP_USR-67890123-bcde-4567-8901-23456789abcd',
+    owner_mp_access_token: 'APP_USR-1234567890123456-082517-74ea8234850937a7b830495204859bc3-987654321',
+    plan_basico_id: 'plan_basico_cf_prod',
+    plan_premium_id: 'plan_premium_cf_prod',
+    owner_cbu: '0170259240000007239234',
+    owner_banco: 'BBVA'
+};
 
 // Catálogo inicial de platos
 const PLATOS_INICIALES = [
@@ -330,6 +340,15 @@ export function DbProvider({ children }) {
         return data ? JSON.parse(data) : [];
     });
 
+    const [saasConfig, setSaasConfig] = useState(() => {
+        const data = localStorage.getItem(KEY_SAAS_CONFIG);
+        if (!data) {
+            localStorage.setItem(KEY_SAAS_CONFIG, JSON.stringify(SAAS_CONFIG_DEFECTO));
+            return SAAS_CONFIG_DEFECTO;
+        }
+        return JSON.parse(data);
+    });
+
     const [currentUser, setCurrentUser] = useState(() => {
         const token = sessionStorage.getItem('comandaflow_jwt_token');
         if (!token) return null;
@@ -386,6 +405,9 @@ export function DbProvider({ children }) {
                 case KEY_EMAIL_LOGS:
                     setEmailLogs(parsed);
                     break;
+                case KEY_SAAS_CONFIG:
+                    setSaasConfig(parsed);
+                    break;
                 default:
                     break;
             }
@@ -393,7 +415,7 @@ export function DbProvider({ children }) {
 
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);
-    }, [config, offlineQueue, emailLogs, restaurants, activeRestaurant, tables, orders, menu, waLogs, caja, cajaEstados, cierres]);
+    }, [config, offlineQueue, emailLogs, restaurants, activeRestaurant, tables, orders, menu, waLogs, caja, cajaEstados, cierres, saasConfig]);
 
     // Funciones mutadoras con actualización en localStorage y State
 
@@ -470,6 +492,48 @@ export function DbProvider({ children }) {
     const updateEmailLogs = (newLogs) => {
         localStorage.setItem(KEY_EMAIL_LOGS, JSON.stringify(newLogs));
         setEmailLogs(newLogs);
+    };
+
+    const updateSaasConfig = (newSaasConfig) => {
+        localStorage.setItem(KEY_SAAS_CONFIG, JSON.stringify(newSaasConfig));
+        setSaasConfig(newSaasConfig);
+    };
+
+    const resetearDemo = () => {
+        localStorage.setItem(KEY_ORDERS, JSON.stringify([]));
+        localStorage.setItem(KEY_CAJA, JSON.stringify([]));
+        localStorage.setItem(KEY_TABLES, JSON.stringify(MESAS_INICIALES));
+        localStorage.setItem(KEY_MENU, JSON.stringify(PLATOS_INICIALES));
+        localStorage.setItem(KEY_WA_LOGS, JSON.stringify([]));
+        localStorage.setItem(KEY_EMAIL_LOGS, JSON.stringify([]));
+        localStorage.setItem(KEY_CIERRES, JSON.stringify([]));
+        localStorage.setItem(KEY_CAJA_ESTADOS, JSON.stringify(ESTADOS_CAJA_DEFECTO));
+        
+        setOrders([]);
+        setCaja([]);
+        setTables(MESAS_INICIALES);
+        setMenu(PLATOS_INICIALES);
+        setWaLogs([]);
+        setEmailLogs([]);
+        setCierres([]);
+        setCajaEstados(ESTADOS_CAJA_DEFECTO);
+
+        // Reset active restaurant to default SaaS settings
+        const localDefault = { ...LOCAL_DEFECTO_SAAS };
+        localDefault.password = ofuscarDatoSensible(localDefault.password);
+        localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(localDefault));
+        setActiveRestaurant(localDefault);
+        localStorage.setItem(KEY_RESTAURANTS, JSON.stringify([localDefault]));
+        setRestaurants([localDefault]);
+        
+        // Sincronizar también config
+        const nextConfig = {
+            ...CONFIG_DEFECTO,
+            restauranteNombre: localDefault.nombre,
+            whatsappPhone: localDefault.whatsapp
+        };
+        localStorage.setItem(KEY_CONFIG, JSON.stringify(nextConfig));
+        setConfig(nextConfig);
     };
 
     // -- LÓGICA DE PRECIOS Y COSTOS --
@@ -1206,6 +1270,7 @@ export function DbProvider({ children }) {
             offlineQueue,
             emailLogs,
             currentUser,
+            saasConfig,
             
             updateMenu,
             updateConfig,
@@ -1220,6 +1285,8 @@ export function DbProvider({ children }) {
             setOfflineMode,
             updateOfflineQueue,
             updateEmailLogs,
+            updateSaasConfig,
+            resetearDemo,
             
             calcularCostosPedido,
             calcularCuotas,

@@ -17,7 +17,9 @@ function ClientMenu() {
         calcularCostosPedido, 
         calcularCuotas, 
         setOfflineMode, 
-        updateOfflineQueue 
+        updateOfflineQueue,
+        resetearDemo,
+        activeRestaurant
     } = useDb();
 
     // Estados Locales
@@ -60,6 +62,16 @@ function ClientMenu() {
     const [createdPedido, setCreatedPedido] = useState(null);
     const [syncProgress, setSyncProgress] = useState(0);
     const [syncStatusText, setSyncStatusText] = useState('');
+
+    // Auto-reset de base de datos si entra con ?demo=true en URL hash
+    useEffect(() => {
+        const queryParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+        if (queryParams.get('demo') === 'true') {
+            resetearDemo();
+            // Quitar query param de la URL
+            navigate(`/menu/${restaurantId}`, { replace: true });
+        }
+    }, [restaurantId, navigate]);
 
     // Monitorear mesa activa en localStorage
     useEffect(() => {
@@ -367,7 +379,11 @@ function ClientMenu() {
             <nav className="navbar">
                 <div className="nav-container">
                     <a href="#/" className="nav-brand" style={{ display: 'flex', alignItems: 'center' }}>
-                        <img src={logoImg} alt="ComandaFlow Logo" style={{ height: '32px', marginRight: '8px', objectFit: 'contain', borderRadius: '4px' }} />
+                        {activeRestaurant?.logo && (activeRestaurant.logo.startsWith('http') || activeRestaurant.logo.startsWith('data:image')) ? (
+                            <img src={activeRestaurant.logo} alt="Logo" style={{ height: '32px', width: '32px', marginRight: '8px', objectFit: 'cover', borderRadius: '4px' }} />
+                        ) : (
+                            <span style={{ marginRight: '8px', fontSize: '1.4rem' }}>{activeRestaurant?.logo || '🍔'}</span>
+                        )}
                         <span>{config.restauranteNombre}</span>
                         <span className={`network-badge ${offlineMode ? 'offline' : 'online'}`}>
                             {offlineMode ? '🔴 Modo Local (Offline)' : '🟢 En Línea'}

@@ -18,6 +18,8 @@ function AdminDashboard() {
         activeRestaurant,
         currentUser,
         offlineMode,
+        restaurants,
+        updateRestaurants,
         loginWithAuth0,
         logoutAuth0,
         validarAislamientoTenant,
@@ -40,7 +42,10 @@ function AdminDashboard() {
         updateMenu,
         updateTables,
         calcularCostosPedido,
-        calcularCuotas
+        calcularCuotas,
+        resetearDemo,
+        saasConfig,
+        updateSaasConfig
     } = useDb();
 
     // Login local state
@@ -78,13 +83,13 @@ function AdminDashboard() {
     const [calcMonto, setCalcMonto] = useState('');
     const [calcCuotas, setCalcCuotas] = useState(1);
 
-    // Form Configuración
     const [confNombre, setConfNombre] = useState(config.restauranteNombre);
     const [confPhone, setConfPhone] = useState(config.whatsappPhone);
     const [confToken, setConfToken] = useState(config.whatsappToken);
     const [confCostoEnvio, setConfCostoEnvio] = useState(config.costoEnvio);
     const [confMontoGratis, setConfMontoGratis] = useState(config.montoEnvioGratis);
     const [confInteres, setConfInteres] = useState(config.interesCredito);
+    const [confLogo, setConfLogo] = useState(activeRestaurant.logo || '🍔');
 
     // Modal Editar Pedido
     const [isEditOrderModalOpen, setIsEditOrderModalOpen] = useState(false);
@@ -102,11 +107,12 @@ function AdminDashboard() {
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         if (queryParams.get('demo') === 'true') {
+            resetearDemo();
             loginWithAuth0('contacto@quincho.com', 'merchant', 'El Quincho Porteño', 'quincho');
             // Quitar query param de la URL
             navigate('/admin', { replace: true });
         }
-    }, [location, loginWithAuth0, navigate]);
+    }, [location.search, navigate]);
 
     // Validar aislamiento de tenant al iniciar
     useEffect(() => {
@@ -123,7 +129,8 @@ function AdminDashboard() {
         setConfCostoEnvio(config.costoEnvio);
         setConfMontoGratis(config.montoEnvioGratis);
         setConfInteres(config.interesCredito);
-    }, [config]);
+        setConfLogo(activeRestaurant.logo || '🍔');
+    }, [config, activeRestaurant]);
 
     // Manejar login
     const handleLoginSubmit = (e) => {
@@ -387,6 +394,18 @@ function AdminDashboard() {
             interesCredito: parseFloat(confInteres)
         };
         updateConfig(nextConfig);
+
+        const nextActive = {
+            ...activeRestaurant,
+            nombre: confNombre,
+            whatsapp: confPhone,
+            logo: confLogo
+        };
+        updateActiveRestaurant(nextActive);
+
+        const nextRestList = restaurants.map(r => r.id === activeRestaurant.id ? nextActive : r);
+        updateRestaurants(nextRestList);
+
         alert("Configuración del local guardada con éxito.");
     };
 
@@ -837,12 +856,10 @@ function AdminDashboard() {
                 {/* 1. COMANDAS KANBAN */}
                 {activeTab === 'orders' && (
                     <section className="admin-tab-content active">
-                        {/* Simulador Plataformas */}
+                        {/* Simulador Red */}
                         <div className="simulator-panel">
-                            <span>🛵 Simular Pedidos de Plataformas Externas:</span>
-                            <button className="btn btn-peya btn-sm" onClick={() => simularPedidoPlataforma('PedidosYa')}>Simular PedidosYa 🛵</button>
-                            <button className="btn btn-orange btn-sm" onClick={() => simularPedidoPlataforma('Rappi')}>Simular Rappi 🍊</button>
-                            <button className={`btn btn-secondary btn-sm ${offlineMode ? 'offline' : ''}`} onClick={() => setOfflineMode(!offlineMode)} style={{ marginLeft: 'auto' }}>
+                            <span>🔌 Simulación de Red:</span>
+                            <button className={`btn btn-secondary btn-sm ${offlineMode ? 'offline' : ''}`} onClick={() => setOfflineMode(!offlineMode)} style={{ marginLeft: '10px' }}>
                                 {offlineMode ? '🔌 Restaurar Conexión' : '🔌 Simular Caída Internet'}
                             </button>
                         </div>
@@ -1454,6 +1471,52 @@ function AdminDashboard() {
                                     <label>Interés de Crédito Mensual (%)</label>
                                     <input type="number" value={confInteres} onChange={(e) => setConfInteres(e.target.value)} className="form-control" required />
                                 </div>
+                                <div className="form-group">
+                                    <label>Logo de tu Comercio</label>
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+                                        {confLogo ? (
+                                            confLogo.startsWith('http') || confLogo.startsWith('data:image') ? (
+                                                <img src={confLogo} alt="Logo actual" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ccc' }} />
+                                            ) : (
+                                                <div style={{ width: '60px', height: '60px', borderRadius: '8px', border: '1px solid #ccc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', backgroundColor: '#eee' }}>
+                                                    {confLogo}
+                                                </div>
+                                            )
+                                        ) : null}
+                                        <div style={{ flex: 1 }}>
+                                            <input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                className="form-control" 
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        const reader = new FileReader();
+                                                        reader.onloadend = () => {
+                                                            setConfLogo(reader.result);
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    }
+                                                }} 
+                                            />
+                                            <small className="form-hint">Sube tu logo en formato PNG/JPG para mostrarlo en tu carta digital.</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--color-text-muted)', display: 'block', marginBottom: '5px' }}>O elige un Emoji como Logo rápido:</label>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', border: '1px solid #eee', padding: '8px', borderRadius: '8px', backgroundColor: '#fcfcfc' }}>
+                                        {['🍔', '🍕', '🍣', '🌮', '🥗', '🍰', '🍺', '☕', '🍖', '🥟', '🥪', '🍜'].map((emoji) => (
+                                            <button 
+                                                key={emoji} 
+                                                type="button" 
+                                                style={{ border: confLogo === emoji ? '2px solid var(--color-primary)' : '1px solid #ddd', padding: '8px 12px', borderRadius: '4px', background: 'white', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                onClick={() => setConfLogo(emoji)}
+                                            >
+                                                {emoji}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
                                 <button type="submit" className="btn btn-primary" style={{ marginTop: '15px' }}>Guardar Cambios</button>
                             </form>
                         </div>
@@ -1597,9 +1660,56 @@ function AdminDashboard() {
                                     <textarea required value={stockDescripcion} onChange={(e) => setStockDescripcion(e.target.value)} placeholder="Detalle de los ingredientes..." className="form-control" rows="3" />
                                 </div>
                                 <div className="form-group">
-                                    <label>URL Imagen del Plato</label>
-                                    <input type="text" value={stockImagen} onChange={(e) => setStockImagen(e.target.value)} placeholder="https://images.unsplash.com/photo-..." className="form-control" />
-                                    <small className="form-hint">Si se deja vacío, se asignará una imagen ilustrativa por defecto.</small>
+                                    <label>Imagen del Producto</label>
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+                                        {stockImagen && (
+                                            <img src={stockImagen} alt="Previsualización" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ccc' }} />
+                                        )}
+                                        <div style={{ flex: 1 }}>
+                                            <input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                className="form-control" 
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        const reader = new FileReader();
+                                                        reader.onloadend = () => {
+                                                            setStockImagen(reader.result);
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    }
+                                                }} 
+                                            />
+                                            <small className="form-hint">Sube tu propia foto en formato PNG/JPG (se guardará en la base de datos).</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--color-text-muted)', display: 'block', marginBottom: '5px' }}>O elige una imagen genérica del sistema:</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', maxHeight: '120px', overflowY: 'auto', border: '1px solid #eee', padding: '8px', borderRadius: '8px', backgroundColor: '#fcfcfc' }}>
+                                        {[
+                                            { name: '🍕 Pizza', url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80' },
+                                            { name: '🍔 Burguer', url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80' },
+                                            { name: '🌮 Taco', url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=400&q=80' },
+                                            { name: '🥩 Milanesa', url: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=400&q=80' },
+                                            { name: '🥗 Ensalada', url: 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&w=400&q=80' },
+                                            { name: '🍰 Flan', url: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&w=400&q=80' },
+                                            { name: '🥞 Panqueque', url: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=400&q=80' },
+                                            { name: '🍺 Cerveza', url: 'https://images.unsplash.com/photo-1608270176054-8a3a38d1723a?auto=format&fit=crop&w=400&q=80' },
+                                            { name: '🥤 Gaseosa', url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80' },
+                                            { name: '☕ Café', url: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=400&q=80' }
+                                        ].map((img, idx) => (
+                                            <button 
+                                                key={idx} 
+                                                type="button" 
+                                                style={{ border: stockImagen === img.url ? '2px solid var(--color-primary)' : '1px solid #ddd', padding: '4px', borderRadius: '4px', background: 'white', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}
+                                                onClick={() => setStockImagen(img.url)}
+                                            >
+                                                <img src={img.url} alt={img.name} style={{ width: '100%', height: '35px', objectFit: 'cover', borderRadius: '3px' }} />
+                                                <span style={{ fontSize: '0.62rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%', textAlign: 'center' }}>{img.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                             <div className="modal-footer">

@@ -17,7 +17,9 @@ function SuperAdmin() {
         actualizarEstadoLocalSaaS,
         registrarLocalSaaS,
         simularEnvioEmail,
-        updateEmailLogs
+        updateEmailLogs,
+        saasConfig,
+        updateSaasConfig
     } = useDb();
 
     // Login local state
@@ -30,6 +32,27 @@ function SuperAdmin() {
     const [regPassword, setRegPassword] = useState('');
     const [regWhatsapp, setRegWhatsapp] = useState('+549');
     const [regPlan, setRegPlan] = useState('Premium');
+
+    // SaaS Configuration local state
+    const [mpPublicKey, setMpPublicKey] = useState(saasConfig.owner_mp_public_key || '');
+    const [mpAccessToken, setMpAccessToken] = useState(saasConfig.owner_mp_access_token || '');
+    const [planBasicoId, setPlanBasicoId] = useState(saasConfig.plan_basico_id || '');
+    const [planPremiumId, setPlanPremiumId] = useState(saasConfig.plan_premium_id || '');
+    const [ownerCbu, setOwnerCbu] = useState(saasConfig.owner_cbu || '');
+    const [ownerBanco, setOwnerBanco] = useState(saasConfig.owner_banco || '');
+
+    const handleSaveSaasConfig = (e) => {
+        e.preventDefault();
+        updateSaasConfig({
+            owner_mp_public_key: mpPublicKey,
+            owner_mp_access_token: mpAccessToken,
+            plan_basico_id: planBasicoId,
+            plan_premium_id: planPremiumId,
+            owner_cbu: ownerCbu,
+            owner_banco: ownerBanco
+        });
+        alert("Configuración de pasarela SaaS y recaudación bancaria guardada con éxito. Listo para producción.");
+    };
 
     // Simulators state
     const [testQueryLogs, setTestQueryLogs] = useState('');
@@ -348,8 +371,55 @@ function SuperAdmin() {
                                 <li>Ingresá al panel del comercio o actualizá su pestaña (se bloqueará automáticamente en tiempo real).</li>
                                 <li>Hacé clic en <strong>"Dar de Alta 🟢"</strong> en esta consola para desbloquearlo al instante.</li>
                             </ol>
-                        </div>
                     </div>
+                </div>
+            </div>
+
+                {/* Configuración Recaudación SaaS */}
+                <div className="admin-card margin-top-20">
+                    <h2>Configuración de Pasarela y Cuentas de Cobro (Producción) 💳</h2>
+                    <p className="admin-card-description">Definí tus credenciales de Mercado Pago y cuenta bancaria de destino (CBU) para recibir de forma directa los pagos de suscripciones de los restaurantes adheridos.</p>
+                    <form onSubmit={handleSaveSaasConfig}>
+                        <div className="admin-grid-two-cols" style={{ gap: '15px' }}>
+                            <div>
+                                <h4 style={{ marginBottom: '10px' }}>Credenciales Mercado Pago</h4>
+                                <div className="form-group" style={{ marginBottom: '10px' }}>
+                                    <label>Public Key (Producción)</label>
+                                    <input type="text" value={mpPublicKey} onChange={(e) => setMpPublicKey(e.target.value)} placeholder="Ej: APP_USR-xxxxxx" className="form-control" required />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: '10px' }}>
+                                    <label>Access Token (Producción)</label>
+                                    <input type="password" value={mpAccessToken} onChange={(e) => setMpAccessToken(e.target.value)} placeholder="Ej: APP_USR-yyyyyy" className="form-control" required />
+                                </div>
+                                <div className="form-row" style={{ display: 'flex', gap: '10px' }}>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label>Plan Básico ID</label>
+                                        <input type="text" value={planBasicoId} onChange={(e) => setPlanBasicoId(e.target.value)} placeholder="ID del Plan Básico" className="form-control" required />
+                                    </div>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label>Plan Premium ID</label>
+                                        <input type="text" value={planPremiumId} onChange={(e) => setPlanPremiumId(e.target.value)} placeholder="ID del Plan Premium" className="form-control" required />
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 style={{ marginBottom: '10px' }}>Cuenta Bancaria Destino (Cobros Directos/CBU)</h4>
+                                <div className="form-group" style={{ marginBottom: '10px' }}>
+                                    <label>CBU / CVU Recaudador (Titular de ComandaFlow)</label>
+                                    <input type="text" value={ownerCbu} onChange={(e) => setOwnerCbu(e.target.value)} placeholder="Ej: 01702592..." className="form-control" required />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: '10px' }}>
+                                    <label>Banco Destino</label>
+                                    <input type="text" value={ownerBanco} onChange={(e) => setOwnerBanco(e.target.value)} placeholder="Ej: BBVA" className="form-control" required />
+                                </div>
+                                <div className="alert-box alert-info" style={{ marginTop: '15px', fontSize: '0.8rem', padding: '10px' }}>
+                                    <strong>Nota de Producción:</strong>
+                                    Los comercios que opten por Débito Directo CBU transferirán a esta cuenta. Al verificar la acreditación, podrás activarlos haciendo click en "Aprobar BBVA".
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" className="btn btn-primary" style={{ marginTop: '15px' }}>Guardar Credenciales de Producción 🔒</button>
+                    </form>
                 </div>
 
                 {/* Listado Comercios */}
