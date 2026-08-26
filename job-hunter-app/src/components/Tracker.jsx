@@ -10,7 +10,8 @@ import {
   Save, 
   ExternalLink,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  MapPin
 } from 'lucide-react';
 
 function Tracker() {
