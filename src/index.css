@@ -3359,6 +3359,31 @@ hr {
     100% { transform: rotate(360deg); }
 }
 
+/* Micro-animaciones para Feedback Visual del Carrito */
+@keyframes cartBounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+}
+.cart-pop {
+    animation: cartBounce 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes addedScale {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+.added-bounce {
+    animation: addedScale 0.25s ease-out;
+}
+
+.btn-added-feedback {
+    background-color: #2e7d32 !important;
+    border-color: #2e7d32 !important;
+    color: white !important;
+}
+
 
 
 

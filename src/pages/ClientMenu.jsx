@@ -35,6 +35,8 @@ function ClientMenu() {
     const [successModalOpen, setSuccessModalOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
     const [syncOverlayOpen, setSyncOverlayOpen] = useState(false);
+    const [addedItemId, setAddedItemId] = useState(null);
+    const [cartBouncing, setCartBouncing] = useState(false);
 
     // Personalización de Platos
     const [activeCustomPlato, setActiveCustomPlato] = useState(null);
@@ -139,6 +141,16 @@ function ClientMenu() {
         let cartId = plato.id.toString();
         let nombreCompleto = plato.nombre;
         let precio = precioFinal !== null ? precioFinal : plato.precio;
+
+        // Feedback visual del botón (solo si es agregado directo sin pasar por el modal de opciones)
+        if (!opcionesSeleccionadas) {
+            setAddedItemId(plato.id);
+            setTimeout(() => setAddedItemId(null), 1200);
+        }
+
+        // Animación de rebote (bounce) en el carrito en el navbar
+        setCartBouncing(true);
+        setTimeout(() => setCartBouncing(false), 500);
 
         if (opcionesSeleccionadas) {
             const optString = JSON.stringify(opcionesSeleccionadas);
@@ -396,7 +408,7 @@ function ClientMenu() {
                         <button onClick={() => navigate('/admin')} className="btn btn-secondary btn-sm nav-link-admin">
                             <span>Panel Cocina 🍳</span>
                         </button>
-                        <button className="cart-trigger" onClick={() => setCartOpen(true)}>
+                        <button className={`cart-trigger ${cartBouncing ? 'cart-pop' : ''}`} onClick={() => setCartOpen(true)}>
                             <span className="cart-icon">🛒</span>
                             <span className="cart-badge">{totalCantidad}</span>
                         </button>
@@ -463,10 +475,10 @@ function ClientMenu() {
                                     <p className="card-desc">{plato.descripcion}</p>
                                     <div className="card-footer-row">
                                         <span className="card-price">${plato.precio.toLocaleString('es-AR')}</span>
-                                        <button className="btn btn-primary btn-sm btn-add" 
+                                        <button className={`btn btn-sm btn-add ${addedItemId === plato.id ? 'btn-added-feedback added-bounce' : 'btn-primary'}`} 
                                                 disabled={!plato.disponible} 
                                                 onClick={() => agregarAlCarrito(plato)}>
-                                            {plato.disponible ? 'Agregar 🛒' : 'Sin Stock 🚫'}
+                                            {!plato.disponible ? 'Sin Stock 🚫' : (addedItemId === plato.id ? '¡Sumado! 🎉' : 'Agregar 🛒')}
                                         </button>
                                     </div>
                                 </div>
