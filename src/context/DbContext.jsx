@@ -238,7 +238,19 @@ export function DbProvider({ children }) {
             localStorage.setItem(KEY_MENU, JSON.stringify(PLATOS_INICIALES));
             return PLATOS_INICIALES;
         }
-        return JSON.parse(data);
+        try {
+            const parsed = JSON.parse(data);
+            // Si la base de datos local contiene las rutas relativas antiguas (/assets/...) que están rotas, forzar re-inicio
+            const containsBroken = parsed.some(plato => plato.imagen && plato.imagen.startsWith('/assets/') && !plato.imagen.includes('logo.png'));
+            if (containsBroken) {
+                localStorage.setItem(KEY_MENU, JSON.stringify(PLATOS_INICIALES));
+                return PLATOS_INICIALES;
+            }
+            return parsed;
+        } catch (e) {
+            localStorage.setItem(KEY_MENU, JSON.stringify(PLATOS_INICIALES));
+            return PLATOS_INICIALES;
+        }
     });
 
     const [config, setConfig] = useState(() => {

@@ -75,6 +75,8 @@ function AdminDashboard() {
     const [stockCategoria, setStockCategoria] = useState('Principal');
     const [stockDescripcion, setStockDescripcion] = useState('');
     const [stockImagen, setStockImagen] = useState('');
+    const [stockTamanos, setStockTamanos] = useState([]);
+    const [stockAdicionales, setStockAdicionales] = useState([]);
 
     // Filtros
     const [cobranzaFilter, setCobranzaFilter] = useState('pendientes');
@@ -348,6 +350,8 @@ function AdminDashboard() {
         setStockCategoria('Principal');
         setStockDescripcion('');
         setStockImagen('');
+        setStockTamanos([]);
+        setStockAdicionales([]);
         setIsStockModalOpen(true);
     };
 
@@ -359,6 +363,8 @@ function AdminDashboard() {
         setStockCategoria(plato.categoria);
         setStockDescripcion(plato.descripcion);
         setStockImagen(plato.imagen || '');
+        setStockTamanos(plato.opciones?.tamanos || []);
+        setStockAdicionales(plato.opciones?.adicionales || []);
         setIsStockModalOpen(true);
     };
 
@@ -369,7 +375,11 @@ function AdminDashboard() {
             precio: parseFloat(stockPrecio),
             categoria: stockCategoria,
             descripcion: stockDescripcion,
-            imagen: stockImagen
+            imagen: stockImagen,
+            opciones: {
+                tamanos: stockTamanos.filter(t => t.nombre.trim() !== '').map(t => ({ nombre: t.nombre, recargo: parseFloat(t.recargo) || 0 })),
+                adicionales: stockAdicionales.filter(a => a.nombre.trim() !== '').map(a => ({ nombre: a.nombre, recargo: parseFloat(a.recargo) || 0, exclusivo: !!a.exclusivo }))
+            }
         };
 
         if (stockModalType === 'add') {
@@ -1629,13 +1639,13 @@ function AdminDashboard() {
             {/* MODAL STOCK (Add/Edit) */}
             {isStockModalOpen && (
                 <div className="modal-overlay active">
-                    <div className="modal-card">
+                    <div className="modal-card" style={{ maxWidth: '580px', width: '90%' }}>
                         <div className="modal-header">
                             <h2>{stockModalType === 'add' ? 'Agregar Nuevo Plato' : 'Editar Plato'}</h2>
                             <button className="close-btn" onClick={() => setIsStockModalOpen(false)}>&times;</button>
                         </div>
                         <form onSubmit={handleSaveStock}>
-                            <div className="modal-body">
+                            <div className="modal-body" style={{ maxHeight: '68vh', overflowY: 'auto', paddingRight: '5px' }}>
                                 <div className="form-group">
                                     <label>Nombre del Plato *</label>
                                     <input type="text" required value={stockNombre} onChange={(e) => setStockNombre(e.target.value)} placeholder="Ej: Pizza Napolitana" className="form-control" />
@@ -1711,15 +1721,131 @@ function AdminDashboard() {
                                         ))}
                                     </div>
                                 </div>
+
+                                <div style={{ borderTop: '1px solid #eee', marginTop: '15px', paddingTop: '15px' }}>
+                                    <h3 style={{ fontSize: '0.9rem', marginBottom: '5px', color: '#1a1a24' }}>📏 Tamaños y Opciones de Porción</h3>
+                                    <p style={{ fontSize: '0.75rem', color: '#666', marginBottom: '10px' }}>Establece los tamaños de porción disponibles y el recargo adicional en pesos.</p>
+                                    {stockTamanos.map((tamano, index) => (
+                                        <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Ej: Familiar" 
+                                                value={tamano.nombre} 
+                                                className="form-control" 
+                                                style={{ flex: 2, padding: '6px' }}
+                                                onChange={(e) => {
+                                                    const next = [...stockTamanos];
+                                                    next[index].nombre = e.target.value;
+                                                    setStockTamanos(next);
+                                                }}
+                                            />
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
+                                                <span style={{ fontSize: '0.8rem' }}>+$</span>
+                                                <input 
+                                                    type="number" 
+                                                    placeholder="0" 
+                                                    value={tamano.recargo} 
+                                                    className="form-control"
+                                                    style={{ padding: '6px' }}
+                                                    onChange={(e) => {
+                                                        const next = [...stockTamanos];
+                                                        next[index].recargo = e.target.value;
+                                                        setStockTamanos(next);
+                                                    }}
+                                                />
+                                            </div>
+                                            <button 
+                                                type="button" 
+                                                className="btn btn-danger btn-xs" 
+                                                style={{ padding: '6px 8px', display: 'flex', alignItems: 'center' }}
+                                                onClick={() => setStockTamanos(stockTamanos.filter((_, i) => i !== index))}
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-secondary btn-sm" 
+                                        style={{ marginTop: '5px', fontSize: '0.75rem', padding: '4px 8px' }}
+                                        onClick={() => setStockTamanos([...stockTamanos, { nombre: '', recargo: '' }])}
+                                    >
+                                        ➕ Agregar Tamaño
+                                    </button>
+                                </div>
+
+                                <div style={{ borderTop: '1px solid #eee', marginTop: '15px', paddingTop: '15px' }}>
+                                    <h3 style={{ fontSize: '0.9rem', marginBottom: '5px', color: '#1a1a24' }}>🧂 Adicionales / Extras / Preferencias</h3>
+                                    <p style={{ fontSize: '0.75rem', color: '#666', marginBottom: '10px' }}>Configura opcionales como Extra Queso o exclusiones exclusivas (Frita vs Horno).</p>
+                                    {stockAdicionales.map((adicional, index) => (
+                                        <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Ej: Extra Queso" 
+                                                value={adicional.nombre} 
+                                                className="form-control" 
+                                                style={{ flex: 2, padding: '6px' }}
+                                                onChange={(e) => {
+                                                    const next = [...stockAdicionales];
+                                                    next[index].nombre = e.target.value;
+                                                    setStockAdicionales(next);
+                                                }}
+                                            />
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
+                                                <span style={{ fontSize: '0.8rem' }}>+$</span>
+                                                <input 
+                                                    type="number" 
+                                                    placeholder="0" 
+                                                    value={adicional.recargo} 
+                                                    className="form-control"
+                                                    style={{ padding: '6px' }}
+                                                    onChange={(e) => {
+                                                        const next = [...stockAdicionales];
+                                                        next[index].recargo = e.target.value;
+                                                        setStockAdicionales(next);
+                                                    }}
+                                                />
+                                            </div>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={!!adicional.exclusivo}
+                                                    onChange={(e) => {
+                                                        const next = [...stockAdicionales];
+                                                        next[index].exclusivo = e.target.checked;
+                                                        setStockAdicionales(next);
+                                                    }}
+                                                />
+                                                Único
+                                            </label>
+                                            <button 
+                                                type="button" 
+                                                className="btn btn-danger btn-xs" 
+                                                style={{ padding: '6px 8px', display: 'flex', alignItems: 'center' }}
+                                                onClick={() => setStockAdicionales(stockAdicionales.filter((_, i) => i !== index))}
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-secondary btn-sm" 
+                                        style={{ marginTop: '5px', fontSize: '0.75rem', padding: '4px 8px' }}
+                                        onClick={() => setStockAdicionales([...stockAdicionales, { nombre: '', recargo: '', exclusivo: false }])}
+                                    >
+                                        ➕ Agregar Adicional
+                                    </button>
+                                </div>
                             </div>
                             <div className="modal-footer">
-                                                                <button type="button" className="btn btn-secondary" onClick={() => setIsStockModalOpen(false)}>Cancelar</button>
-                                                                <button type="submit" className="btn btn-primary">Guardar Plato</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            )}
+                                <button type="button" className="btn btn-secondary" onClick={() => setIsStockModalOpen(false)}>Cancelar</button>
+                                <button type="submit" className="btn btn-primary">Guardar Plato</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
                                             {/* MODAL EDITAR PEDIDO */}
                                             {isEditOrderModalOpen && editOrderTarget && (
