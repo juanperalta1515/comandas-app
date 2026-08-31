@@ -25,4 +25,5 @@ dist-ssr
 
 # Exclude independent projects in subfolders
 job-hunter-app/
+turnia/
 
