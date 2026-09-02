@@ -15,7 +15,8 @@ function App() {
           <Route path="/menu" element={<Navigate to="/menu/quincho" replace />} />
           <Route path="/menu/:restaurantId" element={<ClientMenu />} />
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/superadmin" element={<SuperAdmin />} />
+          <Route path="/master-control" element={<SuperAdmin />} />
+          <Route path="/superadmin" element={<Navigate to="/master-control" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

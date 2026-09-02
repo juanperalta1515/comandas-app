@@ -14,6 +14,7 @@ function SuperAdmin() {
         logoutAuth0, 
         updateActiveRestaurant, 
         updateRestaurants,
+        switchRestaurant,
         actualizarEstadoLocalSaaS,
         registrarLocalSaaS,
         simularEnvioEmail,
@@ -64,10 +65,14 @@ function SuperAdmin() {
     // Login Submit
     const handleLoginSubmit = (e) => {
         e.preventDefault();
-        if (loginEmail === 'admin@comandaflow.com' && loginPassword === 'admin123') {
-            loginWithAuth0('admin@comandaflow.com', 'superadmin', 'Super Admin', 'superadmin_id');
+        const cleanUser = loginEmail.trim().toLowerCase();
+        if (
+            (cleanUser === 'juanperalta2027' || cleanUser === 'juanperalta2027@comandaflow.com' || cleanUser === 'juanperalta2027@turnia.es' || cleanUser === 'admin@comandaflow.com') &&
+            (loginPassword === '34246038Ff' || loginPassword === 'admin123')
+        ) {
+            loginWithAuth0(cleanUser, 'superadmin', 'Super Admin (Juan Peralta)', 'superadmin_id');
         } else {
-            alert("Credenciales incorrectas. Verifique el correo y la contraseña.");
+            alert("Credenciales incorrectas. Verifique el usuario y la contraseña.");
         }
     };
 
@@ -140,8 +145,8 @@ function SuperAdmin() {
     const seleccionarRestauranteComoActivo = (id) => {
         const local = restaurants.find(l => l.id === id);
         if (local) {
-            updateActiveRestaurant(local);
-            alert(`Sesión activa cambiada a: ${local.nombre}. Si tenés abierta la pestaña de administración, se actualizará sola.`);
+            switchRestaurant(local.id);
+            navigate('/admin');
         }
     };
 
@@ -210,23 +215,23 @@ function SuperAdmin() {
     if (!currentUser || currentUser.role !== 'superadmin') {
         return (
             <div className="auth0-overlay">
-                <div className="auth0-box">
+                <div className="auth0-box" style={{ maxWidth: '420px' }}>
                     <div className="auth0-header">
                         <span className="auth0-logo">👑</span>
-                        <h3>ComandaFlow SaaS Owner</h3>
-                        <p>Identifíquese para acceder a la administración global</p>
+                        <h3>Master Control Panel</h3>
+                        <p>Acceso exclusivo de Super Admin / Dueño de la Plataforma</p>
                     </div>
                     <form onSubmit={handleLoginSubmit}>
                         <div className="form-group" style={{ marginBottom: '15px' }}>
                             <label style={{ fontWeight: '600', fontSize: '0.85rem', marginBottom: '5px', display: 'block' }}>
-                                Email Corporativo
+                                Usuario / Email
                             </label>
                             <input 
-                                type="email" 
+                                type="text" 
                                 required 
                                 value={loginEmail} 
                                 onChange={(e) => setLoginEmail(e.target.value)} 
-                                placeholder="admin@comandaflow.com" 
+                                placeholder="juanperalta2027" 
                                 style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border)' }} 
                             />
                         </div>
@@ -243,13 +248,10 @@ function SuperAdmin() {
                                 style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border)' }} 
                             />
                         </div>
-                        <button type="submit" className="btn btn-primary btn-block" style={{ backgroundColor: 'var(--color-primary)', borderColor: 'var(--color-primary)', color: 'white' }}>
-                            Acceder con Auth0 🔒
+                        <button type="submit" className="btn btn-primary btn-block" style={{ backgroundColor: 'var(--color-primary)', borderColor: 'var(--color-primary)', color: 'white', fontWeight: 'bold' }}>
+                            Acceder al Panel Master 🔒
                         </button>
                     </form>
-                    <div style={{ marginTop: '15px', textAlign: 'center' }}>
-                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Credenciales: <code>admin@comandaflow.com</code> / <code>admin123</code></small>
-                    </div>
                 </div>
             </div>
         );
@@ -275,7 +277,7 @@ function SuperAdmin() {
             {/* Navbar */}
             <nav className="navbar navbar-admin">
                 <div className="nav-container">
-                    <a href="#/superadmin" className="nav-brand" style={{ display: 'flex', alignItems: 'center' }}>
+                    <a href="#/master-control" className="nav-brand" style={{ display: 'flex', alignItems: 'center' }}>
                         <img src={logoImg} alt="ComandaFlow Logo" style={{ height: '32px', marginRight: '8px', objectFit: 'contain', borderRadius: '4px' }} />
                         <span>ComandaFlow SaaS Owner Panel <span className="rest-badge premium">SUPERADMIN</span></span>
                     </a>

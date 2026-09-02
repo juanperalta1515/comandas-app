@@ -20,6 +20,8 @@ function AdminDashboard() {
         offlineMode,
         restaurants,
         updateRestaurants,
+        loginUser,
+        switchRestaurant,
         loginWithAuth0,
         logoutAuth0,
         validarAislamientoTenant,
@@ -37,6 +39,7 @@ function AdminDashboard() {
         registrarTransaccionCaja,
         updateCajaEstados,
         cerrarCajaParcial,
+        abrirCajaParcial,
         cerrarJornadaCompleta,
         updateConfig,
         updateMenu,
@@ -105,16 +108,15 @@ function AdminDashboard() {
     const [chartPeriod, setChartPeriod] = useState('day'); // 'day', 'month', 'year'
     const [selectedCierreDetalle, setSelectedCierreDetalle] = useState(null);
 
-    // Auto-login con ?demo=true
+    // Auto-login con ?demo=true o ?restaurant=xyz
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
-        if (queryParams.get('demo') === 'true') {
-            resetearDemo();
-            loginWithAuth0('contacto@quincho.com', 'merchant', 'El Quincho Porteño', 'quincho');
-            // Quitar query param de la URL
+        const reqRest = queryParams.get('restaurant') || 'quincho';
+        if (queryParams.get('demo') === 'true' || queryParams.get('restaurant')) {
+            switchRestaurant(reqRest);
             navigate('/admin', { replace: true });
         }
-    }, [location.search, navigate]);
+    }, [location.search, navigate, switchRestaurant]);
 
     // Validar aislamiento de tenant al iniciar
     useEffect(() => {
@@ -134,25 +136,24 @@ function AdminDashboard() {
         setConfLogo(activeRestaurant.logo || '🍔');
     }, [config, activeRestaurant]);
 
-    // Manejar login
+    // Manejar login dinámico para cualquier comercio
     const handleLoginSubmit = (e) => {
         e.preventDefault();
-        if (loginEmail === 'contacto@quincho.com' && loginPassword === 'quincho123') {
-            loginWithAuth0('contacto@quincho.com', 'merchant', 'El Quincho Porteño', 'quincho');
-        } else {
-            alert("Credenciales incorrectas. Verifique el correo y la contraseña.");
+        const res = loginUser(loginEmail, loginPassword);
+        if (!res.ok) {
+            alert(res.error || "Credenciales incorrectas.");
         }
     };
 
-    const handleDemoLogin = () => {
-        loginWithAuth0('contacto@quincho.com', 'merchant', 'El Quincho Porteño', 'quincho');
+    const handleQuickLogin = (resId) => {
+        switchRestaurant(resId);
     };
 
     // Si no está autenticado, renderizar Login
     if (!currentUser || currentUser.role !== 'merchant') {
         return (
             <div className="auth0-overlay">
-                <div className="auth0-box">
+                <div className="auth0-box" style={{ maxWidth: '440px' }}>
                     <div className="auth0-header">
                         <span className="auth0-logo">⚡</span>
                         <h3>ComandaFlow Portal Admin</h3>
@@ -189,13 +190,25 @@ function AdminDashboard() {
                             Ingresar con Auth0 🔒
                         </button>
                     </form>
-                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <button type="button" className="btn btn-secondary btn-block" onClick={handleDemoLogin} style={{ backgroundColor: 'var(--color-success)', borderColor: 'var(--color-success)', color: 'white', fontWeight: 'bold' }}>
-                            Probar Demo (Acceso un Clic) 🚀
-                        </button>
-                    </div>
-                    <div style={{ marginTop: '15px', textAlign: 'center' }}>
-                        <small className="text-muted" style={{ fontSize: '0.75rem' }}>Local Demo: <code>contacto@quincho.com</code> / <code>quincho123</code></small>
+
+                    <div style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                        <p style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--color-text-muted)', marginBottom: '8px' }}>
+                            Acceso Rápido por Comercio (Cuentas Aisladas):
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            {restaurants.map(r => (
+                                <button 
+                                    key={r.id} 
+                                    type="button" 
+                                    className="btn btn-secondary btn-sm" 
+                                    onClick={() => handleQuickLogin(r.id)} 
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', fontSize: '0.82rem' }}
+                                >
+                                    <span>{r.logo || '🍽️'} <strong>{r.nombre}</strong></span>
+                                    <span style={{ fontSize: '0.72rem', color: '#666' }}>{r.email}</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -580,11 +593,7 @@ function AdminDashboard() {
                             <td class="right">$${totalSalon.toLocaleString('es-AR')}</td>
                         </tr>
                         <tr>
-                            <td>🛵 Caja Plataformas (PedidosYa/Rappi):</td>
-                            <td class="right">$${totalPlataformas.toLocaleString('es-AR')}</td>
-                        </tr>
-                        <tr>
-                            <td>🏪 Caja Venta Directa (Mostrador):</td>
+                            <td>🏪 Caja Venta Directa (Mostrador / Delivery):</td>
                             <td class="right">$${totalDirecto.toLocaleString('es-AR')}</td>
                         </tr>
                     </table>
@@ -643,7 +652,8 @@ function AdminDashboard() {
     const handlePrintHistoricalCierre = (cierre) => {
         const printWindow = window.open('', '_blank', 'width=800,height=600');
         
-        const historicoTx = JSON.parse(localStorage.getItem('comandas_caja_historico')) || [];
+        const storeKeyHist = `comandas_tenant_${activeRestaurant.id}_caja_historico`;
+        const historicoTx = JSON.parse(localStorage.getItem(storeKeyHist)) || JSON.parse(localStorage.getItem('comandas_caja_historico')) || [];
         const txsCierre = historicoTx.filter(tx => tx.id_cierre === cierre.id_cierre);
 
         const txRowsHtml = txsCierre.length === 0
@@ -686,35 +696,30 @@ function AdminDashboard() {
             <body>
                 <div class="header">
                     <h1>${activeRestaurant.nombre}</h1>
-                    <p>REPORTE DE CIERRE DIARIO CONSOLIDADO</p>
-                    <p>Cierre ID: <strong>${cierre.id_cierre}</strong></p>
-                    <p>Fecha/Hora de Cierre: ${cierre.fecha} ${cierre.hora}</p>
+                    <p>COMPROBANTE OFICIAL DE CIERRE DE JORNADA</p>
+                    <p>ID Cierre: #${cierre.id_cierre} | Fecha: ${cierre.fecha} ${cierre.hora}</p>
                 </div>
 
                 <div class="section">
-                    <div class="section-title">Totales del Cierre</div>
+                    <div class="section-title">Consolidación de Canales</div>
                     <table class="summary-table">
                         <tr>
-                            <td>🍽️ Facturación Salón (Mesas):</td>
+                            <td>🍽️ Total Recaudado Salón (Mesas):</td>
                             <td class="right">$${cierre.total_salon.toLocaleString('es-AR')}</td>
                         </tr>
                         <tr>
-                            <td>🛵 Facturación Plataformas:</td>
-                            <td class="right">$${cierre.total_plataformas.toLocaleString('es-AR')}</td>
-                        </tr>
-                        <tr>
-                            <td>🏪 Facturación Venta Directa:</td>
+                            <td>🏪 Total Recaudado Directo (Mostrador / Delivery):</td>
                             <td class="right">$${cierre.total_directo.toLocaleString('es-AR')}</td>
                         </tr>
                         <tr class="total">
-                            <td>TOTAL CONSOLIDADO NETO:</td>
+                            <td>TOTAL GENERAL ARQUEADO:</td>
                             <td class="right">$${cierre.total_general.toLocaleString('es-AR')}</td>
                         </tr>
                     </table>
                 </div>
 
                 <div class="section">
-                    <div class="section-title">Libro Diario de Caja Archivada - Detalle</div>
+                    <div class="section-title">Detalle de Transacciones Auditadas</div>
                     <table class="details-table">
                         <thead>
                             <tr>
@@ -733,8 +738,8 @@ function AdminDashboard() {
                 </div>
 
                 <div class="footer">
-                    <p>ComandaFlow SaaS - Control Histórico Contable</p>
-                    <p>Firma Responsable Caja: ___________________________</p>
+                    <p>ComandaFlow SaaS - Documento de Archivo Contable y Fiscal</p>
+                    <p>Firma Encargado de Turno: ___________________________</p>
                 </div>
                 <script>
                     window.onload = function() {
@@ -748,6 +753,54 @@ function AdminDashboard() {
         printWindow.document.close();
     };
 
+    // Recalcular métricas de caja y ventas
+    let totalSalon = 0;
+    let totalDirecto = 0;
+    let totalIngresos = 0;
+    let totalEgresos = 0;
+    const metodoCounts = {};
+
+    caja.forEach(tx => {
+        const factor = tx.tipo === 'ingreso' ? 1 : -1;
+        const monto = tx.monto * factor;
+
+        if (tx.tipo === 'ingreso') {
+            totalIngresos += tx.monto;
+            const metodo = tx.metodoPago || 'Efectivo';
+            metodoCounts[metodo] = (metodoCounts[metodo] || 0) + tx.monto;
+        } else {
+            totalEgresos += tx.monto;
+        }
+
+        if (tx.canal === 'salon') totalSalon += monto;
+        else totalDirecto += monto;
+    });
+
+    const totalGeneral = totalSalon + totalDirecto;
+    const totalCajaMonto = totalGeneral;
+
+    // Métricas de ventas y comandas
+    const itemsVentasDetalle = {};
+    orders.forEach(p => {
+        if (p.estado === 'Anulado') return;
+        (p.items || []).forEach(it => {
+            const menuItem = menu.find(m => m.id === it.id) || {};
+            if (!itemsVentasDetalle[it.nombre]) {
+                itemsVentasDetalle[it.nombre] = {
+                    nombre: it.nombre,
+                    categoria: menuItem.categoria || 'Varios',
+                    cantidad: 0,
+                    precioUnitario: it.precio || menuItem.precio || 0,
+                    subtotal: 0
+                };
+            }
+            itemsVentasDetalle[it.nombre].cantidad += it.cantidad;
+            itemsVentasDetalle[it.nombre].subtotal += (it.precio || itemsVentasDetalle[it.nombre].precioUnitario) * it.cantidad;
+        });
+    });
+    const listaItemsVentas = Object.values(itemsVentasDetalle).sort((a, b) => b.subtotal - a.subtotal);
+    const totalRecaudadoProductos = listaItemsVentas.reduce((acc, it) => acc + it.subtotal, 0);
+
     // Estadísticas contables (Turno de caja activo y ventas)
     const ordersActivasNoAnuladas = orders.filter(o => o.estado !== 'Anulado');
     const ordersCobradas = ordersActivasNoAnuladas.filter(o => o.cobrado);
@@ -757,22 +810,13 @@ function AdminDashboard() {
     
     // Total Facturado (Ventas cobradas)
     const totalFacturadoHoy = ordersCobradas.reduce((acc, o) => acc + o.total, 0);
-
-    // Saldo en Arqueo de Caja Chica
-    let totalCajaMonto = 0;
-    caja.forEach(tx => {
-        const factor = tx.tipo === 'ingreso' ? 1 : -1;
-        totalCajaMonto += tx.monto * factor;
-    });
-
-    // Ticket promedio basado en ventas cobradas
     const ticketPromedio = countPedidosCobrados > 0 ? (totalFacturadoHoy / countPedidosCobrados) : 0;
 
     // Calcular distribución horaria para gráficos
     const horasCount = { almuerzo: 0, tarde: 0, cena_temprana: 0, cena_tarde: 0 };
     orders.forEach(p => {
         if (p.estado === 'Anulado') return;
-        const timePart = p.fecha_hora.split(' ')[1];
+        const timePart = p.fecha_hora ? p.fecha_hora.split(' ')[1] : null;
         if (!timePart) return;
         const hour = parseInt(timePart.split(':')[0]);
         
@@ -788,27 +832,6 @@ function AdminDashboard() {
     const hCenTemPct = (horasCount.cena_temprana / maxHoras) * 110;
     const hCenTarPct = (horasCount.cena_tarde / maxHoras) * 110;
 
-    // Ventas discriminadas por plato / ítem
-    const itemsVentasDetalle = {};
-    ordersCobradas.forEach(p => {
-        p.items.forEach(it => {
-            if (!itemsVentasDetalle[it.nombre]) {
-                const menuItem = menu.find(m => m.nombre === it.nombre) || {};
-                itemsVentasDetalle[it.nombre] = {
-                    nombre: it.nombre,
-                    categoria: menuItem.categoria || 'Principal',
-                    cantidad: 0,
-                    precioUnitario: it.precio || menuItem.precio || 0,
-                    subtotal: 0
-                };
-            }
-            itemsVentasDetalle[it.nombre].cantidad += it.cantidad;
-            itemsVentasDetalle[it.nombre].subtotal += (it.precio || itemsVentasDetalle[it.nombre].precioUnitario) * it.cantidad;
-        });
-    });
-    const listaItemsVentas = Object.values(itemsVentasDetalle).sort((a, b) => b.subtotal - a.subtotal);
-    const totalRecaudadoProductos = listaItemsVentas.reduce((acc, it) => acc + it.subtotal, 0);
-
     // Top Platos (para compatibilidad)
     const topPlatos = listaItemsVentas.map(it => [it.nombre, it.cantidad]).slice(0, 5);
 
@@ -822,6 +845,13 @@ function AdminDashboard() {
     // Cuotas Local Calculador
     const calcCuotasResult = calcMonto ? calcularCuotas(parseFloat(calcMonto), parseInt(calcCuotas)) : null;
 
+    const handleCerrarJornada = () => {
+        if (window.confirm("🚨 ATENCIÓN CIERRE DE JORNADA 🚨\n\n¿Estás seguro de que querés cerrar la jornada de hoy?\n\nEsto consolidará los totales, creará un cierre histórico y reseteará las comandas a $0.")) {
+            cerrarJornadaCompleta();
+            alert("Jornada cerrada y archivada correctamente.");
+        }
+    };
+
     return (
         <div className="admin-body">
             {/* Header / Navbar */}
@@ -829,17 +859,33 @@ function AdminDashboard() {
                 <div className="nav-container">
                     <a href="#/admin" className="nav-brand" style={{ display: 'flex', alignItems: 'center' }}>
                         <img src={logoImg} alt="ComandaFlow Logo" style={{ height: '32px', marginRight: '8px', objectFit: 'contain', borderRadius: '4px' }} />
-                        <span>Panel Cocina & Administración <span className="rest-badge">{activeRestaurant.nombre}</span></span>
+                        <span>Panel Cocina & Administración</span>
                         <span className={`network-badge ${offlineMode ? 'offline' : 'online'}`} style={{ marginLeft: '12px' }}>
-                            {offlineMode ? '🔴 Modo Local (Offline)' : '🟢 En Línea'}
+                            {offlineMode ? '🔴 Modo Local' : '🟢 En Línea'}
                         </span>
                     </a>
-                    <div className="nav-actions">
+                    <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {/* Selector Rápido de Restaurante */}
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)' }}>
+                            <span style={{ fontSize: '1.1rem', marginRight: '6px' }}>{activeRestaurant.logo || '🍽️'}</span>
+                            <select 
+                                value={activeRestaurant.id} 
+                                onChange={(e) => switchRestaurant(e.target.value)}
+                                style={{ background: 'transparent', color: '#fff', border: 'none', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer', outline: 'none' }}
+                            >
+                                {restaurants.map(r => (
+                                    <option key={r.id} value={r.id} style={{ color: '#000' }}>
+                                        {r.logo || '🍽️'} {r.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         <button onClick={() => navigate('/')} className="btn btn-secondary btn-sm nav-link-home">
                             <span>Inicio 🏠</span>
                         </button>
                         <button onClick={() => navigate(`/menu/${activeRestaurant.id}`)} className="btn btn-secondary btn-sm nav-link-client">
-                            <span>Ver Carta Digital 🍕</span>
+                            <span>Carta Digital 📱</span>
                         </button>
                         <button onClick={logoutAuth0} className="btn btn-danger btn-sm" style={{ padding: '4px 10px', fontSize: '0.75rem', fontWeight: 'bold' }}>
                             Salir 🔒
@@ -1152,24 +1198,51 @@ function AdminDashboard() {
                     <section className="admin-tab-content active">
                         {/* Canales Caja */}
                         <div className="admin-card">
-                            <h3>Gestión Contable de Canales (Turnos Abiertos)</h3>
-                            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginTop: '15px' }}>
-                                {['salon', 'plataformas', 'directo'].map(canal => (
-                                    <div key={canal} style={{ background: '#fcfcfc', border: '1px solid #eee', padding: '12px 18px', borderRadius: '8px', display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '1.5rem' }}>{canal === 'salon' ? '🍽️' : canal === 'plataformas' ? '🛵' : '🏪'}</span>
-                                        <div>
-                                            <h5 style={{ textTransform: 'capitalize', fontSize: '0.85rem' }}>Caja {canal === 'salon' ? 'Salón' : canal === 'plataformas' ? 'Plataformas' : 'Directa'}</h5>
-                                            <button 
-                                                className={`btn ${cajaEstados[canal] ? 'btn-danger' : 'btn-success'} btn-xs`}
-                                                onClick={() => cerrarCajaParcial(canal)}
-                                                disabled={cajaEstados[canal]}
-                                                style={{ marginTop: '5px' }}
-                                            >
-                                                {cajaEstados[canal] ? 'Cerrada' : 'Cerrar Caja Parcial 🔒'}
-                                            </button>
+                            <h3>Gestión Contable de Canales (Turnos de Caja)</h3>
+                            <p className="admin-card-description" style={{ fontSize: '0.8rem', marginBottom: '12px' }}>
+                                Podés cerrar temporalmente una caja o reabrirla si ingresa un nuevo pedido o comanda pendiente.
+                            </p>
+                            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginTop: '10px' }}>
+                                {[
+                                    { id: 'salon', label: 'Caja Salón (Mesas)', icon: '🍽️' },
+                                    { id: 'directo', label: 'Caja Venta Directa (Mostrador / Delivery)', icon: '🏪' }
+                                ].map(canal => {
+                                    const estaCerrada = !!cajaEstados[canal.id];
+                                    return (
+                                        <div key={canal.id} style={{ background: '#fcfcfc', border: '1px solid #eee', padding: '14px 18px', borderRadius: '8px', display: 'flex', gap: '15px', alignItems: 'center', minWidth: '280px' }}>
+                                            <span style={{ fontSize: '1.8rem' }}>{canal.icon}</span>
+                                            <div>
+                                                <h5 style={{ fontSize: '0.88rem', marginBottom: '6px' }}>{canal.label}</h5>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span className={`status-badge ${estaCerrada ? 'status-unavailable' : 'status-available'}`} style={{ fontSize: '0.72rem' }}>
+                                                        {estaCerrada ? '🔒 CERRADA' : '🟢 ABIERTA'}
+                                                    </span>
+                                                    {estaCerrada ? (
+                                                        <button 
+                                                            className="btn btn-success btn-xs"
+                                                            onClick={() => {
+                                                                abrirCajaParcial(canal.id);
+                                                                alert(`Caja ${canal.label} reabierta con éxito.`);
+                                                            }}
+                                                        >
+                                                            Reabrir Caja 🔓
+                                                        </button>
+                                                    ) : (
+                                                        <button 
+                                                            className="btn btn-danger btn-xs"
+                                                            onClick={() => {
+                                                                cerrarCajaParcial(canal.id);
+                                                                alert(`Caja ${canal.label} cerrada temporalmente.`);
+                                                            }}
+                                                        >
+                                                            Cerrar Caja Parcial 🔒
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -1356,7 +1429,7 @@ function AdminDashboard() {
                                     <button type="button" className="btn btn-secondary btn-sm" onClick={handlePrintActiveJornada}>
                                         Exportar PDF / Imprimir Caja Activa 📄
                                     </button>
-                                    <button className="btn btn-danger btn-sm" onClick={() => { if(confirm("🚨 ATENCIÓN CIERRE DE JORNADA 🚨\n\n¿Estás seguro de que querés cerrar la jornada de hoy?\n\nEsto consolidará los totales, creará un cierre histórico y reseteará las comandas a $0.")) { cerrarJornadaCompleta(); alert("Jornada cerrada y archivada correctamente."); } }}>
+                                    <button className="btn btn-danger btn-sm" onClick={handleCerrarJornada}>
                                         Cerrar Jornada Completa 🚪
                                     </button>
                                 </div>
@@ -1409,8 +1482,7 @@ function AdminDashboard() {
                                             <th>ID Cierre</th>
                                             <th>Fecha / Hora</th>
                                             <th>Salón 🍽️</th>
-                                            <th>Plataformas 🛵</th>
-                                            <th>Mostrador 🏪</th>
+                                            <th>Mostrador / Delivery 🏪</th>
                                             <th>Total Neto</th>
                                             <th>Acciones</th>
                                         </tr>
@@ -1418,7 +1490,7 @@ function AdminDashboard() {
                                     <tbody>
                                         {cierres.length === 0 ? (
                                             <tr>
-                                                <td colSpan="7" className="text-center" style={{ padding: '15px', color: '#999' }}>No hay registros de jornadas cerradas anteriormente.</td>
+                                                <td colSpan="6" className="text-center" style={{ padding: '15px', color: '#999' }}>No hay registros de jornadas cerradas anteriormente.</td>
                                             </tr>
                                         ) : (
                                             cierres.map(c => (
@@ -1426,7 +1498,6 @@ function AdminDashboard() {
                                                     <td><strong>#{c.id_cierre}</strong></td>
                                                     <td>{c.fecha} {c.hora}</td>
                                                     <td>${c.total_salon.toLocaleString('es-AR')}</td>
-                                                    <td>${c.total_plataformas.toLocaleString('es-AR')}</td>
                                                     <td>${c.total_directo.toLocaleString('es-AR')}</td>
                                                     <td><strong>${c.total_general.toLocaleString('es-AR')}</strong></td>
                                                     <td>

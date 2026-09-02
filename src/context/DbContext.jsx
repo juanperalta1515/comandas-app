@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const DbContext = createContext();
 
@@ -6,22 +6,19 @@ const DbContext = createContext();
 const SAAS_SECRET_SALT = "ComandaFlowSecureSalt102!";
 const JWT_SECRET_KEY = "comandaflow_secret_hash_2026";
 
-// Claves de localStorage
-const KEY_MENU = 'comandas_menu';
-const KEY_ORDERS = 'comandas_orders';
-const KEY_CONFIG = 'comandas_config';
-const KEY_WA_LOGS = 'comandas_wa_logs';
-const KEY_TABLES = 'comandas_tables';
-const KEY_CAJA = 'comandas_caja';
-const KEY_CIERRES = 'comandas_cierres_historico';
-const KEY_CAJA_ESTADOS = 'comandas_caja_estados';
+// Claves globales de localStorage
 const KEY_RESTAURANTS = 'comandas_saas_restaurants';
 const KEY_ACTIVE_RESTAURANT = 'comandas_saas_active_restaurant';
 const KEY_OFFLINE_SIMULATED = 'comandas_offline_simulated';
 const KEY_OFFLINE_QUEUE = 'comandas_offline_queue';
 const KEY_EMAIL_LOGS = 'comandas_email_logs';
-const KEY_CAJA_HISTORICO = 'comandas_caja_historico';
 const KEY_SAAS_CONFIG = 'comandas_saas_config';
+
+// Helper para obtener claves por restaurante (Multi-Tenancy aislado)
+export function getStoreKey(restaurantId, keyName) {
+    const cleanId = (restaurantId || 'quincho').toLowerCase().trim();
+    return `comandas_tenant_${cleanId}_${keyName}`;
+}
 
 const SAAS_CONFIG_DEFECTO = {
     owner_mp_public_key: 'APP_USR-67890123-bcde-4567-8901-23456789abcd',
@@ -30,154 +27,6 @@ const SAAS_CONFIG_DEFECTO = {
     plan_premium_id: 'plan_premium_cf_prod',
     owner_cbu: '0170259240000007239234',
     owner_banco: 'BBVA'
-};
-
-// Catálogo inicial de platos
-const PLATOS_INICIALES = [
-    { 
-        id: 1, 
-        nombre: 'Pizza Especial de Muzzarella y Jamón', 
-        descripcion: 'Muzzarela premium, jamón cocido, morrones asados y aceitunas verdes.', 
-        precio: 6500, 
-        categoria: 'Principal', 
-        disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80',
-        opciones: {
-            tamanos: [
-                { nombre: 'Chica', recargo: 0 },
-                { nombre: 'Mediana', recargo: 1500 },
-                { nombre: 'Familiar', recargo: 3000 }
-            ],
-            adicionales: [
-                { nombre: 'Extra Queso', recargo: 800 },
-                { nombre: 'Huevo Frito', recargo: 500 },
-                { nombre: 'Panceta', recargo: 1000 }
-            ]
-        }
-    },
-    { 
-        id: 2, 
-        nombre: 'Pizza Fugazzeta Rellena (Porción)', 
-        descripcion: 'Abundante cebolla caramelizada, doble muzzarela y orégano.', 
-        precio: 2200, 
-        categoria: 'Principal', 
-        disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?auto=format&fit=crop&w=400&q=80'
-    },
-    { 
-        id: 3, 
-        nombre: 'Empanada de Carne Cortada a Cuchillo', 
-        descripcion: 'Frita o al horno. Relleno jugoso de carne vacuna con verdeo y comino.', 
-        precio: 950, 
-        categoria: 'Entrada', 
-        disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1556040885-3571d79435b6?auto=format&fit=crop&w=400&q=80',
-        opciones: {
-            tamanos: [],
-            adicionales: [
-                { nombre: 'Frita', recargo: 0, exclusivo: true },
-                { nombre: 'Al Horno', recargo: 0, exclusivo: true }
-            ]
-        }
-    },
-    { 
-        id: 4, 
-        nombre: 'Empanada de Jamón y Queso Hojaldrada', 
-        descripcion: 'Jamón cocido de primera calidad y queso muzzarela derretido.', 
-        precio: 900, 
-        categoria: 'Entrada', 
-        disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1628191139360-408a06492299?auto=format&fit=crop&w=400&q=80'
-    },
-    { 
-        id: 5, 
-        nombre: 'Milanesa de Ternera Napolitana con Papas Fritas', 
-        descripcion: 'Milanesa gigante, salsa de tomate de la casa, jamón, muzzarela y papas fritas bastón.', 
-        precio: 7800, 
-        categoria: 'Principal', 
-        disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=400&q=80'
-    },
-    { 
-        id: 6, 
-        nombre: 'Flan Casero con Dulce de Leche y Crema', 
-        descripcion: 'El clásico postre argentino hecho con 8 yemas, acompañado de dulce de leche colonial.', 
-        precio: 2200, 
-        categoria: 'Postre', 
-        disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&w=400&q=80'
-    },
-    { 
-        id: 7, 
-        nombre: 'Panqueque con Dulce de Leche Quemado', 
-        descripcion: 'Dos panqueques rellenos de abundante dulce de leche, espolvoreados con azúcar y quemados al hierro.', 
-        precio: 2100, 
-        categoria: 'Postre', 
-        disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=400&q=80'
-    },
-    { 
-        id: 8, 
-        nombre: 'Cerveza Quilmes Clásica 1 Litro', 
-        descripcion: 'Cerveza lager argentina helada, ideal para compartir.', 
-        precio: 2500, 
-        categoria: 'Bebida', 
-        disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1608270176054-8a3a38d1723a?auto=format&fit=crop&w=400&q=80'
-    },
-    { 
-        id: 9, 
-        nombre: 'Gaseosa Paso de los Toros Pomelo 1.5L', 
-        descripcion: 'Bebida gasificada con sabor amargo y refrescante de pomelo.', 
-        precio: 1800, 
-        categoria: 'Bebida', 
-        disponible: true,
-        imagen: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80'
-    }
-];
-
-const CONFIG_DEFECTO = {
-    montoEnvioGratis: 8000, 
-    costoEnvio: 800,       
-    interesCredito: 10,     
-    restauranteNombre: "El Quincho Porteño",
-    whatsappPhone: "+5491132456789",
-    whatsappToken: "EAAG_simulado_token_antigravity_123456"
-};
-
-const MESAS_INICIALES = Array.from({ length: 12 }, (_, i) => ({
-    id: i + 1,
-    numero: i + 1,
-    estado: 'Libre', 
-    pedido_activo: null 
-}));
-
-const ESTADOS_CAJA_DEFECTO = {
-    salon: false,
-    plataformas: false,
-    directo: false
-};
-
-const LOCAL_DEFECTO_SAAS = {
-    id: 'quincho',
-    nombre: 'El Quincho Porteño',
-    whatsapp: '+5491132456789',
-    alias_cbu: 'quincho.mp',
-    logo: '🍔',
-    estado: 'Activo',
-    plan: 'Premium',
-    onboarding_complete: true,
-    email: 'contacto@quincho.com',
-    password: 'quincho123',
-    metodo_pago_registro: 'MercadoPago',
-    comprobante_registro: '',
-    fecha_registro: new Date().toLocaleDateString('es-AR'),
-    referral_code: 'CF-QUINCHO',
-    referral_claimed: false,
-    referral_claimed_by: null,
-    descuento_activo: false,
-    descuento_meses_restantes: 0,
-    descuento_porcentaje: 30
 };
 
 // Criptografía y ofuscación de datos
@@ -230,128 +79,455 @@ export function escaparHTML(str) {
     });
 }
 
-export function DbProvider({ children }) {
-    // Inicializar estados cargándolos del localStorage
-    const [menu, setMenu] = useState(() => {
-        const data = localStorage.getItem(KEY_MENU);
-        if (!data) {
-            localStorage.setItem(KEY_MENU, JSON.stringify(PLATOS_INICIALES));
-            return PLATOS_INICIALES;
+// Catálogos iniciales por restaurante
+const PLATOS_QUINCHO = [
+    { 
+        id: 1, 
+        nombre: 'Pizza Especial de Muzzarella y Jamón', 
+        descripcion: 'Muzzarela premium, jamón cocido, morrones asados y aceitunas verdes.', 
+        precio: 6500, 
+        categoria: 'Principal', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80',
+        opciones: {
+            tamanos: [
+                { nombre: 'Chica', recargo: 0 },
+                { nombre: 'Mediana', recargo: 1500 },
+                { nombre: 'Familiar', recargo: 3000 }
+            ],
+            adicionales: [
+                { nombre: 'Extra Queso', recargo: 800 },
+                { nombre: 'Huevo Frito', recargo: 500 },
+                { nombre: 'Panceta', recargo: 1000 }
+            ]
         }
-        try {
-            const parsed = JSON.parse(data);
-            // Si la base de datos local contiene las rutas relativas antiguas (/assets/...) que están rotas, forzar re-inicio
-            const containsBroken = parsed.some(plato => plato.imagen && plato.imagen.startsWith('/assets/') && !plato.imagen.includes('logo.png'));
-            if (containsBroken) {
-                localStorage.setItem(KEY_MENU, JSON.stringify(PLATOS_INICIALES));
-                return PLATOS_INICIALES;
+    },
+    { 
+        id: 2, 
+        nombre: 'Pizza Fugazzeta Rellena (Porción)', 
+        descripcion: 'Abundante cebolla caramelizada, doble muzzarela y orégano.', 
+        precio: 2200, 
+        categoria: 'Principal', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?auto=format&fit=crop&w=400&q=80'
+    },
+    { 
+        id: 3, 
+        nombre: 'Empanada de Carne Cortada a Cuchillo', 
+        descripcion: 'Frita o al horno. Relleno jugoso de carne vacuna con verdeo y comino.', 
+        precio: 950, 
+        categoria: 'Entrada', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1556040885-3571d79435b6?auto=format&fit=crop&w=400&q=80',
+        opciones: {
+            tamanos: [],
+            adicionales: [
+                { nombre: 'Frita', recargo: 0, exclusivo: true },
+                { nombre: 'Al Horno', recargo: 0, exclusivo: true }
+            ]
+        }
+    },
+    { 
+        id: 4, 
+        nombre: 'Milanesa de Ternera Napolitana con Fritas', 
+        descripcion: 'Milanesa gigante, salsa de tomate de la casa, jamón, muzzarela y papas fritas bastón.', 
+        precio: 7800, 
+        categoria: 'Principal', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=400&q=80'
+    },
+    { 
+        id: 5, 
+        nombre: 'Flan Casero con Dulce de Leche', 
+        descripcion: 'El clásico postre argentino hecho con 8 yemas y dulce de leche colonial.', 
+        precio: 2200, 
+        categoria: 'Postre', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?auto=format&fit=crop&w=400&q=80'
+    },
+    { 
+        id: 6, 
+        nombre: 'Cerveza Quilmes Clásica 1L', 
+        descripcion: 'Cerveza lager argentina helada, ideal para compartir.', 
+        precio: 2500, 
+        categoria: 'Bebida', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1608270176054-8a3a38d1723a?auto=format&fit=crop&w=400&q=80'
+    }
+];
+
+const PLATOS_NAPOLI = [
+    { 
+        id: 101, 
+        nombre: 'Pizza Margherita Verace Napoletana', 
+        descripcion: 'Pomodoro San Marzano D.O.P., mozzarella fior di latte, albahaca fresca y aceite de oliva virgen extra.', 
+        precio: 8200, 
+        categoria: 'Principal', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=400&q=80',
+        opciones: {
+            tamanos: [
+                { nombre: 'Individual', recargo: 0 },
+                { nombre: 'Grande (8 porciones)', recargo: 3200 }
+            ],
+            adicionales: [
+                { nombre: 'Prosciutto di Parma', recargo: 1800 },
+                { nombre: 'Burrata entera', recargo: 2500 }
+            ]
+        }
+    },
+    { 
+        id: 102, 
+        nombre: 'Calzone Relleno Tradizionale', 
+        descripcion: 'Masa madre horneada a leña, rellena de ricotta fresca, jamón cocido y pimienta negra molida.', 
+        precio: 7500, 
+        categoria: 'Principal', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=400&q=80'
+    },
+    { 
+        id: 103, 
+        nombre: 'Sorrentinos Caseros de Ricota y Nuez', 
+        descripcion: 'Pasta rellena artesanal con salsa bolognesa pomodoro y queso reggianito rallado.', 
+        precio: 6900, 
+        categoria: 'Principal', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=400&q=80'
+    },
+    { 
+        id: 104, 
+        nombre: 'Tiramisú Tradicional Italiano', 
+        descripcion: 'Bizcochuelo savoiardi bañado en espresso ristretto, queso mascarpone y cacao amargo.', 
+        precio: 2800, 
+        categoria: 'Postre', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=400&q=80'
+    },
+    { 
+        id: 105, 
+        nombre: 'Vino Tinto Malbec Reserva 750ml', 
+        descripcion: 'Vino mendocino con paso por roble, notas a ciruela y chocolate.', 
+        precio: 4500, 
+        categoria: 'Bebida', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=400&q=80'
+    }
+];
+
+const PLATOS_SUSHI = [
+    { 
+        id: 201, 
+        nombre: 'Tabla Tokio Premium 20 Piezas', 
+        descripcion: '5 Philadelphia Roll, 5 Salmon Skin Roll, 5 Niguiris de Salmón Flambeado y 5 Geishas con palta y philadelphia.', 
+        precio: 14500, 
+        categoria: 'Principal', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=400&q=80',
+        opciones: {
+            tamanos: [
+                { nombre: '20 Piezas', recargo: 0 },
+                { nombre: '30 Piezas', recargo: 6500 }
+            ],
+            adicionales: [
+                { nombre: 'Salsa Buenos Aires', recargo: 600 },
+                { nombre: 'Jengibre Extra', recargo: 400 },
+                { nombre: 'Wasabi Premium', recargo: 400 }
+            ]
+        }
+    },
+    { 
+        id: 202, 
+        nombre: 'Gyozas de Cerdo y Verdeo (6u)', 
+        descripcion: 'Empanaditas japonesas al vapor y doradas a la plancha, acompañadas de salsa ponzu.', 
+        precio: 4200, 
+        categoria: 'Entrada', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=400&q=80'
+    },
+    { 
+        id: 203, 
+        nombre: 'Wok Nikkei de Lomo y Vegetales', 
+        descripcion: 'Lomo saltado al fuego con cebolla morada, morrones, fideos soba y salsa teriyaki.', 
+        precio: 8900, 
+        categoria: 'Principal', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80'
+    },
+    { 
+        id: 204, 
+        nombre: 'Mousse Cremoso de Maracuyá', 
+        descripcion: 'Postre fresco oriental con pulpa de maracuyá y semillas crocantes.', 
+        precio: 2500, 
+        categoria: 'Postre', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&w=400&q=80'
+    },
+    { 
+        id: 205, 
+        nombre: 'Cerveza Asahi Super Dry 500ml', 
+        descripcion: 'Cerveza japonesa importada de sabor fresco y final seco.', 
+        precio: 3800, 
+        categoria: 'Bebida', 
+        disponible: true,
+        imagen: 'https://images.unsplash.com/photo-1608270176054-8a3a38d1723a?auto=format&fit=crop&w=400&q=80'
+    }
+];
+
+const MESAS_INICIALES = Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    numero: i + 1,
+    estado: 'Libre', 
+    pedido_activo: null 
+}));
+
+const ESTADOS_CAJA_DEFECTO = {
+    salon: false,
+    directo: false
+};
+
+const RESTAURANTES_INICIALES = [
+    {
+        id: 'quincho',
+        nombre: 'El Quincho Porteño',
+        whatsapp: '+5491132456789',
+        alias_cbu: 'quincho.mp',
+        logo: '🍔',
+        estado: 'Activo',
+        plan: 'Premium',
+        onboarding_complete: true,
+        email: 'contacto@quincho.com',
+        password: ofuscarDatoSensible('quincho123'),
+        metodo_pago_registro: 'MercadoPago',
+        comprobante_registro: '',
+        fecha_registro: '15/01/2026',
+        referral_code: 'CF-QUINCHO',
+        referral_claimed: false,
+        referral_claimed_by: null,
+        descuento_activo: false,
+        descuento_meses_restantes: 0,
+        descuento_porcentaje: 30
+    },
+    {
+        id: 'napoli',
+        nombre: 'Pizzería Napoli & Pasta',
+        whatsapp: '+5491145678901',
+        alias_cbu: 'napoli.pizzeria.mp',
+        logo: '🍕',
+        estado: 'Activo',
+        plan: 'Premium',
+        onboarding_complete: true,
+        email: 'contacto@napoli.com',
+        password: ofuscarDatoSensible('napoli123'),
+        metodo_pago_registro: 'MercadoPago',
+        comprobante_registro: '',
+        fecha_registro: '20/01/2026',
+        referral_code: 'CF-NAPOLI',
+        referral_claimed: false,
+        referral_claimed_by: null,
+        descuento_activo: false,
+        descuento_meses_restantes: 0,
+        descuento_porcentaje: 30
+    },
+    {
+        id: 'sushizen',
+        nombre: 'Sushi Zen Nikkei',
+        whatsapp: '+5491178901234',
+        alias_cbu: 'sushi.zen.cbu',
+        logo: '🍣',
+        estado: 'Activo',
+        plan: 'Premium',
+        onboarding_complete: true,
+        email: 'contacto@sushizen.com',
+        password: ofuscarDatoSensible('sushi123'),
+        metodo_pago_registro: 'CBU',
+        comprobante_registro: 'Adhesión CBU: 0170...2392',
+        fecha_registro: '28/01/2026',
+        referral_code: 'CF-SUSHIZEN',
+        referral_claimed: false,
+        referral_claimed_by: null,
+        descuento_activo: false,
+        descuento_meses_restantes: 0,
+        descuento_porcentaje: 30
+    }
+];
+
+// Helper para obtener datos iniciales por restaurante
+function getInitialCatalogForRestaurant(resId) {
+    const id = (resId || '').toLowerCase();
+    if (id === 'napoli') return PLATOS_NAPOLI;
+    if (id === 'sushizen') return PLATOS_SUSHI;
+    return PLATOS_QUINCHO;
+}
+
+function getInitialConfigForRestaurant(restaurant) {
+    const resId = restaurant?.id || 'quincho';
+    const nombre = restaurant?.nombre || 'Mi Restaurante';
+    const whatsapp = restaurant?.whatsapp || '+5491100000000';
+    return {
+        montoEnvioGratis: 8000, 
+        costoEnvio: 800,       
+        interesCredito: 10,     
+        restauranteNombre: nombre,
+        whatsappPhone: whatsapp,
+        whatsappToken: `EAAG_${resId}_token_simulado_2026`
+    };
+}
+
+// Historiales de cierres demostrativos iniciales por restaurante (Salón y Venta Directa)
+function getInitialCierresForRestaurant(resId) {
+    const id = (resId || '').toLowerCase();
+    if (id === 'napoli') {
+        return [
+            {
+                id_cierre: 'CIE-9102',
+                fecha: '28/02/2026',
+                hora: '23:45:10',
+                total_salon: 68500,
+                total_directo: 26000,
+                total_general: 94500
+            },
+            {
+                id_cierre: 'CIE-8921',
+                fecha: '27/02/2026',
+                hora: '23:30:00',
+                total_salon: 58000,
+                total_directo: 20000,
+                total_general: 78000
             }
-            return parsed;
-        } catch (e) {
-            localStorage.setItem(KEY_MENU, JSON.stringify(PLATOS_INICIALES));
-            return PLATOS_INICIALES;
+        ];
+    }
+    if (id === 'sushizen') {
+        return [
+            {
+                id_cierre: 'CIE-9340',
+                fecha: '28/02/2026',
+                hora: '23:55:00',
+                total_salon: 95000,
+                total_directo: 40000,
+                total_general: 135000
+            },
+            {
+                id_cierre: 'CIE-9210',
+                fecha: '27/02/2026',
+                hora: '23:40:15',
+                total_salon: 82000,
+                total_directo: 30000,
+                total_general: 112000
+            }
+        ];
+    }
+    // Quincho
+    return [
+        {
+            id_cierre: 'CIE-8501',
+            fecha: '28/02/2026',
+            hora: '23:50:20',
+            total_salon: 42000,
+            total_directo: 20000,
+            total_general: 62000
+        },
+        {
+            id_cierre: 'CIE-8410',
+            fecha: '27/02/2026',
+            hora: '23:15:00',
+            total_salon: 31000,
+            total_directo: 14000,
+            total_general: 45000
         }
-    });
+    ];
+}
 
-    const [config, setConfig] = useState(() => {
-        const data = localStorage.getItem(KEY_CONFIG);
-        if (!data) {
-            localStorage.setItem(KEY_CONFIG, JSON.stringify(CONFIG_DEFECTO));
-            return CONFIG_DEFECTO;
-        }
-        return JSON.parse(data);
-    });
-
-    const [orders, setOrders] = useState(() => {
-        const data = localStorage.getItem(KEY_ORDERS);
-        if (!data) {
-            localStorage.setItem(KEY_ORDERS, JSON.stringify([]));
-            return [];
-        }
-        return JSON.parse(data);
-    });
-
-    const [waLogs, setWaLogs] = useState(() => {
-        const data = localStorage.getItem(KEY_WA_LOGS);
-        if (!data) {
-            localStorage.setItem(KEY_WA_LOGS, JSON.stringify([]));
-            return [];
-        }
-        return JSON.parse(data);
-    });
-
-    const [tables, setTables] = useState(() => {
-        const data = localStorage.getItem(KEY_TABLES);
-        if (!data) {
-            localStorage.setItem(KEY_TABLES, JSON.stringify(MESAS_INICIALES));
-            return MESAS_INICIALES;
-        }
-        return JSON.parse(data);
-    });
-
-    const [caja, setCaja] = useState(() => {
-        const data = localStorage.getItem(KEY_CAJA);
-        if (!data) {
-            localStorage.setItem(KEY_CAJA, JSON.stringify([]));
-            return [];
-        }
-        return JSON.parse(data);
-    });
-
-    const [cajaEstados, setCajaEstados] = useState(() => {
-        const data = localStorage.getItem(KEY_CAJA_ESTADOS);
-        if (!data) {
-            localStorage.setItem(KEY_CAJA_ESTADOS, JSON.stringify(ESTADOS_CAJA_DEFECTO));
-            return ESTADOS_CAJA_DEFECTO;
-        }
-        return JSON.parse(data);
-    });
-
-    const [cierres, setCierres] = useState(() => {
-        const data = localStorage.getItem(KEY_CIERRES);
-        if (!data) {
-            localStorage.setItem(KEY_CIERRES, JSON.stringify([]));
-            return [];
-        }
-        return JSON.parse(data);
-    });
-
+export function DbProvider({ children }) {
+    // 1. Lista de Restaurantes (SaaS)
     const [restaurants, setRestaurants] = useState(() => {
         const data = localStorage.getItem(KEY_RESTAURANTS);
         if (!data) {
-            const localDefault = { ...LOCAL_DEFECTO_SAAS };
-            localDefault.password = ofuscarDatoSensible(localDefault.password);
-            localStorage.setItem(KEY_RESTAURANTS, JSON.stringify([localDefault]));
-            return [localDefault];
+            localStorage.setItem(KEY_RESTAURANTS, JSON.stringify(RESTAURANTES_INICIALES));
+            return RESTAURANTES_INICIALES;
         }
-        return JSON.parse(data);
+        try {
+            const list = JSON.parse(data);
+            // Si solo contenía quincho, fusionar las cuentas demo
+            const hasNapoli = list.some(r => r.id === 'napoli');
+            if (!hasNapoli) {
+                const merged = [...list, ...RESTAURANTES_INICIALES.filter(initR => !list.some(r => r.id === initR.id))];
+                localStorage.setItem(KEY_RESTAURANTS, JSON.stringify(merged));
+                return merged;
+            }
+            return list;
+        } catch (e) {
+            localStorage.setItem(KEY_RESTAURANTS, JSON.stringify(RESTAURANTES_INICIALES));
+            return RESTAURANTES_INICIALES;
+        }
     });
 
+    // 2. Restaurante Activo Seleccionado
     const [activeRestaurant, setActiveRestaurant] = useState(() => {
         const data = localStorage.getItem(KEY_ACTIVE_RESTAURANT);
         if (!data) {
-            const localDefault = { ...LOCAL_DEFECTO_SAAS };
-            localDefault.password = ofuscarDatoSensible(localDefault.password);
-            localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(localDefault));
-            return localDefault;
+            const defaultRes = RESTAURANTES_INICIALES[0];
+            localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(defaultRes));
+            return defaultRes;
         }
-        return JSON.parse(data);
+        try {
+            return JSON.parse(data);
+        } catch (e) {
+            const defaultRes = RESTAURANTES_INICIALES[0];
+            localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(defaultRes));
+            return defaultRes;
+        }
     });
 
-    const [offlineMode, setOfflineModeState] = useState(() => {
-        return localStorage.getItem(KEY_OFFLINE_SIMULATED) === 'true';
-    });
+    const currentResId = activeRestaurant?.id || 'quincho';
 
+    // 3. Helper de carga por local
+    const loadStoreItem = (resId, keyName, defaultVal) => {
+        const cleanId = resId || 'quincho';
+        const storeKey = getStoreKey(cleanId, keyName);
+        const raw = localStorage.getItem(storeKey);
+        if (!raw) {
+            // Migración de claves legacy si existen y es 'quincho'
+            if (cleanId === 'quincho') {
+                const legacyRaw = localStorage.getItem(`comandas_${keyName}`);
+                if (legacyRaw) {
+                    try {
+                        const parsedLegacy = JSON.parse(legacyRaw);
+                        localStorage.setItem(storeKey, JSON.stringify(parsedLegacy));
+                        return parsedLegacy;
+                    } catch(e) {}
+                }
+            }
+            localStorage.setItem(storeKey, JSON.stringify(defaultVal));
+            return defaultVal;
+        }
+        try {
+            return JSON.parse(raw);
+        } catch (e) {
+            localStorage.setItem(storeKey, JSON.stringify(defaultVal));
+            return defaultVal;
+        }
+    };
+
+    // 4. Estados por Restaurante (Segregados / Multi-Tenant)
+    const [menu, setMenu] = useState(() => loadStoreItem(currentResId, 'menu', getInitialCatalogForRestaurant(currentResId)));
+    const [config, setConfig] = useState(() => loadStoreItem(currentResId, 'config', getInitialConfigForRestaurant(activeRestaurant)));
+    const [orders, setOrders] = useState(() => loadStoreItem(currentResId, 'orders', []));
+    const [tables, setTables] = useState(() => loadStoreItem(currentResId, 'tables', MESAS_INICIALES));
+    const [caja, setCaja] = useState(() => loadStoreItem(currentResId, 'caja', []));
+    const [cajaEstados, setCajaEstados] = useState(() => loadStoreItem(currentResId, 'caja_estados', ESTADOS_CAJA_DEFECTO));
+    const [cierres, setCierres] = useState(() => loadStoreItem(currentResId, 'cierres', getInitialCierresForRestaurant(currentResId)));
+    const [waLogs, setWaLogs] = useState(() => loadStoreItem(currentResId, 'wa_logs', []));
+
+    // 5. Estados Globales SaaS / Simulación
+    const [offlineMode, setOfflineModeState] = useState(() => localStorage.getItem(KEY_OFFLINE_SIMULATED) === 'true');
     const [offlineQueue, setOfflineQueue] = useState(() => {
         const data = localStorage.getItem(KEY_OFFLINE_QUEUE);
         return data ? JSON.parse(data) : [];
     });
-
     const [emailLogs, setEmailLogs] = useState(() => {
         const data = localStorage.getItem(KEY_EMAIL_LOGS);
         return data ? JSON.parse(data) : [];
     });
-
     const [saasConfig, setSaasConfig] = useState(() => {
         const data = localStorage.getItem(KEY_SAAS_CONFIG);
         if (!data) {
@@ -372,103 +548,152 @@ export function DbProvider({ children }) {
         }
     });
 
-    // Sincronizar cambios en tiempo real entre pestañas
+    // Cargar datos cuando cambia el restaurante activo
+    const switchRestaurant = useCallback((resId) => {
+        const local = restaurants.find(r => r.id === resId) || restaurants[0];
+        if (!local) return;
+
+        localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(local));
+        setActiveRestaurant(local);
+
+        const loadedMenu = loadStoreItem(local.id, 'menu', getInitialCatalogForRestaurant(local.id));
+        const loadedConfig = loadStoreItem(local.id, 'config', getInitialConfigForRestaurant(local));
+        const loadedOrders = loadStoreItem(local.id, 'orders', []);
+        const loadedTables = loadStoreItem(local.id, 'tables', MESAS_INICIALES);
+        const loadedCaja = loadStoreItem(local.id, 'caja', []);
+        const loadedCajaEstados = loadStoreItem(local.id, 'caja_estados', ESTADOS_CAJA_DEFECTO);
+        const loadedCierres = loadStoreItem(local.id, 'cierres', getInitialCierresForRestaurant(local.id));
+        const loadedWaLogs = loadStoreItem(local.id, 'wa_logs', []);
+
+        setMenu(loadedMenu);
+        setConfig(loadedConfig);
+        setOrders(loadedOrders);
+        setTables(loadedTables);
+        setCaja(loadedCaja);
+        setCajaEstados(loadedCajaEstados);
+        setCierres(loadedCierres);
+        setWaLogs(loadedWaLogs);
+
+        // Actualizar sesión JWT con el nuevo restaurante
+        loginWithAuth0(local.email, 'merchant', local.nombre, local.id);
+    }, [restaurants]);
+
+    // Recargar estado cada vez que `currentResId` cambie
+    useEffect(() => {
+        if (!activeRestaurant) return;
+        const targetId = activeRestaurant.id;
+
+        const storeKeyMenu = getStoreKey(targetId, 'menu');
+        const rawMenu = localStorage.getItem(storeKeyMenu);
+        const nextMenu = rawMenu ? JSON.parse(rawMenu) : getInitialCatalogForRestaurant(targetId);
+        setMenu(nextMenu);
+
+        const storeKeyConfig = getStoreKey(targetId, 'config');
+        const rawConfig = localStorage.getItem(storeKeyConfig);
+        const nextConfig = rawConfig ? JSON.parse(rawConfig) : getInitialConfigForRestaurant(activeRestaurant);
+        setConfig(nextConfig);
+
+        const storeKeyOrders = getStoreKey(targetId, 'orders');
+        const rawOrders = localStorage.getItem(storeKeyOrders);
+        setOrders(rawOrders ? JSON.parse(rawOrders) : []);
+
+        const storeKeyTables = getStoreKey(targetId, 'tables');
+        const rawTables = localStorage.getItem(storeKeyTables);
+        setTables(rawTables ? JSON.parse(rawTables) : MESAS_INICIALES);
+
+        const storeKeyCaja = getStoreKey(targetId, 'caja');
+        const rawCaja = localStorage.getItem(storeKeyCaja);
+        setCaja(rawCaja ? JSON.parse(rawCaja) : []);
+
+        const storeKeyCajaEstados = getStoreKey(targetId, 'caja_estados');
+        const rawCajaEstados = localStorage.getItem(storeKeyCajaEstados);
+        setCajaEstados(rawCajaEstados ? JSON.parse(rawCajaEstados) : ESTADOS_CAJA_DEFECTO);
+
+        const storeKeyCierres = getStoreKey(targetId, 'cierres');
+        const rawCierres = localStorage.getItem(storeKeyCierres);
+        setCierres(rawCierres ? JSON.parse(rawCierres) : getInitialCierresForRestaurant(targetId));
+
+        const storeKeyWa = getStoreKey(targetId, 'wa_logs');
+        const rawWa = localStorage.getItem(storeKeyWa);
+        setWaLogs(rawWa ? JSON.parse(rawWa) : []);
+    }, [activeRestaurant]);
+
+    // Sincronizar entre pestañas con localStorage event
     useEffect(() => {
         const handleStorageChange = (e) => {
             if (!e.newValue) return;
-            const parsed = JSON.parse(e.newValue);
-            switch (e.key) {
-                case KEY_MENU:
-                    setMenu(parsed);
-                    break;
-                case KEY_CONFIG:
-                    setConfig(parsed);
-                    break;
-                case KEY_ORDERS:
-                    setOrders(parsed);
-                    break;
-                case KEY_WA_LOGS:
-                    setWaLogs(parsed);
-                    break;
-                case KEY_TABLES:
-                    setTables(parsed);
-                    break;
-                case KEY_CAJA:
-                    setCaja(parsed);
-                    break;
-                case KEY_CAJA_ESTADOS:
-                    setCajaEstados(parsed);
-                    break;
-                case KEY_CIERRES:
-                    setCierres(parsed);
-                    break;
-                case KEY_RESTAURANTS:
-                    setRestaurants(parsed);
-                    break;
-                case KEY_ACTIVE_RESTAURANT:
-                    setActiveRestaurant(parsed);
-                    break;
-                case KEY_OFFLINE_SIMULATED:
-                    setOfflineModeState(e.newValue === 'true');
-                    break;
-                case KEY_OFFLINE_QUEUE:
-                    setOfflineQueue(parsed);
-                    break;
-                case KEY_EMAIL_LOGS:
-                    setEmailLogs(parsed);
-                    break;
-                case KEY_SAAS_CONFIG:
-                    setSaasConfig(parsed);
-                    break;
-                default:
-                    break;
-            }
+            try {
+                const parsed = JSON.parse(e.newValue);
+                const prefix = `comandas_tenant_${currentResId}_`;
+
+                if (e.key === `${prefix}menu`) setMenu(parsed);
+                else if (e.key === `${prefix}config`) setConfig(parsed);
+                else if (e.key === `${prefix}orders`) setOrders(parsed);
+                else if (e.key === `${prefix}tables`) setTables(parsed);
+                else if (e.key === `${prefix}caja`) setCaja(parsed);
+                else if (e.key === `${prefix}caja_estados`) setCajaEstados(parsed);
+                else if (e.key === `${prefix}cierres`) setCierres(parsed);
+                else if (e.key === `${prefix}wa_logs`) setWaLogs(parsed);
+                else if (e.key === KEY_RESTAURANTS) setRestaurants(parsed);
+                else if (e.key === KEY_ACTIVE_RESTAURANT) setActiveRestaurant(parsed);
+                else if (e.key === KEY_OFFLINE_SIMULATED) setOfflineModeState(e.newValue === 'true');
+                else if (e.key === KEY_OFFLINE_QUEUE) setOfflineQueue(parsed);
+                else if (e.key === KEY_EMAIL_LOGS) setEmailLogs(parsed);
+                else if (e.key === KEY_SAAS_CONFIG) setSaasConfig(parsed);
+            } catch(err) {}
         };
 
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);
-    }, [config, offlineQueue, emailLogs, restaurants, activeRestaurant, tables, orders, menu, waLogs, caja, cajaEstados, cierres, saasConfig]);
+    }, [currentResId]);
 
-    // Funciones mutadoras con actualización en localStorage y State
-
-    const updateMenu = (newMenu) => {
-        localStorage.setItem(KEY_MENU, JSON.stringify(newMenu));
-        setMenu(newMenu);
+    // Mutadores con aislamiento por tenant
+    const updateMenu = (newMenu, customResId = null) => {
+        const resId = customResId || currentResId;
+        localStorage.setItem(getStoreKey(resId, 'menu'), JSON.stringify(newMenu));
+        if (resId === currentResId) setMenu(newMenu);
     };
 
-    const updateConfig = (newConfig) => {
-        localStorage.setItem(KEY_CONFIG, JSON.stringify(newConfig));
-        setConfig(newConfig);
+    const updateConfig = (newConfig, customResId = null) => {
+        const resId = customResId || currentResId;
+        localStorage.setItem(getStoreKey(resId, 'config'), JSON.stringify(newConfig));
+        if (resId === currentResId) setConfig(newConfig);
     };
 
-    const updateOrders = (newOrders) => {
-        localStorage.setItem(KEY_ORDERS, JSON.stringify(newOrders));
-        setOrders(newOrders);
+    const updateOrders = (newOrders, customResId = null) => {
+        const resId = customResId || currentResId;
+        localStorage.setItem(getStoreKey(resId, 'orders'), JSON.stringify(newOrders));
+        if (resId === currentResId) setOrders(newOrders);
     };
 
-    const updateWaLogs = (newWaLogs) => {
-        localStorage.setItem(KEY_WA_LOGS, JSON.stringify(newWaLogs));
-        setWaLogs(newWaLogs);
+    const updateWaLogs = (newWaLogs, customResId = null) => {
+        const resId = customResId || currentResId;
+        localStorage.setItem(getStoreKey(resId, 'wa_logs'), JSON.stringify(newWaLogs));
+        if (resId === currentResId) setWaLogs(newWaLogs);
     };
 
-    const updateTables = (newTables) => {
-        localStorage.setItem(KEY_TABLES, JSON.stringify(newTables));
-        setTables(newTables);
+    const updateTables = (newTables, customResId = null) => {
+        const resId = customResId || currentResId;
+        localStorage.setItem(getStoreKey(resId, 'tables'), JSON.stringify(newTables));
+        if (resId === currentResId) setTables(newTables);
     };
 
-    const updateCaja = (newCaja) => {
-        localStorage.setItem(KEY_CAJA, JSON.stringify(newCaja));
-        setCaja(newCaja);
+    const updateCaja = (newCaja, customResId = null) => {
+        const resId = customResId || currentResId;
+        localStorage.setItem(getStoreKey(resId, 'caja'), JSON.stringify(newCaja));
+        if (resId === currentResId) setCaja(newCaja);
     };
 
-    const updateCajaEstados = (newEstados) => {
-        localStorage.setItem(KEY_CAJA_ESTADOS, JSON.stringify(newEstados));
-        setCajaEstados(newEstados);
+    const updateCajaEstados = (newEstados, customResId = null) => {
+        const resId = customResId || currentResId;
+        localStorage.setItem(getStoreKey(resId, 'caja_estados'), JSON.stringify(newEstados));
+        if (resId === currentResId) setCajaEstados(newEstados);
     };
 
-    const updateCierres = (newCierres) => {
-        localStorage.setItem(KEY_CIERRES, JSON.stringify(newCierres));
-        setCierres(newCierres);
+    const updateCierres = (newCierres, customResId = null) => {
+        const resId = customResId || currentResId;
+        localStorage.setItem(getStoreKey(resId, 'cierres'), JSON.stringify(newCierres));
+        if (resId === currentResId) setCierres(newCierres);
     };
 
     const updateRestaurants = (newRestaurants) => {
@@ -479,16 +704,6 @@ export function DbProvider({ children }) {
     const updateActiveRestaurant = (newActive) => {
         localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(newActive));
         setActiveRestaurant(newActive);
-
-        // Si cambiamos de restaurante activo, sincronizamos también la configuración básica del negocio
-        if (newActive) {
-            const nextConfig = {
-                ...config,
-                restauranteNombre: newActive.nombre,
-                whatsappPhone: newActive.whatsapp
-            };
-            updateConfig(nextConfig);
-        }
     };
 
     const setOfflineMode = (val) => {
@@ -511,45 +726,71 @@ export function DbProvider({ children }) {
         setSaasConfig(newSaasConfig);
     };
 
-    const resetearDemo = () => {
-        localStorage.setItem(KEY_ORDERS, JSON.stringify([]));
-        localStorage.setItem(KEY_CAJA, JSON.stringify([]));
-        localStorage.setItem(KEY_TABLES, JSON.stringify(MESAS_INICIALES));
-        localStorage.setItem(KEY_MENU, JSON.stringify(PLATOS_INICIALES));
-        localStorage.setItem(KEY_WA_LOGS, JSON.stringify([]));
-        localStorage.setItem(KEY_EMAIL_LOGS, JSON.stringify([]));
-        localStorage.setItem(KEY_CIERRES, JSON.stringify([]));
-        localStorage.setItem(KEY_CAJA_ESTADOS, JSON.stringify(ESTADOS_CAJA_DEFECTO));
+    // Helper para que el menú de cliente (/menu/:restaurantId) obtenga los datos del restaurante requerido
+    const getRestaurantData = (restaurantId) => {
+        const resId = (restaurantId || currentResId).toLowerCase();
+        const found = restaurants.find(r => r.id.toLowerCase() === resId) || restaurants[0];
         
-        setOrders([]);
-        setCaja([]);
-        setTables(MESAS_INICIALES);
-        setMenu(PLATOS_INICIALES);
-        setWaLogs([]);
-        setEmailLogs([]);
-        setCierres([]);
-        setCajaEstados(ESTADOS_CAJA_DEFECTO);
+        // Menu
+        const storeKeyMenu = getStoreKey(found.id, 'menu');
+        const rawMenu = localStorage.getItem(storeKeyMenu);
+        const resMenu = rawMenu ? JSON.parse(rawMenu) : getInitialCatalogForRestaurant(found.id);
 
-        // Reset active restaurant to default SaaS settings
-        const localDefault = { ...LOCAL_DEFECTO_SAAS };
-        localDefault.password = ofuscarDatoSensible(localDefault.password);
-        localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(localDefault));
-        setActiveRestaurant(localDefault);
-        localStorage.setItem(KEY_RESTAURANTS, JSON.stringify([localDefault]));
-        setRestaurants([localDefault]);
-        
-        // Sincronizar también config
-        const nextConfig = {
-            ...CONFIG_DEFECTO,
-            restauranteNombre: localDefault.nombre,
-            whatsappPhone: localDefault.whatsapp
+        // Config
+        const storeKeyConfig = getStoreKey(found.id, 'config');
+        const rawConfig = localStorage.getItem(storeKeyConfig);
+        const resConfig = rawConfig ? JSON.parse(rawConfig) : getInitialConfigForRestaurant(found);
+
+        // Tables
+        const storeKeyTables = getStoreKey(found.id, 'tables');
+        const rawTables = localStorage.getItem(storeKeyTables);
+        const resTables = rawTables ? JSON.parse(rawTables) : MESAS_INICIALES;
+
+        // Orders
+        const storeKeyOrders = getStoreKey(found.id, 'orders');
+        const rawOrders = localStorage.getItem(storeKeyOrders);
+        const resOrders = rawOrders ? JSON.parse(rawOrders) : [];
+
+        return {
+            restaurant: found,
+            menu: resMenu,
+            config: resConfig,
+            tables: resTables,
+            orders: resOrders
         };
-        localStorage.setItem(KEY_CONFIG, JSON.stringify(nextConfig));
-        setConfig(nextConfig);
+    };
+
+    // Resetear demo individual o global
+    const resetearDemo = (targetResId = null) => {
+        const resId = targetResId || currentResId;
+        const initialMenu = getInitialCatalogForRestaurant(resId);
+        const initialCierres = getInitialCierresForRestaurant(resId);
+        const initialConf = getInitialConfigForRestaurant(restaurants.find(r => r.id === resId) || activeRestaurant);
+
+        localStorage.setItem(getStoreKey(resId, 'orders'), JSON.stringify([]));
+        localStorage.setItem(getStoreKey(resId, 'caja'), JSON.stringify([]));
+        localStorage.setItem(getStoreKey(resId, 'tables'), JSON.stringify(MESAS_INICIALES));
+        localStorage.setItem(getStoreKey(resId, 'menu'), JSON.stringify(initialMenu));
+        localStorage.setItem(getStoreKey(resId, 'wa_logs'), JSON.stringify([]));
+        localStorage.setItem(getStoreKey(resId, 'cierres'), JSON.stringify(initialCierres));
+        localStorage.setItem(getStoreKey(resId, 'caja_estados'), JSON.stringify(ESTADOS_CAJA_DEFECTO));
+        localStorage.setItem(getStoreKey(resId, 'config'), JSON.stringify(initialConf));
+
+        if (resId === currentResId) {
+            setOrders([]);
+            setCaja([]);
+            setTables(MESAS_INICIALES);
+            setMenu(initialMenu);
+            setWaLogs([]);
+            setCierres(initialCierres);
+            setCajaEstados(ESTADOS_CAJA_DEFECTO);
+            setConfig(initialConf);
+        }
     };
 
     // -- LÓGICA DE PRECIOS Y COSTOS --
-    const calcularCostosPedido = (subtotal, tipoEntrega) => {
+    const calcularCostosPedido = (subtotal, tipoEntrega, customConfig = null) => {
+        const activeCfg = customConfig || config;
         const sub = parseFloat(subtotal) || 0;
         if (tipoEntrega === 'retiro' || tipoEntrega === 'mesa') {
             return {
@@ -561,9 +802,9 @@ export function DbProvider({ children }) {
             };
         }
 
-        const gratis = sub >= config.montoEnvioGratis;
-        const costo = gratis ? 0 : config.costoEnvio;
-        const falta = gratis ? 0 : (config.montoEnvioGratis - sub);
+        const gratis = sub >= activeCfg.montoEnvioGratis;
+        const costo = gratis ? 0 : activeCfg.costoEnvio;
+        const falta = gratis ? 0 : (activeCfg.montoEnvioGratis - sub);
 
         return {
             subtotal: sub,
@@ -574,8 +815,9 @@ export function DbProvider({ children }) {
         };
     };
 
-    const calcularCuotas = (monto, cuotasSeleccionadas) => {
-        const interesMensual = config.interesCredito / 100;
+    const calcularCuotas = (monto, cuotasSeleccionadas, customConfig = null) => {
+        const activeCfg = customConfig || config;
+        const interesMensual = activeCfg.interesCredito / 100;
         let recargoPercent = 0;
         if (cuotasSeleccionadas > 1) {
             recargoPercent = interesMensual * cuotasSeleccionadas;
@@ -610,7 +852,8 @@ export function DbProvider({ children }) {
         updateEmailLogs(logs);
     };
 
-    const enviarNotificacionWhatsApp = (pedido) => {
+    const enviarNotificacionWhatsApp = (pedido, customConfig = null) => {
+        const activeCfg = customConfig || config;
         const { id_pedido, nombre_cliente, telefono_cliente, total, estado, tipo_entrega, nro_mesa } = pedido;
         let mensaje = '';
         let triggerEnvio = false;
@@ -641,9 +884,9 @@ export function DbProvider({ children }) {
             telefono: telefono_cliente,
             estadoPedido: estado,
             mensaje: mensaje,
-            endpoint: `https://graph.facebook.com/v18.0/${config.whatsappPhone.replace(/[^0-9]/g, '')}/messages`,
+            endpoint: `https://graph.facebook.com/v18.0/${(activeCfg.whatsappPhone || '').replace(/[^0-9]/g, '')}/messages`,
             headers: {
-                "Authorization": `Bearer ${config.whatsappToken.substring(0, 10)}...[SECRET]`,
+                "Authorization": `Bearer ${(activeCfg.whatsappToken || 'token').substring(0, 10)}...[SECRET]`,
                 "Content-Type": "application/json"
             },
             payload: {
@@ -660,7 +903,12 @@ export function DbProvider({ children }) {
     };
 
     // -- GESTIÓN DE PEDIDOS --
-    const crearPedido = (datosPedido) => {
+    const crearPedido = (datosPedido, targetResId = null) => {
+        const resId = targetResId || currentResId;
+        const resData = getRestaurantData(resId);
+        const currentOrdersList = (resId === currentResId) ? orders : resData.orders;
+        const currentTablesList = (resId === currentResId) ? tables : resData.tables;
+
         const isPaidInitially = datosPedido.cobrado !== undefined 
             ? datosPedido.cobrado 
             : (datosPedido.plataforma || datosPedido.metodo_pago === 'debito' || datosPedido.metodo_pago === 'credito' ? true : false);
@@ -671,6 +919,7 @@ export function DbProvider({ children }) {
                 fecha_hora: new Date().toLocaleString('es-AR'),
                 estado: 'Pendiente', 
                 cobrado: isPaidInitially,
+                restaurant_id: resId,
                 ...datosPedido,
                 esOffline: true
             };
@@ -684,11 +933,12 @@ export function DbProvider({ children }) {
             fecha_hora: new Date().toLocaleString('es-AR'),
             estado: datosPedido.estado || 'Pendiente', 
             cobrado: isPaidInitially,
+            restaurant_id: resId,
             ...datosPedido
         };
         
-        const nextOrders = [...orders, nuevoPedido];
-        updateOrders(nextOrders);
+        const nextOrders = [...currentOrdersList, nuevoPedido];
+        updateOrders(nextOrders, resId);
         
         if (nuevoPedido.cobrado) {
             let canal = 'directo';
@@ -700,24 +950,24 @@ export function DbProvider({ children }) {
                 canal = 'plataformas';
                 descripcion = `Venta ${nuevoPedido.plataforma.toUpperCase()} - Pedido #${nuevoPedido.id_pedido}`;
             }
-            registrarTransaccionCaja('ingreso', descripcion, nuevoPedido.total, nuevoPedido.metodo_pago || 'Efectivo', canal);
+            registrarTransaccionCaja('ingreso', descripcion, nuevoPedido.total, nuevoPedido.metodo_pago || 'Efectivo', canal, resId);
         }
         
         if (nuevoPedido.tipo_entrega === 'mesa') {
             const nroMesa = parseInt(nuevoPedido.nro_mesa);
-            const nextTables = tables.map(m => {
+            const nextTables = currentTablesList.map(m => {
                 if (m.numero === nroMesa) {
                     return { ...m, estado: 'Ocupada', pedido_activo: nuevoPedido.id_pedido };
                 }
                 return m;
             });
-            updateTables(nextTables);
+            updateTables(nextTables, resId);
         }
         
         return nuevoPedido;
     };
 
-    const crearPedidoDirectoMesa = (nroMesa, items, nombreCliente) => {
+    const crearPedidoDirectoMesa = (nroMesa, items, nombreCliente, targetResId = null) => {
         const subtotal = items.reduce((acc, curr) => acc + (curr.precio * curr.cantidad), 0);
         const pedido = {
             nombre_cliente: nombreCliente.trim() || `Mesa ${nroMesa}`,
@@ -734,12 +984,15 @@ export function DbProvider({ children }) {
             nro_mesa: nroMesa,
             estado: "Confirmado"
         };
-        return crearPedido(pedido);
+        return crearPedido(pedido, targetResId);
     };
 
     // -- CAJA Y CONTABILIDAD --
-    const registrarTransaccionCaja = (tipo, descripcion, monto, metodoPago = 'Efectivo', canal = 'directo') => {
-        const cajaCerrada = cajaEstados[canal] === true;
+    const registrarTransaccionCaja = (tipo, descripcion, monto, metodoPago = 'Efectivo', canal = 'directo', targetResId = null) => {
+        const resId = targetResId || currentResId;
+        const currentCajaList = (resId === currentResId) ? caja : (JSON.parse(localStorage.getItem(getStoreKey(resId, 'caja'))) || []);
+        const currentEstados = (resId === currentResId) ? cajaEstados : (JSON.parse(localStorage.getItem(getStoreKey(resId, 'caja_estados'))) || ESTADOS_CAJA_DEFECTO);
+        const cajaCerrada = currentEstados[canal] === true;
 
         const nuevaTransaccion = {
             id: 'TX-' + Math.floor(10000 + Math.random() * 90000),
@@ -753,8 +1006,8 @@ export function DbProvider({ children }) {
             timestamp: new Date().toISOString()
         };
 
-        const nextCaja = [nuevaTransaccion, ...caja];
-        updateCaja(nextCaja);
+        const nextCaja = [nuevaTransaccion, ...currentCajaList];
+        updateCaja(nextCaja, resId);
         return nuevaTransaccion;
     };
 
@@ -766,7 +1019,6 @@ export function DbProvider({ children }) {
         const updatedOrders = orders.map((p, idx) => {
             if (idx === index) {
                 const updated = { ...p, estado: nuevoEstado };
-                // Cobrar al marcar como entregado si no estaba cobrado y no es salón
                 if (nuevoEstado === 'Entregado' && previousState !== 'Entregado' && p.tipo_entrega !== 'mesa' && !p.cobrado) {
                     updated.cobrado = true;
                     let canal = 'directo';
@@ -806,9 +1058,7 @@ export function DbProvider({ children }) {
         
         const oldPedido = orders[index];
         
-        // Si cambió la mesa o cambió el tipo de entrega, debemos liberar la mesa vieja y ocupar la nueva!
         if (oldPedido.tipo_entrega === 'mesa' && (updatedFields.tipo_entrega !== 'mesa' || updatedFields.nro_mesa !== oldPedido.nro_mesa)) {
-            // Liberar mesa vieja
             const nroOld = parseInt(oldPedido.nro_mesa);
             const nextTables = tables.map(m => {
                 if (m.numero === nroOld && m.pedido_activo === idPedido) {
@@ -820,7 +1070,6 @@ export function DbProvider({ children }) {
         }
         
         if (updatedFields.tipo_entrega === 'mesa' && (oldPedido.tipo_entrega !== 'mesa' || updatedFields.nro_mesa !== oldPedido.nro_mesa)) {
-            // Ocupar mesa nueva
             const nroNew = parseInt(updatedFields.nro_mesa);
             const nextTables = tables.map(m => {
                 if (m.numero === nroNew) {
@@ -856,7 +1105,6 @@ export function DbProvider({ children }) {
             canal = 'salon';
             descripcion = `Cobro Mesa ${pedido.nro_mesa} - Pedido #${idPedido}`;
             
-            // Liberar mesa
             const nroMesa = parseInt(pedido.nro_mesa);
             const nextTables = tables.map(m => {
                 if (m.numero === nroMesa && m.pedido_activo === idPedido) {
@@ -937,31 +1185,42 @@ export function DbProvider({ children }) {
         return true;
     };
 
-    const cerrarCajaParcial = (canal) => {
-        const nextEstados = { ...cajaEstados, [canal]: true };
-        updateCajaEstados(nextEstados);
+    const cerrarCajaParcial = (canal, targetResId = null) => {
+        const resId = targetResId || currentResId;
+        const currentEstados = (resId === currentResId) ? cajaEstados : (JSON.parse(localStorage.getItem(getStoreKey(resId, 'caja_estados'))) || ESTADOS_CAJA_DEFECTO);
+        const nextEstados = { ...currentEstados, [canal]: true };
+        updateCajaEstados(nextEstados, resId);
         return true;
     };
 
-    const cerrarJornadaCompleta = () => {
+    const abrirCajaParcial = (canal, targetResId = null) => {
+        const resId = targetResId || currentResId;
+        const currentEstados = (resId === currentResId) ? cajaEstados : (JSON.parse(localStorage.getItem(getStoreKey(resId, 'caja_estados'))) || ESTADOS_CAJA_DEFECTO);
+        const nextEstados = { ...currentEstados, [canal]: false };
+        updateCajaEstados(nextEstados, resId);
+        return true;
+    };
+
+    const cerrarJornadaCompleta = (targetResId = null) => {
+        const resId = targetResId || currentResId;
+        const currentCaja = (resId === currentResId) ? caja : (JSON.parse(localStorage.getItem(getStoreKey(resId, 'caja'))) || []);
+        const currentCierresList = (resId === currentResId) ? cierres : (JSON.parse(localStorage.getItem(getStoreKey(resId, 'cierres'))) || []);
+
         let totalSalon = 0;
-        let totalPlataformas = 0;
         let totalDirecto = 0;
 
-        caja.forEach(tx => {
+        currentCaja.forEach(tx => {
             const factor = tx.tipo === 'ingreso' ? 1 : -1;
             const monto = tx.monto * factor;
             
             if (tx.canal === 'salon') {
                 totalSalon += monto;
-            } else if (tx.canal === 'plataformas') {
-                totalPlataformas += monto;
-            } else if (tx.canal === 'directo') {
+            } else {
                 totalDirecto += monto;
             }
         });
 
-        const totalGeneral = totalSalon + totalPlataformas + totalDirecto;
+        const totalGeneral = totalSalon + totalDirecto;
         const fecha = new Date().toLocaleDateString('es-AR');
         const hora = new Date().toLocaleTimeString('es-AR');
         
@@ -970,25 +1229,25 @@ export function DbProvider({ children }) {
             fecha: fecha,
             hora: hora,
             total_salon: totalSalon,
-            total_plataformas: totalPlataformas,
             total_directo: totalDirecto,
             total_general: totalGeneral
         };
 
-        // Guardar transacciones en el histórico persistente
-        const historicoTx = JSON.parse(localStorage.getItem(KEY_CAJA_HISTORICO)) || [];
-        const cajaConIdCierre = caja.map(tx => ({ ...tx, id_cierre: nuevoCierre.id_cierre }));
-        localStorage.setItem(KEY_CAJA_HISTORICO, JSON.stringify(historicoTx.concat(cajaConIdCierre)));
+        // Guardar transacciones en el histórico persistente del tenant
+        const histKey = getStoreKey(resId, 'caja_historico');
+        const historicoTx = JSON.parse(localStorage.getItem(histKey)) || [];
+        const cajaConIdCierre = currentCaja.map(tx => ({ ...tx, id_cierre: nuevoCierre.id_cierre }));
+        localStorage.setItem(histKey, JSON.stringify(historicoTx.concat(cajaConIdCierre)));
 
-        const historico = [nuevoCierre, ...cierres];
-        updateCierres(historico);
+        const historico = [nuevoCierre, ...currentCierresList];
+        updateCierres(historico, resId);
 
-        // Limpiar el estado de la caja y mesas activas
-        updateCaja([]);
-        updateOrders([]);
-        updateCajaEstados(ESTADOS_CAJA_DEFECTO);
+        // Limpiar el estado de la caja y mesas activas para este restaurante
+        updateCaja([], resId);
+        updateOrders([], resId);
+        updateCajaEstados(ESTADOS_CAJA_DEFECTO, resId);
         const mesasReseteadas = MESAS_INICIALES.map(m => ({ ...m }));
-        updateTables(mesasReseteadas);
+        updateTables(mesasReseteadas, resId);
 
         localStorage.removeItem('comandas_active_mesa');
 
@@ -1028,20 +1287,26 @@ export function DbProvider({ children }) {
 
     // -- OPERACIONES SAAS --
     const registrarLocalSaaS = (datosLocal) => {
-        const nuevoId = 'rest-' + Math.floor(1000 + Math.random() * 9000);
+        const slug = (datosLocal.nombre || 'rest')
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]/g, '')
+            .substring(0, 10);
+        const nuevoId = slug || ('rest-' + Math.floor(1000 + Math.random() * 9000));
         const esPendiente = datosLocal.metodo_pago_registro === 'Transferencia' || datosLocal.metodo_pago_registro === 'CBU';
+        
         const nuevoLocal = {
             id: nuevoId,
             nombre: datosLocal.nombre,
             whatsapp: datosLocal.whatsapp,
             cuit: datosLocal.cuit || '30-' + Math.floor(10000000 + Math.random() * 90000000) + '-9',
-            alias_cbu: datosLocal.alias_cbu || '',
+            alias_cbu: datosLocal.alias_cbu || `${nuevoId}.mp`,
             logo: datosLocal.logo || '🍕',
             estado: esPendiente ? 'Pendiente' : 'Activo',
             plan: datosLocal.plan || 'Premium',
             onboarding_complete: false,
-            email: datosLocal.email || '',
-            password: ofuscarDatoSensible(datosLocal.password || ''),
+            email: datosLocal.email || `${nuevoId}@comercio.com`,
+            password: ofuscarDatoSensible(datosLocal.password || '123456'),
             metodo_pago_registro: datosLocal.metodo_pago_registro || 'MercadoPago',
             comprobante_registro: datosLocal.comprobante_registro || '',
             cbu_cliente: ofuscarDatoSensible(datosLocal.cbu_cliente || ''),
@@ -1053,6 +1318,19 @@ export function DbProvider({ children }) {
             descuento_meses_restantes: 0,
             descuento_porcentaje: 30
         };
+
+        // Inicializar datos limpios e independientes para este nuevo local
+        const initialMenu = getInitialCatalogForRestaurant(nuevoLocal.id);
+        const initialConf = getInitialConfigForRestaurant(nuevoLocal);
+        
+        localStorage.setItem(getStoreKey(nuevoLocal.id, 'menu'), JSON.stringify(initialMenu));
+        localStorage.setItem(getStoreKey(nuevoLocal.id, 'config'), JSON.stringify(initialConf));
+        localStorage.setItem(getStoreKey(nuevoLocal.id, 'orders'), JSON.stringify([]));
+        localStorage.setItem(getStoreKey(nuevoLocal.id, 'tables'), JSON.stringify(MESAS_INICIALES));
+        localStorage.setItem(getStoreKey(nuevoLocal.id, 'caja'), JSON.stringify([]));
+        localStorage.setItem(getStoreKey(nuevoLocal.id, 'caja_estados'), JSON.stringify(ESTADOS_CAJA_DEFECTO));
+        localStorage.setItem(getStoreKey(nuevoLocal.id, 'cierres'), JSON.stringify([]));
+        localStorage.setItem(getStoreKey(nuevoLocal.id, 'wa_logs'), JSON.stringify([]));
 
         const nextRestaurants = [...restaurants, nuevoLocal];
         updateRestaurants(nextRestaurants);
@@ -1084,7 +1362,6 @@ export function DbProvider({ children }) {
         });
         updateRestaurants(nextRestaurants);
 
-        // Si es el local activo, actualizar sesión activa
         if (activeRestaurant && activeRestaurant.id === idLocal) {
             const nextActive = { ...activeRestaurant, estado };
             localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(nextActive));
@@ -1129,7 +1406,6 @@ export function DbProvider({ children }) {
 
         updateRestaurants(nextRestaurants);
 
-        // Si el local recomendador es el activo, actualizar sesión
         if (activeRestaurant && activeRestaurant.id === idLocalRecommender) {
             const nextActive = { ...activeRestaurant, descuento_activo: true, descuento_meses_restantes: 2, descuento_porcentaje: 30 };
             localStorage.setItem(KEY_ACTIVE_RESTAURANT, JSON.stringify(nextActive));
@@ -1161,7 +1437,6 @@ export function DbProvider({ children }) {
         });
         updateRestaurants(nextRestaurants);
 
-        // Actualizar sesión activa
         if (activeRestaurant && activeRestaurant.id === idLocal) {
             const nextActive = { ...activeRestaurant, alias_cbu: datosConfig.alias_cbu, logo: datosConfig.logo || activeRestaurant.logo, onboarding_complete: true };
             updateActiveRestaurant(nextActive);
@@ -1253,6 +1528,25 @@ export function DbProvider({ children }) {
         setCurrentUser(null);
     };
 
+    // Autenticación multi-usuario de restaurantes
+    const loginUser = (email, password) => {
+        const cleanEmail = (email || '').trim().toLowerCase();
+        const found = restaurants.find(r => r.email && r.email.toLowerCase() === cleanEmail);
+        
+        if (!found) {
+            return { ok: false, error: "Usuario o comercio no registrado." };
+        }
+
+        const passDesofuscada = desofuscarDatoSensible(found.password) || found.password;
+        if (passDesofuscada !== password && found.password !== password) {
+            return { ok: false, error: "Contraseña incorrecta." };
+        }
+
+        // Si la contraseña es correcta, activar restaurante y sesión JWT
+        switchRestaurant(found.id);
+        return { ok: true, restaurant: found };
+    };
+
     // Validar IDOR / Tenant Mismatch
     const validarAislamientoTenant = () => {
         if (currentUser && currentUser.role === 'merchant') {
@@ -1294,6 +1588,8 @@ export function DbProvider({ children }) {
             updateCierres,
             updateRestaurants,
             updateActiveRestaurant,
+            switchRestaurant,
+            getRestaurantData,
             setOfflineMode,
             updateOfflineQueue,
             updateEmailLogs,
@@ -1315,6 +1611,7 @@ export function DbProvider({ children }) {
             cobrarMesa,
             anularPedido,
             cerrarCajaParcial,
+            abrirCajaParcial,
             cerrarJornadaCompleta,
             
             agregarPlatoAlMenu,
@@ -1327,6 +1624,7 @@ export function DbProvider({ children }) {
             obtenerAbonoMensual,
             actualizarConfiguracionOnboarding,
             
+            loginUser,
             loginWithAuth0,
             logoutAuth0,
             validarAislamientoTenant,

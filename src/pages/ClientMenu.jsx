@@ -7,10 +7,6 @@ function ClientMenu() {
     const navigate = useNavigate();
     const { restaurantId } = useParams(); // URL parameter: /menu/:restaurantId
     const { 
-        menu, 
-        config, 
-        tables, 
-        orders, 
         offlineMode, 
         offlineQueue, 
         crearPedido, 
@@ -19,8 +15,15 @@ function ClientMenu() {
         setOfflineMode, 
         updateOfflineQueue,
         resetearDemo,
-        activeRestaurant
+        getRestaurantData
     } = useDb();
+
+    // Obtener datos específicos para el restaurante solicitado en la URL
+    const resData = getRestaurantData(restaurantId);
+    const menu = resData.menu;
+    const config = resData.config;
+    const tables = resData.tables;
+    const activeRestaurant = resData.restaurant;
 
     // Estados Locales
     const [cart, setCart] = useState([]);
@@ -249,8 +252,8 @@ function ClientMenu() {
     // Cálculos Carrito
     const subtotal = cart.reduce((acc, curr) => acc + (curr.precio * curr.cantidad), 0);
     const totalCantidad = cart.reduce((acc, curr) => acc + curr.cantidad, 0);
-    const costos = calcularCostosPedido(subtotal, tipoEntrega);
-    const cuotasCalculo = calcularCuotas(costos.total, cardInstallments);
+    const costos = calcularCostosPedido(subtotal, tipoEntrega, config);
+    const cuotasCalculo = calcularCuotas(costos.total, cardInstallments, config);
 
     const openCheckout = () => {
         setCartOpen(false);
@@ -302,7 +305,7 @@ function ClientMenu() {
             pedido.nro_mesa = clienteMesa;
         }
 
-        const nuevoPedido = crearPedido(pedido);
+        const nuevoPedido = crearPedido(pedido, activeRestaurant.id);
 
         // Si es mesa, guardar sesión local
         if (tipoEntrega === 'mesa') {
