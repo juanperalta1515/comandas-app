@@ -348,6 +348,27 @@ const RESTAURANTES_INICIALES = [
         descuento_activo: false,
         descuento_meses_restantes: 0,
         descuento_porcentaje: 30
+    },
+    {
+        id: 'juanresto',
+        nombre: 'Parrilla & Restó Juan',
+        whatsapp: '+5491155556666',
+        alias_cbu: 'juan.comandas.mp',
+        logo: '🥩',
+        estado: 'Activo',
+        plan: 'Premium',
+        onboarding_complete: true,
+        email: 'juanperalta2015f@gmail.com',
+        password: ofuscarDatoSensible('juan123'),
+        metodo_pago_registro: 'MercadoPago',
+        comprobante_registro: '',
+        fecha_registro: '01/03/2026',
+        referral_code: 'CF-JUAN',
+        referral_claimed: false,
+        referral_claimed_by: null,
+        descuento_activo: false,
+        descuento_meses_restantes: 0,
+        descuento_porcentaje: 30
     }
 ];
 
@@ -447,10 +468,9 @@ export function DbProvider({ children }) {
         }
         try {
             const list = JSON.parse(data);
-            // Si solo contenía quincho, fusionar las cuentas demo
-            const hasNapoli = list.some(r => r.id === 'napoli');
-            if (!hasNapoli) {
-                const merged = [...list, ...RESTAURANTES_INICIALES.filter(initR => !list.some(r => r.id === initR.id))];
+            const missing = RESTAURANTES_INICIALES.filter(initR => !list.some(r => r.email?.toLowerCase() === initR.email?.toLowerCase()));
+            if (missing.length > 0) {
+                const merged = [...list, ...missing];
                 localStorage.setItem(KEY_RESTAURANTS, JSON.stringify(merged));
                 return merged;
             }
@@ -1528,23 +1548,133 @@ export function DbProvider({ children }) {
         setCurrentUser(null);
     };
 
-    // Autenticación multi-usuario de restaurantes
+    // Autenticación multi-usuario de restaurantes y SuperAdmin
     const loginUser = (email, password) => {
         const cleanEmail = (email || '').trim().toLowerCase();
+        
+        // SuperAdmin check
+        if (cleanEmail === 'superadmin@comandaflow.com' && password === 'admin123') {
+            const token = loginWithAuth0('superadmin@comandaflow.com', 'superadmin', 'SuperAdmin Master', 'superadmin');
+            return { ok: true, role: 'superadmin', restaurant: activeRestaurant, token };
+        }
+
         const found = restaurants.find(r => r.email && r.email.toLowerCase() === cleanEmail);
         
         if (!found) {
-            return { ok: false, error: "Usuario o comercio no registrado." };
+            return { ok: false, error: "No existe ninguna cuenta registrada con este correo electrónico." };
         }
 
         const passDesofuscada = desofuscarDatoSensible(found.password) || found.password;
         if (passDesofuscada !== password && found.password !== password) {
-            return { ok: false, error: "Contraseña incorrecta." };
+            return { ok: false, error: "Contraseña incorrecta. Podés restablecerla con 'Olvidé mi contraseña'." };
         }
 
-        // Si la contraseña es correcta, activar restaurante y sesión JWT
+        // Si la contraseña es correcta, activar restaurante y sesión JWT con su propio ID
         switchRestaurant(found.id);
-        return { ok: true, restaurant: found };
+        const token = loginWithAuth0(found.email, 'merchant', found.nombre, found.id);
+        return { ok: true, restaurant: found, role: 'merchant', token };
+    };
+
+    // Solicitar código de recuperación de contraseña
+    const solicitarRecuperacionContrasena = (email) => {
+        const cleanEmail = (email || '').trim().toLowerCase();
+        const found = restaurants.find(r => r.email && r.email.toLowerCase() === cleanEmail);
+        
+        if (!found) {
+            return { ok: false, error: `No encontramos ninguna cuenta registrada con el correo ${cleanEmail}` };
+        }
+
+        const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+        const payloadRecovery = {
+            email: cleanEmail,
+            codigo: codigo,
+            restaurantId: found.id,
+            timestamp: Date.now(),
+            exp: Date.now() + 15 * 60 * 1000 // 15 minutos de validez
+        };
+
+        const resetsRaw = localStorage.getItem('comandas_pwd_resets');
+        const resets = resetsRaw ? JSON.parse(resetsRaw) : {};
+        resets[cleanEmail] = payloadRecovery;
+        localStorage.setItem('comandas_pwd_resets', JSON.stringify(resets));
+
+        // Registrar envío de email en historial interno
+        simularEnvioEmail(
+            cleanEmail,
+            `🔐 Código de Recuperación de Clave - ComandaFlow (${found.nombre})`,
+            `Hola ${found.nombre},\n\nHemos recibido una solicitud para restablecer la contraseña de acceso a tu panel de ComandaFlow.\n\nTu CÓDIGO DE VERIFICACIÓN es: ${codigo}\n\nIngresá este código en la pantalla de recuperación para definir tu nueva contraseña. Este código vence en 15 minutos.\n\nSi no realizaste esta solicitud, podés desestimar este mensaje.`
+        );
+
+        // Envío real a la casilla de correo
+        try {
+            fetch(`https://formsubmit.co/ajax/${encodeURIComponent(cleanEmail)}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    _subject: `🔐 Tu código de recuperación ComandaFlow: ${codigo}`,
+                    email: cleanEmail,
+                    comercio: found.nombre,
+                    codigo_seguridad: codigo,
+                    mensaje: `Hola ${found.nombre}. Tu código de seguridad de 6 dígitos para restablecer tu contraseña en ComandaFlow es: ${codigo}. Ingresalo en la pantalla de recuperación para definir tu nueva contraseña.`
+                })
+            }).catch(err => console.log('Envío de email externo:', err));
+        } catch(e) {}
+
+        return { 
+            ok: true, 
+            codigo, 
+            email: found.email, 
+            nombre: found.nombre, 
+            mensaje: `Se envió el código de 6 dígitos al correo ${cleanEmail}.` 
+        };
+    };
+
+    // Reestablecer contraseña con código
+    const reestablecerContrasenaConCodigo = (email, codigoIngresado, nuevaPassword) => {
+        const cleanEmail = (email || '').trim().toLowerCase();
+        const resetsRaw = localStorage.getItem('comandas_pwd_resets');
+        const resets = resetsRaw ? JSON.parse(resetsRaw) : {};
+        const recoveryData = resets[cleanEmail];
+
+        if (!recoveryData) {
+            return { ok: false, error: "No hay ninguna solicitud de recuperación activa para este email." };
+        }
+
+        if (Date.now() > recoveryData.exp) {
+            return { ok: false, error: "El código de seguridad ha expirado. Solicitá uno nuevo." };
+        }
+
+        if (recoveryData.codigo !== (codigoIngresado || '').trim()) {
+            return { ok: false, error: "El código ingresado es incorrecto. Verificá los 6 dígitos." };
+        }
+
+        if (!nuevaPassword || nuevaPassword.length < 4) {
+            return { ok: false, error: "La nueva contraseña debe tener al menos 4 caracteres." };
+        }
+
+        // Actualizar en base de datos de restaurantes
+        const nextRestaurants = restaurants.map(r => {
+            if (r.email && r.email.toLowerCase() === cleanEmail) {
+                return { ...r, password: ofuscarDatoSensible(nuevaPassword) };
+            }
+            return r;
+        });
+
+        updateRestaurants(nextRestaurants);
+        delete resets[cleanEmail];
+        localStorage.setItem('comandas_pwd_resets', JSON.stringify(resets));
+
+        // Enviar email de confirmación
+        simularEnvioEmail(
+            cleanEmail,
+            `✅ Tu contraseña ha sido actualizada - ComandaFlow`,
+            `Hola, tu contraseña de acceso a ComandaFlow ha sido actualizada con éxito. Ya podés iniciar sesión con tus nuevas credenciales.`
+        );
+
+        return { ok: true, mensaje: "¡Contraseña actualizada exitosamente! Ya podés iniciar sesión." };
     };
 
     // Validar IDOR / Tenant Mismatch
@@ -1625,6 +1755,8 @@ export function DbProvider({ children }) {
             actualizarConfiguracionOnboarding,
             
             loginUser,
+            solicitarRecuperacionContrasena,
+            reestablecerContrasenaConCodigo,
             loginWithAuth0,
             logoutAuth0,
             validarAislamientoTenant,

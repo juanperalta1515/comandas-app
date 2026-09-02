@@ -21,6 +21,8 @@ function AdminDashboard() {
         restaurants,
         updateRestaurants,
         loginUser,
+        solicitarRecuperacionContrasena,
+        reestablecerContrasenaConCodigo,
         switchRestaurant,
         loginWithAuth0,
         logoutAuth0,
@@ -51,9 +53,22 @@ function AdminDashboard() {
         updateSaasConfig
     } = useDb();
 
-    // Login local state
+    // Login & Password Recovery state
+    const [authMode, setAuthMode] = useState('login'); // 'login' | 'forgot_step1' | 'forgot_step2'
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
+    const [loginShowPassword, setLoginShowPassword] = useState(false);
+    const [loginError, setLoginError] = useState('');
+    const [loginLoading, setLoginLoading] = useState(false);
+
+    // Password Recovery State
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [forgotCode, setForgotCode] = useState('');
+    const [forgotNewPassword, setForgotNewPassword] = useState('');
+    const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+    const [forgotError, setForgotError] = useState('');
+    const [forgotSuccess, setForgotSuccess] = useState('');
+    const [forgotLoading, setForgotLoading] = useState(false);
 
     // Active tab
     const [activeTab, setActiveTab] = useState('orders');
@@ -108,16 +123,6 @@ function AdminDashboard() {
     const [chartPeriod, setChartPeriod] = useState('day'); // 'day', 'month', 'year'
     const [selectedCierreDetalle, setSelectedCierreDetalle] = useState(null);
 
-    // Auto-login con ?demo=true o ?restaurant=xyz
-    useEffect(() => {
-        const queryParams = new URLSearchParams(location.search);
-        const reqRest = queryParams.get('restaurant') || 'quincho';
-        if (queryParams.get('demo') === 'true' || queryParams.get('restaurant')) {
-            switchRestaurant(reqRest);
-            navigate('/admin', { replace: true });
-        }
-    }, [location.search, navigate, switchRestaurant]);
-
     // Validar aislamiento de tenant al iniciar
     useEffect(() => {
         if (currentUser) {
@@ -136,80 +141,304 @@ function AdminDashboard() {
         setConfLogo(activeRestaurant.logo || '🍔');
     }, [config, activeRestaurant]);
 
-    // Manejar login dinámico para cualquier comercio
+    // Handlers de Autenticación y Recuperación
     const handleLoginSubmit = (e) => {
         e.preventDefault();
-        const res = loginUser(loginEmail, loginPassword);
-        if (!res.ok) {
-            alert(res.error || "Credenciales incorrectas.");
+        setLoginError('');
+        setLoginLoading(true);
+
+        setTimeout(() => {
+            const res = loginUser(loginEmail, loginPassword);
+            setLoginLoading(false);
+            if (!res.ok) {
+                setLoginError(res.error || "Credenciales incorrectas.");
+            } else {
+                setLoginPassword('');
+                setLoginError('');
+            }
+        }, 300);
+    };
+
+    const handleForgotStep1 = (e) => {
+        e.preventDefault();
+        setForgotError('');
+        setForgotLoading(true);
+
+        setTimeout(() => {
+            const res = solicitarRecuperacionContrasena(forgotEmail);
+            setForgotLoading(false);
+            if (!res.ok) {
+                setForgotError(res.error);
+            } else {
+                setForgotSuccess(res.mensaje);
+                setAuthMode('forgot_step2');
+            }
+        }, 400);
+    };
+
+    const handleForgotStep2 = (e) => {
+        e.preventDefault();
+        setForgotError('');
+
+        if (forgotNewPassword !== forgotConfirmPassword) {
+            setForgotError("Las contraseñas no coinciden. Verificalas.");
+            return;
         }
+
+        setForgotLoading(true);
+
+        setTimeout(() => {
+            const res = reestablecerContrasenaConCodigo(forgotEmail, forgotCode, forgotNewPassword);
+            setForgotLoading(false);
+            if (!res.ok) {
+                setForgotError(res.error);
+            } else {
+                alert("✅ ¡Contraseña restablecida con éxito!\n\nYa podés iniciar sesión con tus nuevas credenciales.");
+                setAuthMode('login');
+                setLoginEmail(forgotEmail);
+                setLoginPassword(forgotNewPassword);
+                setForgotCode('');
+                setForgotNewPassword('');
+                setForgotConfirmPassword('');
+                setForgotSuccess('');
+            }
+        }, 500);
     };
 
-    const handleQuickLogin = (resId) => {
-        switchRestaurant(resId);
-    };
-
-    // Si no está autenticado, renderizar Login
-    if (!currentUser || currentUser.role !== 'merchant') {
+    // Si no está autenticado, renderizar Portal de Acceso Exclusivo y Recuperación
+    if (!currentUser) {
         return (
-            <div className="auth0-overlay">
-                <div className="auth0-box" style={{ maxWidth: '440px' }}>
-                    <div className="auth0-header">
-                        <span className="auth0-logo">⚡</span>
-                        <h3>ComandaFlow Portal Admin</h3>
-                        <p>Inicie sesión con su cuenta de comercio</p>
-                    </div>
-                    <form onSubmit={handleLoginSubmit}>
-                        <div className="form-group" style={{ marginBottom: '15px' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.85rem', marginBottom: '5px', display: 'block' }}>
-                                Email del Administrador
-                            </label>
-                            <input 
-                                type="email" 
-                                required 
-                                value={loginEmail} 
-                                onChange={(e) => setLoginEmail(e.target.value)} 
-                                placeholder="contacto@quincho.com" 
-                                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border)' }} 
-                            />
-                        </div>
-                        <div className="form-group" style={{ marginBottom: '20px' }}>
-                            <label style={{ fontWeight: '600', fontSize: '0.85rem', marginBottom: '5px', display: 'block' }}>
-                                Contraseña
-                            </label>
-                            <input 
-                                type="password" 
-                                required 
-                                value={loginPassword} 
-                                onChange={(e) => setLoginPassword(e.target.value)} 
-                                placeholder="••••••••" 
-                                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border)' }} 
-                            />
-                        </div>
-                        <button type="submit" className="btn btn-primary btn-block" style={{ backgroundColor: 'var(--color-primary)', borderColor: 'var(--color-primary)', color: 'white' }}>
-                            Ingresar con Auth0 🔒
-                        </button>
-                    </form>
-
-                    <div style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-                        <p style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--color-text-muted)', marginBottom: '8px' }}>
-                            Acceso Rápido por Comercio (Cuentas Aisladas):
+            <div className="login-portal-wrapper" style={{
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+                padding: '20px',
+                fontFamily: 'Inter, system-ui, sans-serif'
+            }}>
+                <div className="login-portal-card" style={{
+                    background: 'rgba(30, 41, 59, 0.92)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '24px',
+                    padding: '40px',
+                    width: '100%',
+                    maxWidth: '460px',
+                    boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.7)',
+                    color: '#fff'
+                }}>
+                    <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                        <img src={logoImg} alt="ComandaFlow" style={{ height: '60px', borderRadius: '12px', marginBottom: '16px', boxShadow: '0 8px 20px rgba(0,0,0,0.4)' }} />
+                        <h2 style={{ fontSize: '1.6rem', fontWeight: 800, margin: '0 0 6px 0', color: '#fff' }}>
+                            {authMode === 'login' ? 'Panel de Restaurante' : 'Recuperar Contraseña'}
+                        </h2>
+                        <p style={{ color: '#94a3b8', fontSize: '0.88rem', margin: 0 }}>
+                            {authMode === 'login' 
+                                ? 'Ingresá con el email y contraseña de tu comercio' 
+                                : authMode === 'forgot_step1'
+                                ? 'Ingresá el email con el que registraste tu local'
+                                : 'Ingresá el código de seguridad enviado por email'}
                         </p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            {restaurants.map(r => (
-                                <button 
-                                    key={r.id} 
-                                    type="button" 
-                                    className="btn btn-secondary btn-sm" 
-                                    onClick={() => handleQuickLogin(r.id)} 
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', fontSize: '0.82rem' }}
-                                >
-                                    <span>{r.logo || '🍽️'} <strong>{r.nombre}</strong></span>
-                                    <span style={{ fontSize: '0.72rem', color: '#666' }}>{r.email}</span>
-                                </button>
-                            ))}
-                        </div>
                     </div>
+
+                    {authMode === 'login' && (
+                        <form onSubmit={handleLoginSubmit}>
+                            {loginError && (
+                                <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '18px' }}>
+                                    ⚠️ {loginError}
+                                </div>
+                            )}
+
+                            <div className="form-group" style={{ marginBottom: '16px' }}>
+                                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                                    Correo Electrónico de Contacto
+                                </label>
+                                <input 
+                                    type="email" 
+                                    className="form-control" 
+                                    required 
+                                    placeholder="contacto@mirestaurante.com"
+                                    value={loginEmail}
+                                    onChange={(e) => { setLoginEmail(e.target.value); setLoginError(''); }}
+                                    style={{ background: '#0f172a', border: '1px solid #334155', color: '#fff', padding: '12px 14px', borderRadius: '10px', width: '100%', fontSize: '0.95rem', outline: 'none' }}
+                                />
+                            </div>
+
+                            <div className="form-group" style={{ marginBottom: '22px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                    <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1', margin: 0 }}>
+                                        Contraseña
+                                    </label>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => { setAuthMode('forgot_step1'); setForgotEmail(loginEmail); setForgotError(''); setForgotSuccess(''); }}
+                                        style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.78rem', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                                    >
+                                        ¿Olvidaste tu contraseña?
+                                    </button>
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                    <input 
+                                        type={loginShowPassword ? 'text' : 'password'}
+                                        className="form-control" 
+                                        required 
+                                        placeholder="••••••••"
+                                        value={loginPassword}
+                                        onChange={(e) => { setLoginPassword(e.target.value); setLoginError(''); }}
+                                        style={{ background: '#0f172a', border: '1px solid #334155', color: '#fff', padding: '12px 14px', paddingRight: '42px', borderRadius: '10px', width: '100%', fontSize: '0.95rem', outline: 'none' }}
+                                    />
+                                    <button 
+                                        type="button"
+                                        onClick={() => setLoginShowPassword(!loginShowPassword)}
+                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1.1rem', padding: 0 }}
+                                    >
+                                        {loginShowPassword ? '👁️' : '🔒'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                className="btn btn-primary" 
+                                disabled={loginLoading}
+                                style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', border: 'none', color: '#fff' }}
+                            >
+                                {loginLoading ? 'Verificando...' : 'Ingresar al Panel 🔐'}
+                            </button>
+
+                            <div style={{ textAlign: 'center', marginTop: '22px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                                <a href="#/" style={{ color: '#94a3b8', fontSize: '0.84rem', textDecoration: 'none' }}>
+                                    ← Volver al Sitio Web Principal
+                                </a>
+                            </div>
+                        </form>
+                    )}
+
+                    {authMode === 'forgot_step1' && (
+                        <form onSubmit={handleForgotStep1}>
+                            {forgotError && (
+                                <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '18px' }}>
+                                    ⚠️ {forgotError}
+                                </div>
+                            )}
+
+                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                                    Email registrado de tu restaurante
+                                </label>
+                                <input 
+                                    type="email" 
+                                    className="form-control" 
+                                    required 
+                                    placeholder="contacto@mirestaurante.com"
+                                    value={forgotEmail}
+                                    onChange={(e) => { setForgotEmail(e.target.value); setForgotError(''); }}
+                                    style={{ background: '#0f172a', border: '1px solid #334155', color: '#fff', padding: '12px 14px', borderRadius: '10px', width: '100%', fontSize: '0.95rem', outline: 'none' }}
+                                />
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                className="btn btn-primary" 
+                                disabled={forgotLoading}
+                                style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', border: 'none', color: '#fff' }}
+                            >
+                                {forgotLoading ? 'Buscando...' : 'Enviar Código de Seguridad 📩'}
+                            </button>
+
+                            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setAuthMode('login')}
+                                    style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.84rem', cursor: 'pointer' }}
+                                >
+                                    ← Volver al Inicio de Sesión
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
+                    {authMode === 'forgot_step2' && (
+                        <form onSubmit={handleForgotStep2}>
+                            {forgotSuccess && (
+                                <div style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid #22c55e', color: '#86efac', padding: '12px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '16px' }}>
+                                    📩 {forgotSuccess}
+                                </div>
+                            )}
+
+                            {forgotError && (
+                                <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '12px 14px', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '16px' }}>
+                                    ⚠️ {forgotError}
+                                </div>
+                            )}
+
+                            <div className="form-group" style={{ marginBottom: '14px' }}>
+                                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                                    Código de 6 dígitos
+                                </label>
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    required 
+                                    maxLength="6"
+                                    placeholder="Ej: 489201"
+                                    value={forgotCode}
+                                    onChange={(e) => { setForgotCode(e.target.value); setForgotError(''); }}
+                                    style={{ background: '#0f172a', border: '1px solid #334155', color: '#38bdf8', letterSpacing: '4px', textAlign: 'center', padding: '12px 14px', borderRadius: '10px', width: '100%', fontSize: '1.25rem', fontWeight: 800, outline: 'none' }}
+                                />
+                            </div>
+
+                            <div className="form-group" style={{ marginBottom: '14px' }}>
+                                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                                    Nueva Contraseña
+                                </label>
+                                <input 
+                                    type="password" 
+                                    className="form-control" 
+                                    required 
+                                    placeholder="Nueva clave (mínimo 4 caracteres)"
+                                    value={forgotNewPassword}
+                                    onChange={(e) => { setForgotNewPassword(e.target.value); setForgotError(''); }}
+                                    style={{ background: '#0f172a', border: '1px solid #334155', color: '#fff', padding: '12px 14px', borderRadius: '10px', width: '100%', fontSize: '0.95rem', outline: 'none' }}
+                                />
+                            </div>
+
+                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                                    Confirmar Nueva Contraseña
+                                </label>
+                                <input 
+                                    type="password" 
+                                    className="form-control" 
+                                    required 
+                                    placeholder="Repetí la nueva clave"
+                                    value={forgotConfirmPassword}
+                                    onChange={(e) => { setForgotConfirmPassword(e.target.value); setForgotError(''); }}
+                                    style={{ background: '#0f172a', border: '1px solid #334155', color: '#fff', padding: '12px 14px', borderRadius: '10px', width: '100%', fontSize: '0.95rem', outline: 'none' }}
+                                />
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                className="btn btn-primary" 
+                                disabled={forgotLoading}
+                                style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', border: 'none', color: '#fff' }}
+                            >
+                                {forgotLoading ? 'Guardando...' : 'Restablecer Contraseña 💾'}
+                            </button>
+
+                            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setAuthMode('login')}
+                                    style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.84rem', cursor: 'pointer' }}
+                                >
+                                    ← Cancelar y Volver
+                                </button>
+                            </div>
+                        </form>
+                    )}
                 </div>
             </div>
         );
@@ -860,35 +1089,42 @@ function AdminDashboard() {
                     <a href="#/admin" className="nav-brand" style={{ display: 'flex', alignItems: 'center' }}>
                         <img src={logoImg} alt="ComandaFlow Logo" style={{ height: '32px', marginRight: '8px', objectFit: 'contain', borderRadius: '4px' }} />
                         <span>Panel Cocina & Administración</span>
-                        <span className={`network-badge ${offlineMode ? 'offline' : 'online'}`} style={{ marginLeft: '12px' }}>
-                            {offlineMode ? '🔴 Modo Local' : '🟢 En Línea'}
-                        </span>
                     </a>
-                    <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {/* Selector Rápido de Restaurante */}
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)' }}>
-                            <span style={{ fontSize: '1.1rem', marginRight: '6px' }}>{activeRestaurant.logo || '🍽️'}</span>
-                            <select 
-                                value={activeRestaurant.id} 
-                                onChange={(e) => switchRestaurant(e.target.value)}
-                                style={{ background: 'transparent', color: '#fff', border: 'none', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer', outline: 'none' }}
-                            >
-                                {restaurants.map(r => (
-                                    <option key={r.id} value={r.id} style={{ color: '#000' }}>
-                                        {r.logo || '🍽️'} {r.nombre}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                    <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {/* Comercio Identificador */}
+                        {currentUser?.role === 'superadmin' ? (
+                            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                <span style={{ fontSize: '1.1rem', marginRight: '6px' }}>👑</span>
+                                <select 
+                                    value={activeRestaurant.id} 
+                                    onChange={(e) => switchRestaurant(e.target.value)}
+                                    style={{ background: 'transparent', color: '#fff', border: 'none', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer', outline: 'none' }}
+                                >
+                                    {restaurants.map(r => (
+                                        <option key={r.id} value={r.id} style={{ color: '#000' }}>
+                                            {r.logo || '🍽️'} {r.nombre}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.15)', padding: '4px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                <span style={{ fontSize: '1.2rem', marginRight: '6px' }}>{activeRestaurant.logo || '🍽️'}</span>
+                                <strong style={{ color: '#fff', fontSize: '0.88rem' }}>{activeRestaurant.nombre}</strong>
+                            </div>
+                        )}
 
-                        <button onClick={() => navigate('/')} className="btn btn-secondary btn-sm nav-link-home">
-                            <span>Inicio 🏠</span>
-                        </button>
+                        {currentUser && (
+                            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.78rem', background: 'rgba(0,0,0,0.25)', padding: '4px 8px', borderRadius: '4px' }}>
+                                👤 {currentUser.email}
+                            </span>
+                        )}
+
                         <button onClick={() => navigate(`/menu/${activeRestaurant.id}`)} className="btn btn-secondary btn-sm nav-link-client">
                             <span>Carta Digital 📱</span>
                         </button>
-                        <button onClick={logoutAuth0} className="btn btn-danger btn-sm" style={{ padding: '4px 10px', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                            Salir 🔒
+                        <button onClick={logoutAuth0} className="btn btn-danger btn-sm" style={{ padding: '6px 12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                            Cerrar Sesión 🚪
                         </button>
                     </div>
                 </div>
@@ -912,13 +1148,7 @@ function AdminDashboard() {
                 {/* 1. COMANDAS KANBAN */}
                 {activeTab === 'orders' && (
                     <section className="admin-tab-content active">
-                        {/* Simulador Red */}
-                        <div className="simulator-panel">
-                            <span>🔌 Simulación de Red:</span>
-                            <button className={`btn btn-secondary btn-sm ${offlineMode ? 'offline' : ''}`} onClick={() => setOfflineMode(!offlineMode)} style={{ marginLeft: '10px' }}>
-                                {offlineMode ? '🔌 Restaurar Conexión' : '🔌 Simular Caída Internet'}
-                            </button>
-                        </div>
+                        {/* Columnas Kanban */}
 
                         {/* Columnas Kanban */}
                         <div className="kanban-wrapper">

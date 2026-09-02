@@ -124,7 +124,7 @@ function LandingPage() {
                         <a href="#features" className="nav-link-landing">Características</a>
                         <a href="#pricing" className="nav-link-landing">Precios</a>
                         <button className="btn btn-secondary btn-sm" onClick={() => abrirModalSuscripcion('Premium')}>Registrar mi Local 🚀</button>
-                        <button className="btn btn-primary btn-sm btn-landing-cta" onClick={() => navigate('/admin?demo=true')}>Probar Demo</button>
+                        <button className="btn btn-primary btn-sm btn-landing-cta" onClick={() => navigate('/admin')}>Ingresar al Panel 🔐</button>
                     </div>
                 </div>
             </nav>
@@ -139,10 +139,10 @@ function LandingPage() {
                     
                     <div className="hero-cta-group">
                         <button onClick={() => navigate('/menu')} className="btn btn-primary btn-lg">
-                            <span>Probar Demo Cliente 📱</span>
+                            <span>Carta Digital Cliente 📱</span>
                         </button>
-                        <button onClick={() => navigate('/admin?demo=true')} className="btn btn-secondary btn-lg">
-                            <span>Ver Panel Cocina 🍳</span>
+                        <button onClick={() => navigate('/admin')} className="btn btn-secondary btn-lg">
+                            <span>Ingresar al Panel Cocina 🍳</span>
                         </button>
                     </div>
                 </div>
