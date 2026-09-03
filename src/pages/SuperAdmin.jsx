@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDb, desofuscarDatoSensible } from '../context/DbContext';
+import { testSupabaseHealthCheck, isSupabaseConfigured } from '../services/supabaseClient';
 import logoImg from '../assets/logo.png';
 
 function SuperAdmin() {
@@ -22,6 +23,17 @@ function SuperAdmin() {
         saasConfig,
         updateSaasConfig
     } = useDb();
+
+    // Supabase Health Check state
+    const [supabaseReport, setSupabaseReport] = useState(null);
+    const [testingSupabase, setTestingSupabase] = useState(false);
+
+    const handleTestSupabase = async () => {
+        setTestingSupabase(true);
+        const res = await testSupabaseHealthCheck();
+        setSupabaseReport(res);
+        setTestingSupabase(false);
+    };
 
     // Login local state
     const [loginEmail, setLoginEmail] = useState('');
@@ -521,6 +533,52 @@ function SuperAdmin() {
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                {/* Diagnóstico Supabase Cloud */}
+                <div className="admin-card margin-top-20" style={{ borderLeft: '4px solid #10b981' }}>
+                    <div className="admin-card-header-flex" style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: '12px', marginBottom: '12px' }}>
+                        <div>
+                            <h2>⚡ Diagnóstico de Conexión Cloud (Supabase PostgreSQL)</h2>
+                            <p className="admin-card-description" style={{ marginBottom: 0 }}>
+                                Verificá la comunicación en tiempo real con tu base de datos en la nube y la latencia de respuesta.
+                            </p>
+                        </div>
+                        <span className={`category-badge`} style={{ background: isSupabaseConfigured() ? '#dcfce7' : '#fee2e2', color: isSupabaseConfigured() ? '#166534' : '#991b1b', fontWeight: 'bold' }}>
+                            {isSupabaseConfigured() ? '🟢 Variables Detectadas' : '⚪ Modo Local / Sin Supabase'}
+                        </span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginBottom: '15px' }}>
+                        <button 
+                            className="btn btn-primary btn-sm"
+                            disabled={testingSupabase}
+                            onClick={handleTestSupabase}
+                            style={{ background: '#10b981', borderColor: '#10b981', color: '#fff', fontWeight: 'bold' }}
+                        >
+                            {testingSupabase ? '⏳ Verificando conexión...' : '🔍 Ejecutar Test de Salud Supabase'}
+                        </button>
+                    </div>
+
+                    {supabaseReport && (
+                        <div style={{ background: '#0f172a', color: '#e2e8f0', padding: '16px', borderRadius: '10px', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: '1.6' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #334155', paddingBottom: '8px', marginBottom: '10px' }}>
+                                <span><strong>Estado General:</strong> {supabaseReport.connected ? '✅ CONEXIÓN EXITOSA' : '⚠️ ' + (supabaseReport.error || 'CONEXIÓN INCOMPLETA')}</span>
+                                <span><strong>Latencia:</strong> {supabaseReport.latencyMs} ms</span>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                                <div style={{ background: '#1e293b', padding: '10px', borderRadius: '6px' }}>
+                                    <div><strong>Tabla Restaurants:</strong> {supabaseReport.tests.restaurants.ok ? `✅ OK (${supabaseReport.tests.restaurants.count} registros)` : `❌ ${supabaseReport.tests.restaurants.error || 'Falla'}`}</div>
+                                </div>
+                                <div style={{ background: '#1e293b', padding: '10px', borderRadius: '6px' }}>
+                                    <div><strong>Tabla Orders:</strong> {supabaseReport.tests.orders.ok ? '✅ OK (Lectura/Escritura)' : `❌ ${supabaseReport.tests.orders.error || 'Falla'}`}</div>
+                                </div>
+                                <div style={{ background: '#1e293b', padding: '10px', borderRadius: '6px' }}>
+                                    <div><strong>Websockets Realtime:</strong> {supabaseReport.tests.realtime.ok ? '✅ Activo (Tiempo Real)' : `❌ ${supabaseReport.tests.realtime.error || 'Falla'}`}</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Optimización de BD */}
